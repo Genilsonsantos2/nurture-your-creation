@@ -1,21 +1,22 @@
-import { Search, ArrowLeftRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
-
-const mockMovements = [
-  { id: 1, student: "João Silva", series: "7º Ano A", type: "Entrada", time: "07:12", date: "02/03/2026" },
-  { id: 2, student: "Maria Santos", series: "8º Ano B", type: "Entrada", time: "07:15", date: "02/03/2026" },
-  { id: 3, student: "Pedro Oliveira", series: "6º Ano A", type: "Saída", time: "07:18", date: "02/03/2026" },
-  { id: 4, student: "Ana Costa", series: "9º Ano C", type: "Entrada", time: "07:20", date: "02/03/2026" },
-  { id: 5, student: "Lucas Pereira", series: "7º Ano B", type: "Entrada", time: "07:22", date: "02/03/2026" },
-  { id: 6, student: "Pedro Oliveira", series: "6º Ano A", type: "Entrada", time: "07:45", date: "02/03/2026" },
-  { id: 7, student: "João Silva", series: "7º Ano A", type: "Saída", time: "11:30", date: "02/03/2026" },
-  { id: 8, student: "Fernanda Lima", series: "8º Ano A", type: "Entrada", time: "07:25", date: "01/03/2026" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function MovementsPage() {
   const [search, setSearch] = useState("");
-  const filtered = mockMovements.filter((m) =>
-    m.student.toLowerCase().includes(search.toLowerCase())
+
+  const { data: movements = [], isLoading } = useQuery({
+    queryKey: ["movements"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("movements").select("*, students(name, series, class)").order("registered_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filtered = movements.filter((m: any) =>
+    m.students?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -27,13 +28,8 @@ export default function MovementsPage() {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Buscar por aluno..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        <input type="text" placeholder="Buscar por aluno..." value={search} onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-lg border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
 
       <div className="bg-card rounded-lg border shadow-sm overflow-x-auto">
@@ -48,21 +44,25 @@ export default function MovementsPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {filtered.map((mov) => (
-              <tr key={mov.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium text-foreground">{mov.student}</td>
-                <td className="px-4 py-3 text-muted-foreground">{mov.series}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    mov.type === "Entrada" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
-                  }`}>
-                    {mov.type}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{mov.time}</td>
-                <td className="px-4 py-3 text-muted-foreground">{mov.date}</td>
-              </tr>
-            ))}
+            {isLoading ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhuma movimentação encontrada</td></tr>
+            ) : (
+              filtered.map((mov: any) => (
+                <tr key={mov.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground">{mov.students?.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{mov.students?.series} {mov.students?.class}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${mov.type === "entry" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}>
+                      {mov.type === "entry" ? "Entrada" : "Saída"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{new Date(mov.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{new Date(mov.registered_at).toLocaleDateString("pt-BR")}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
