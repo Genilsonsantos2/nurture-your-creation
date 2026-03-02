@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import StudentsPage from "./pages/StudentsPage";
@@ -16,9 +17,21 @@ import SchedulesPage from "./pages/SchedulesPage";
 import OccurrencesPage from "./pages/OccurrencesPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
+import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
+  if (!user) return <Navigate to="/login" replace />;
+  return <AppLayout>{children}</AppLayout>;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,21 +39,24 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/alunos" element={<AppLayout><StudentsPage /></AppLayout>} />
-          <Route path="/alunos/novo" element={<AppLayout><StudentForm /></AppLayout>} />
-          <Route path="/alunos/importar" element={<AppLayout><ImportStudentsPage /></AppLayout>} />
-          <Route path="/qrcodes" element={<AppLayout><QRCodesPage /></AppLayout>} />
-          <Route path="/portaria" element={<AppLayout><GatePage /></AppLayout>} />
-          <Route path="/movimentacoes" element={<AppLayout><MovementsPage /></AppLayout>} />
-          <Route path="/alertas" element={<AppLayout><AlertsPage /></AppLayout>} />
-          <Route path="/horarios" element={<AppLayout><SchedulesPage /></AppLayout>} />
-          <Route path="/ocorrencias" element={<AppLayout><OccurrencesPage /></AppLayout>} />
-          <Route path="/relatorios" element={<AppLayout><ReportsPage /></AppLayout>} />
-          <Route path="/configuracoes" element={<AppLayout><SettingsPage /></AppLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/alunos" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
+            <Route path="/alunos/novo" element={<ProtectedRoute><StudentForm /></ProtectedRoute>} />
+            <Route path="/alunos/importar" element={<ProtectedRoute><ImportStudentsPage /></ProtectedRoute>} />
+            <Route path="/qrcodes" element={<ProtectedRoute><QRCodesPage /></ProtectedRoute>} />
+            <Route path="/portaria" element={<ProtectedRoute><GatePage /></ProtectedRoute>} />
+            <Route path="/movimentacoes" element={<ProtectedRoute><MovementsPage /></ProtectedRoute>} />
+            <Route path="/alertas" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
+            <Route path="/horarios" element={<ProtectedRoute><SchedulesPage /></ProtectedRoute>} />
+            <Route path="/ocorrencias" element={<ProtectedRoute><OccurrencesPage /></ProtectedRoute>} />
+            <Route path="/relatorios" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+            <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
