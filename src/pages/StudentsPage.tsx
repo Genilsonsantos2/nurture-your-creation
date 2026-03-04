@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Search, Upload, Edit, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 export default function StudentsPage() {
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students"],
@@ -27,7 +28,7 @@ export default function StudentsPage() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       toast.success("Aluno removido.");
     },
-    onError: () => toast.error("Erro ao remover aluno."),
+    onError: () => toast.error("Erro ao remover aluno. Verifique se você tem permissão."),
   });
 
   const filtered = students.filter((s) =>
@@ -89,7 +90,8 @@ export default function StudentsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                      <button onClick={() => navigate(`/alunos/editar/${student.id}`)}
+                        className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                         <Edit className="h-4 w-4" />
                       </button>
                       <button onClick={() => { if (confirm("Remover este aluno?")) deleteMutation.mutate(student.id); }}
