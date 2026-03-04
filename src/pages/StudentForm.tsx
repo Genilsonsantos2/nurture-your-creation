@@ -1,67 +1,120 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function StudentForm() {
+  const { id } = useParams<{ id: string }>();
+  const isEditing = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     name: "", series: "", class: "", enrollment: "", exitLimit: "",
     guardianName: "", guardianPhone: "", guardianRelation: "",
-    whatsappEnabled: false,
+    whatsappEnabled: false, active: true,
   });
+
+  // Load student data if editing
+  const { data: student } = useQuery({
+    queryKey: ["student", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase.from("students").select("*").eq("id", id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: isEditing,
+  });
+
+  const { data: guardian } = useQuery({
+    queryKey: ["guardian", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data } = await supabase.from("guardians").select("*").eq("student_id", id).limit(1).single();
+      return data;
+    },
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (student) {
+      setForm(f => ({
+        ...f,
+        name: student.name, series: student.series, class: student.class,
+        enrollment: student.enrollment, exitLimit: student.exit_limit ? String(student.exit_limit) : "",
+        active: student.active,
+      }));
+    }
+  }, [student]);
+
+  useEffect(() => {
+    if (guardian) {
+      setForm(f => ({
+        ...f,
+        guardianName: guardian.name, guardianPhone: guardian.phone,
+        guardianRelation: guardian.relation || "", whatsappEnabled: guardian.whatsapp_enabled || false,
+      }));
+    }
+  }, [guardian]);
 
   const update = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const mutation = useMutation({
     mutationFn: async () => {
-      // Insert student
-      const { data: student, error: studentErr } = await supabase.from("students").insert({
-        name: form.name,
-        series: form.series,
-        class: form.class,
-        enrollment: form.enrollment,
-        exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
-      }).select().single();
+      if (isEditing) {
+        // Update student
+        const { error: studentErr } = await supabase.from("students").update({
+          name: form.name, series: form.series, class: form.class,
+          enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
+          active: form.active,
+        }).eq("id", id);
+        if (studentErr) throw studentErr;
 
-      if (studentErr) throw studentErr;
+        // Upsert guardian
+        if (form.guardianName && form.guardianPhone) {
+          if (guardian) {
+            await supabase.from("guardians").update({
+              name: form.guardianName, phone: form.guardianPhone,
+              relation: form.guardianRelation || null, whatsapp_enabled: form.whatsappEnabled,
+            }).eq("id", guardian.id);
+          } else {
+            await supabase.from("guardians").insert({
+              student_id: id!, name: form.guardianName, phone: form.guardianPhone,
+              relation: form.guardianRelation || null, whatsapp_enabled: form.whatsappEnabled,
+            });
+          }
+        }
+      } else {
+        // Create student
+        const { data: newStudent, error: studentErr } = await supabase.from("students").insert({
+          name: form.name, series: form.series, class: form.class,
+          enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
+        }).select().single();
+        if (studentErr) throw studentErr;
 
-      // Insert guardian if provided
-      if (form.guardianName && form.guardianPhone) {
-        const { error: guardianErr } = await supabase.from("guardians").insert({
-          student_id: student.id,
-          name: form.guardianName,
-          phone: form.guardianPhone,
-          relation: form.guardianRelation || null,
-          whatsapp_enabled: form.whatsappEnabled,
-        });
-        if (guardianErr) throw guardianErr;
+        if (form.guardianName && form.guardianPhone) {
+          await supabase.from("guardians").insert({
+            student_id: newStudent.id, name: form.guardianName, phone: form.guardianPhone,
+            relation: form.guardianRelation || null, whatsapp_enabled: form.whatsappEnabled,
+          });
+        }
       }
-
-      return student;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success("Aluno cadastrado com sucesso!");
+      toast.success(isEditing ? "Aluno atualizado!" : "Aluno cadastrado!");
       navigate("/alunos");
     },
     onError: (error: any) => {
-      if (error.message?.includes("duplicate")) {
-        toast.error("Matrícula já cadastrada.");
-      } else {
-        toast.error("Erro ao cadastrar aluno.");
-      }
+      if (error.message?.includes("duplicate")) toast.error("Matrícula já cadastrada.");
+      else toast.error("Erro ao salvar aluno.");
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate();
-  };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); mutation.mutate(); };
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -70,7 +123,7 @@ export default function StudentForm() {
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Cadastrar Aluno</h1>
+          <h1 className="text-2xl font-bold text-foreground">{isEditing ? "Editar Aluno" : "Cadastrar Aluno"}</h1>
           <p className="text-sm text-muted-foreground">Preencha os dados do aluno e responsável</p>
         </div>
       </div>
@@ -114,6 +167,14 @@ export default function StudentForm() {
               <input type="number" value={form.exitLimit} onChange={(e) => update("exitLimit", e.target.value)}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
+            {isEditing && (
+              <div className="sm:col-span-2 flex items-center gap-3">
+                <input type="checkbox" id="active" checked={form.active as boolean}
+                  onChange={(e) => update("active", e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+                <label htmlFor="active" className="text-sm text-foreground">Aluno ativo</label>
+              </div>
+            )}
           </div>
         </div>
 
