@@ -37,9 +37,10 @@ export default function GatePage() {
 
   const speak = (text: string) => {
     if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "pt-BR";
-      utterance.rate = 1.1; // Slightly faster for gate flow
+      utterance.rate = 1.1;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -129,8 +130,10 @@ export default function GatePage() {
   const handleScan = useCallback(async (decodedText: string) => {
     if (processingRef.current || activeStudent) return;
     processingRef.current = true;
-    await identifyStudent.mutateAsync(decodedText);
-    setTimeout(() => { processingRef.current = false; }, 2000);
+    try {
+      await identifyStudent.mutateAsync(decodedText);
+    } catch {}
+    setTimeout(() => { processingRef.current = false; }, 3000);
   }, [identifyStudent, activeStudent]);
 
   const startScanning = async () => {
@@ -234,18 +237,18 @@ export default function GatePage() {
                 <button
                   onClick={() => confirmMovement.mutate("entry")}
                   disabled={confirmMovement.isPending}
-                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-success/10 border-2 border-success/20 text-success hover:bg-success hover:text-white transition-all group"
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-success/10 border-2 border-success/20 text-success hover:bg-success hover:text-white transition-all group min-h-[120px]"
                 >
-                  <LogIn className="h-8 w-8 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-black uppercase tracking-widest">Entrada</span>
+                  <LogIn className="h-8 w-8 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-black uppercase tracking-widest">Entrada</span>
                 </button>
                 <button
                   onClick={() => confirmMovement.mutate("exit")}
                   disabled={confirmMovement.isPending}
-                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-warning/10 border-2 border-warning/20 text-warning hover:bg-warning hover:text-white transition-all group"
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-warning/10 border-2 border-warning/20 text-warning hover:bg-warning hover:text-white transition-all group min-h-[120px]"
                 >
-                  <LogOut className="h-8 w-8 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-black uppercase tracking-widest">Saída</span>
+                  <LogOut className="h-8 w-8 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-black uppercase tracking-widest">Saída</span>
                 </button>
               </div>
 
