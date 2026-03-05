@@ -134,6 +134,9 @@ export default function GatePage() {
   }, [identifyStudent, activeStudent]);
 
   const startScanning = async () => {
+    setScanning(true);
+    // Wait for the div to render before starting the scanner
+    await new Promise((resolve) => setTimeout(resolve, 300));
     try {
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
@@ -143,8 +146,8 @@ export default function GatePage() {
         (decodedText) => handleScan(decodedText),
         () => { }
       );
-      setScanning(true);
     } catch (err: any) {
+      setScanning(false);
       toast.error("Não foi possível acessar a câmera. Verifique as permissões.");
     }
   };
