@@ -17,7 +17,11 @@ import SchedulesPage from "./pages/SchedulesPage";
 import OccurrencesPage from "./pages/OccurrencesPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
+import CalendarPage from "./pages/CalendarPage";
 import LoginPage from "./pages/LoginPage";
+import UserManagement from "./pages/UserManagement";
+import ClassesPage from "./pages/ClassesPage";
+import ParentPortal from "./pages/ParentPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +37,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!user || !isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -42,19 +53,23 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/filho/:token" element={<ParentPortal />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/alunos" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
-            <Route path="/alunos/novo" element={<ProtectedRoute><StudentForm /></ProtectedRoute>} />
-            <Route path="/alunos/editar/:id" element={<ProtectedRoute><StudentForm /></ProtectedRoute>} />
-            <Route path="/alunos/importar" element={<ProtectedRoute><ImportStudentsPage /></ProtectedRoute>} />
+            <Route path="/alunos/novo" element={<ProtectedRoute><AdminRoute><StudentForm /></AdminRoute></ProtectedRoute>} />
+            <Route path="/alunos/editar/:id" element={<ProtectedRoute><AdminRoute><StudentForm /></AdminRoute></ProtectedRoute>} />
+            <Route path="/alunos/importar" element={<ProtectedRoute><AdminRoute><ImportStudentsPage /></AdminRoute></ProtectedRoute>} />
             <Route path="/qrcodes" element={<ProtectedRoute><QRCodesPage /></ProtectedRoute>} />
             <Route path="/portaria" element={<ProtectedRoute><GatePage /></ProtectedRoute>} />
             <Route path="/movimentacoes" element={<ProtectedRoute><MovementsPage /></ProtectedRoute>} />
             <Route path="/alertas" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
-            <Route path="/horarios" element={<ProtectedRoute><SchedulesPage /></ProtectedRoute>} />
+            <Route path="/horarios" element={<ProtectedRoute><AdminRoute><SchedulesPage /></AdminRoute></ProtectedRoute>} />
             <Route path="/ocorrencias" element={<ProtectedRoute><OccurrencesPage /></ProtectedRoute>} />
             <Route path="/relatorios" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-            <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/usuarios" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
+            <Route path="/turmas" element={<ProtectedRoute><AdminRoute><ClassesPage /></AdminRoute></ProtectedRoute>} />
+            <Route path="/calendario" element={<ProtectedRoute><AdminRoute><CalendarPage /></AdminRoute></ProtectedRoute>} />
+            <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

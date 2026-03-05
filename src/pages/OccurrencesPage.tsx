@@ -1,9 +1,10 @@
-import { Plus, FileWarning, X, Save } from "lucide-react";
+import { Plus, FileWarning, X, Save, FileDown, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 const typeLabels: Record<string, string> = {
   unauthorized_exit: "Saída sem autorização",
@@ -32,7 +33,7 @@ export default function OccurrencesPage() {
   const { data: occurrences = [] } = useQuery({
     queryKey: ["occurrences"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("occurrences").select("*, students(name, series, class)").order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await supabase.from("occurrences").select("*, students(name, series, class, enrollment)").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       return data;
     },
@@ -65,6 +66,71 @@ export default function OccurrencesPage() {
     },
     onError: () => toast.error("Erro ao registrar ocorrência."),
   });
+
+  const generatePDF = (occ: any) => {
+    const doc = new jsPDF() as any;
+    const dateStr = new Date(occ.created_at).toLocaleDateString("pt-BR");
+    const timeStr = new Date(occ.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    // Header
+    doc.setFillColor(15, 62, 122);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("CETI NOVA ITARANA", 105, 20, { align: "center" });
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("COMUNICADO DISCIPLINAR OFICIAL", 105, 30, { align: "center" });
+
+    // Body layout
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("DADOS DO ALUNO", 20, 60);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nome: ${occ.students?.name || "Desconhecido"}`, 20, 70);
+    doc.text(`Série/Turma: ${occ.students?.series} ${occ.students?.class}`, 20, 78);
+    // Enrolment might not be in the query unless we specify it. The query in this component does not select enrollment, but we will add it to the query next!
+    doc.text(`Matrícula: ${occ.students?.enrollment || "Não informada"}`, 20, 86);
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALHES DA OCORRÊNCIA", 20, 110);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Data do Registro: ${dateStr} às ${timeStr}`, 20, 120);
+    doc.text(`Motivo/Tipo: ${typeLabels[occ.type] || occ.type}`, 20, 128);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Descrição do Ocorrido:", 20, 142);
+    doc.setFont("helvetica", "normal");
+
+    const splitDesc = doc.splitTextToSize(occ.description || "Nenhuma descrição detalhada foi fornecida para esta ocorrência.", 170);
+    doc.text(splitDesc, 20, 150);
+
+    // Signature lines
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.setLineWidth(0.5);
+
+    doc.line(30, 240, 95, 240);
+    doc.setFontSize(9);
+    doc.text("Assinatura da Coordenação", 62.5, 246, { align: "center" });
+
+    doc.line(115, 240, 180, 240);
+    doc.text("Assinatura do Responsável", 147.5, 246, { align: "center" });
+
+    doc.save(`Ocorrencia_${(occ.students?.name || "Aluno").split(" ")[0]}_${dateStr.replace(/\//g, "-")}.pdf`);
+  };
+
+  const handleWhatsApp = (occ: any) => {
+    const text = `⚠️ *CETI NOVA ITARANA* | *Comunicado Escolar*\n\nOlá, responsável.\nRegistramos uma ocorrência disciplinar para o aluno(a) *${occ.students?.name}* hoje (${new Date(occ.created_at).toLocaleDateString("pt-BR")}).\n\n*Motivo:* ${typeLabels[occ.type] || occ.type}\n*Observação:* ${occ.description || "Sem detalhes adicionais inseridos no sistema."}\n\nRecomendamos que compareça à coordenação da escola para assinar o termo físico ou para maiores esclarecimentos.`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
 
   return (
     <div className="space-y-6">
@@ -136,10 +202,21 @@ export default function OccurrencesPage() {
                   {typeLabels[occ.type] || occ.type}
                 </span>
               </div>
-              {occ.description && <p className="text-sm text-muted-foreground">{occ.description}</p>}
-              <p className="text-xs text-muted-foreground">
-                {new Date(occ.created_at).toLocaleDateString("pt-BR")} às {new Date(occ.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-              </p>
+              {occ.description && <p className="text-sm text-foreground/80 bg-muted/30 p-3 rounded-md border border-border/50">{occ.description}</p>}
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Registrado em {new Date(occ.created_at).toLocaleDateString("pt-BR")} às {new Date(occ.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <button onClick={() => generatePDF(occ)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-sm">
+                    <FileDown className="h-3.5 w-3.5" /> Baixar PDF
+                  </button>
+                  <button onClick={() => handleWhatsApp(occ)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] text-white px-3 py-1.5 text-xs font-semibold hover:bg-[#20bd5a] transition-colors shadow-sm">
+                    <MessageCircle className="h-3.5 w-3.5" /> Enviar WhatsApp
+                  </button>
+                </div>
+              </div>
             </div>
           ))
         )}

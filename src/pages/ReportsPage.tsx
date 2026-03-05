@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertCircle } from "lucide-react";
+import { getLastNSchoolDays } from "@/lib/calendar";
 
 export default function ReportsPage() {
   const [period, setPeriod] = useState<"week" | "month">("week");
@@ -23,8 +25,26 @@ export default function ReportsPage() {
     },
   });
 
+  const { data: students = [] } = useQuery({
+    queryKey: ["reports-students"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("students").select("id, name, series, class").eq("active", true).order("name");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Calculate absence based on the last 3 school days
+  const lastThreeSchoolDays = getLastNSchoolDays(3);
+  const oldestSchoolDay = lastThreeSchoolDays[lastThreeSchoolDays.length - 1];
+
+  // Students with a recent entry in the last 3 school days
+  const recentEntries = movements.filter(m => m.type === "entry" && new Date(m.registered_at) >= oldestSchoolDay);
+  const studentsWithRecentEntry = new Set(recentEntries.map(m => m.student_id));
+  const absentStudents = students.filter(s => !studentsWithRecentEntry.has(s.id));
+
   // Group by day of week
-  const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sexta", "Sáb"];
   const dailyStats = dayNames.map((day, i) => {
     const dayMovs = movements.filter((m) => new Date(m.registered_at).getDay() === i);
     return {
@@ -146,6 +166,32 @@ export default function ReportsPage() {
                     <p className="text-xs text-muted-foreground">{student.series}</p>
                   </div>
                   <span className="text-sm font-bold text-foreground">{student.exits}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Absence Alerts Section */}
+        <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-6 lg:col-span-2 shadow-sm">
+          <div className="flex items-center gap-3 text-destructive mb-6">
+            <AlertCircle className="h-6 w-6" />
+            <div>
+              <h2 className="text-lg font-bold">Atenção Especial: Risco de Evasão</h2>
+              <p className="text-sm font-medium text-destructive/80">Alunos sem registro de entrada nos últimos 3 dias</p>
+            </div>
+          </div>
+
+          {absentStudents.length === 0 ? (
+            <div className="text-center p-6 bg-background/50 rounded-xl border border-destructive/10">
+              <p className="text-sm font-semibold text-success">Ótimo! Nenhum aluno com faltas consecutivas críticas.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {absentStudents.map(student => (
+                <div key={student.id} className="bg-background rounded-xl p-4 border border-destructive/20 shadow-sm flex flex-col">
+                  <span className="font-bold text-sm text-foreground mb-1 truncate" title={student.name}>{student.name}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{student.series} • {student.class}</span>
                 </div>
               ))}
             </div>

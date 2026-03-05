@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Upload, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Upload, Edit, Trash2, Link as LinkIcon, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -90,6 +90,17 @@ export default function StudentsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          const link = `${window.location.origin}/filho/${student.id}`;
+                          navigator.clipboard.writeText(link);
+                          toast.success("Link para pais copiado!");
+                        }}
+                        title="Copiar link para pais"
+                        className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors"
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                      </button>
                       <button onClick={() => navigate(`/alunos/editar/${student.id}`)}
                         className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                         <Edit className="h-4 w-4" />
