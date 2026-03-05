@@ -1,4 +1,4 @@
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, QrCode, Search, Filter } from "lucide-react";
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ export default function QRCodesPage() {
   const [filterSeries, setFilterSeries] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
 
-  const { data: students = [] } = useQuery({
+  const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-qr"],
     queryFn: async () => {
       const { data, error } = await supabase.from("students").select("*").eq("active", true).order("name");
@@ -91,57 +91,121 @@ export default function QRCodesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">QR Codes</h1>
-          <p className="text-sm text-muted-foreground">Gere e imprima QR Codes para as carteirinhas</p>
+    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+          <QrCode className="w-64 h-64 text-primary" />
         </div>
-        <button onClick={handlePrintAll} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
-          <Printer className="h-4 w-4" /> Imprimir Todos
-        </button>
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="h-20 w-20 rounded-[2rem] bg-primary shadow-2xl shadow-primary/40 flex items-center justify-center text-primary-foreground">
+            <QrCode className="h-10 w-10" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-foreground tracking-tight drop-shadow-sm">Geração de Acessos</h1>
+            <p className="text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 mt-1">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+              Impressão de Identidade Digital
+            </p>
+          </div>
+        </div>
+        <div className="relative z-10">
+          <button
+            onClick={handlePrintAll}
+            className="premium-button shadow-primary/20"
+          >
+            <Printer className="h-4 w-4 mr-2" /> Imprimir Selecionados
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-3">
-        <select value={filterSeries} onChange={(e) => setFilterSeries(e.target.value)}
-          className="rounded-lg border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-          <option value="">Todas as Séries</option>
-          {seriesOptions.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+        <div className="relative group flex-1 max-w-sm">
+          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+            <Filter className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          </div>
+          <select
+            value={filterSeries}
+            onChange={(e) => setFilterSeries(e.target.value)}
+            className="premium-input w-full pl-12 pr-10 appearance-none cursor-pointer"
+          >
+            <option value="">Filtrar por Série (Todas)</option>
+            {seriesOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+          {filtered.length} Identidades prontas para impressão
+        </p>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="bg-card rounded-lg border p-12 text-center text-muted-foreground text-sm font-medium">Nenhum aluno encontrado para os filtros selecionados.</div>
+      {isLoading ? (
+        <div className="py-40 flex flex-col items-center gap-4 opacity-40">
+          <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          <p className="text-xs font-black uppercase tracking-widest">Compilando identidades...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="glass-panel p-20 text-center space-y-6 opacity-50 border-dashed border-2">
+          <Search className="h-16 w-16 mx-auto text-muted-foreground" />
+          <div className="space-y-1">
+            <p className="text-lg font-black text-foreground tracking-tight">Nenhum registro encontrado</p>
+            <p className="text-sm font-medium">Verifique os filtros ou se existem alunos ativos na série selecionada.</p>
+          </div>
+        </div>
       ) : (
-        <div ref={printRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div ref={printRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
           {filtered.map((student) => (
-            <div key={student.id} className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col mx-auto w-full max-w-[280px]">
+            <div key={student.id} className="group glass-panel p-1 border-none bg-transparent hover:translate-y-[-8px] transition-all duration-500">
+              <div className="bg-card rounded-[2.5rem] border border-border/50 shadow-2xl overflow-hidden flex flex-col h-full relative">
 
-              <div className="bg-gradient-to-br from-primary to-primary/80 p-5 text-center border-b-[4px] border-warning relative">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
-                <img src="/logo.png" alt="Logo" className="h-14 w-auto mx-auto mb-3 object-contain drop-shadow-md relative z-10" />
-                <h3 className="text-primary-foreground font-extrabold text-sm tracking-wide relative z-10 drop-shadow-sm">CETI NOVA ITARANA</h3>
-                <p className="text-primary-foreground/90 font-bold text-[10px] tracking-[0.15em] mt-1 relative z-10">ACESSO ESTUDANTIL</p>
-              </div>
-
-              <div className="p-6 flex flex-col items-center flex-1 bg-gradient-to-b from-card to-muted/10 relative">
-                <div className="bg-white p-3 rounded-2xl mb-5 shadow-sm ring-1 ring-border group-hover:scale-105 transition-transform duration-300">
-                  <QRCodeSVG value={student.qr_code} size={130} level="M" />
+                {/* Header of the card preview */}
+                <div className="bg-gradient-to-br from-primary to-primary-600 p-6 text-center border-b-[6px] border-warning/80 relative">
+                  <div className="absolute inset-0 bg-white/5 opacity-10 mix-blend-overlay" />
+                  <img src="/logo.png" alt="Logo" className="h-16 w-auto mx-auto mb-4 object-contain drop-shadow-xl relative z-10 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-primary-foreground font-black text-[10px] tracking-[0.2em] relative z-10 drop-shadow-sm uppercase">CETI NOVA ITARANA</h3>
+                  <div className="h-px w-12 bg-white/20 mx-auto my-2" />
+                  <p className="text-primary-foreground/90 font-black text-[9px] tracking-[0.3em] relative z-10 uppercase">Identity Card</p>
                 </div>
 
-                <div className="text-center w-full z-10">
-                  <p className="text-lg font-bold text-foreground leading-tight mb-1 truncate px-2" title={student.name}>{student.name}</p>
-                  <p className="text-sm font-bold text-primary mb-3">{student.series} • {student.class}</p>
-                  <p className="text-xs font-semibold text-muted-foreground bg-secondary/50 py-1.5 px-3 rounded-lg inline-block border border-border/50">Matrícula: {student.enrollment}</p>
+                <div className="p-8 flex flex-col items-center flex-1 bg-gradient-to-b from-card to-background relative">
+                  <div className="bg-white p-4 rounded-[2rem] mb-8 shadow-xl ring-2 ring-primary/5 group-hover:ring-primary/20 transition-all duration-500 group-hover:rotate-1">
+                    <QRCodeSVG value={student.qr_code} size={140} level="M" />
+                  </div>
+
+                  <div className="text-center w-full relative z-10">
+                    <p className="text-xl font-black text-foreground tracking-tight leading-tight mb-2 uppercase" title={student.name}>{student.name.split(" ")[0]} {student.name.split(" ").slice(-1)}</p>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary/5 border border-primary/10 text-[10px] font-black text-primary uppercase tracking-widest mb-4">
+                      {student.series} • {student.class}
+                    </div>
+                    <div className="block pt-4 border-t border-border/50">
+                      <code className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">ID: {student.enrollment}</code>
+                    </div>
+                  </div>
+
+                  {/* Glowing background behind QR */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/5 blur-[60px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-
             </div>
           ))}
         </div>
       )}
+
+      {/* Footer Info */}
+      <div className="p-10 rounded-[3rem] bg-muted/20 border border-border/40 flex items-start gap-6">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+          <Printer className="h-6 w-6" />
+        </div>
+        <div>
+          <h4 className="font-black text-foreground tracking-tight uppercase text-xs tracking-[0.2em] mb-2">Instruções de Impressão</h4>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
+            O layout de impressão foi otimizado para papel A4 fotográfico ou Couché.
+            Recomendamos desativar "Margens" nas configurações da impressora e habilitar "Cores de Fundo" para garantir a fidelidade do design institucional.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

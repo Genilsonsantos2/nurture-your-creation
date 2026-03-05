@@ -1,4 +1,4 @@
-import { Plus, FileWarning, X, Save, FileDown, MessageCircle } from "lucide-react";
+import { Plus, FileWarning, X, Save, FileDown, MessageCircle, AlertCircle, History, User } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,11 +16,11 @@ const typeLabels: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  unauthorized_exit: "bg-destructive/15 text-destructive",
-  late: "bg-warning/15 text-warning",
-  student_sick: "bg-info/15 text-info",
+  unauthorized_exit: "bg-destructive text-white shadow-destructive/20",
+  late: "bg-warning text-white shadow-warning/20",
+  student_sick: "bg-info text-white shadow-info/20",
   guardian_pickup: "bg-muted text-muted-foreground",
-  behavior: "bg-destructive/15 text-destructive",
+  behavior: "bg-destructive text-white shadow-destructive/20",
   other: "bg-muted text-muted-foreground",
 };
 
@@ -30,7 +30,7 @@ export default function OccurrencesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ student_id: "", type: "late" as string, description: "" });
 
-  const { data: occurrences = [] } = useQuery({
+  const { data: occurrences = [], isLoading } = useQuery({
     queryKey: ["occurrences"],
     queryFn: async () => {
       const { data, error } = await supabase.from("occurrences").select("*, students(name, series, class, enrollment)").order("created_at", { ascending: false }).limit(100);
@@ -93,7 +93,6 @@ export default function OccurrencesPage() {
     doc.setFont("helvetica", "normal");
     doc.text(`Nome: ${occ.students?.name || "Desconhecido"}`, 20, 70);
     doc.text(`Série/Turma: ${occ.students?.series} ${occ.students?.class}`, 20, 78);
-    // Enrolment might not be in the query unless we specify it. The query in this component does not select enrollment, but we will add it to the query next!
     doc.text(`Matrícula: ${occ.students?.enrollment || "Não informada"}`, 20, 86);
 
     doc.setFontSize(14);
@@ -133,93 +132,177 @@ export default function OccurrencesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Ocorrências</h1>
-          <p className="text-sm text-muted-foreground">Registro de incidentes e situações especiais</p>
+    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent p-10 rounded-[3rem] border border-destructive/20 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+          <FileWarning className="w-64 h-64 text-destructive" />
         </div>
-        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
-          <Plus className="h-4 w-4" /> Registrar Ocorrência
-        </button>
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="h-20 w-20 rounded-[2rem] bg-destructive shadow-2xl shadow-destructive/40 flex items-center justify-center text-white">
+            <AlertCircle className="h-10 w-10" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-foreground tracking-tight drop-shadow-sm">Centro de Ocorrências</h1>
+            <p className="text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 mt-1">
+              <span className="h-2 w-2 rounded-full bg-destructive animate-pulse"></span>
+              Gestão Disciplinar & Monitoramento
+            </p>
+          </div>
+        </div>
+        <div className="relative z-10">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className={`premium-button ${showForm ? "bg-muted text-foreground shadow-none" : "bg-destructive text-white shadow-destructive/40"}`}
+          >
+            {showForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {showForm ? "Fechar Formulário" : "Nova Ocorrência"}
+          </button>
+        </div>
       </div>
 
       {showForm && (
-        <div className="bg-card rounded-lg border p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Nova Ocorrência</h2>
-            <button onClick={() => setShowForm(false)} className="p-1 hover:bg-muted rounded"><X className="h-4 w-4" /></button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="glass-panel p-10 border-destructive/20 shadow-2xl animate-in slide-in-from-top-4 duration-500 overflow-hidden relative">
+          <div className="relative z-10 space-y-8">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Aluno *</label>
-              <select value={form.student_id} onChange={(e) => setForm(p => ({ ...p, student_id: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Selecione...</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} — {s.series} {s.class}</option>
-                ))}
-              </select>
+              <h2 className="text-xl font-black text-foreground tracking-tight">Registro de Incidente</h2>
+              <p className="text-sm text-muted-foreground font-medium mt-1">Preencha os detalhes abaixo para gerar o relatório oficial.</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Tipo *</label>
-              <select value={form.type} onChange={(e) => setForm(p => ({ ...p, type: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                {Object.entries(typeLabels).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-xs font-black text-foreground uppercase tracking-[0.15em] ml-1">Aluno Alvo</label>
+                <select
+                  value={form.student_id}
+                  onChange={(e) => setForm(p => ({ ...p, student_id: e.target.value }))}
+                  className="premium-input w-full appearance-none pr-10"
+                >
+                  <option value="">Buscar aluno...</option>
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name} — {s.series} {s.class}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-3">
+                <label className="text-xs font-black text-foreground uppercase tracking-[0.15em] ml-1">Natureza da Ocorrência</label>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm(p => ({ ...p, type: e.target.value }))}
+                  className="premium-input w-full appearance-none pr-10"
+                >
+                  {Object.entries(typeLabels).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2 space-y-3">
+                <label className="text-xs font-black text-foreground uppercase tracking-[0.15em] ml-1">Relatório Detalhado</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Descreva minuciosamente o ocorrido, citando horários e envolvidos se necessário..."
+                  rows={4}
+                  className="premium-input w-full py-5 resize-none shadow-inner"
+                />
+              </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium text-foreground mb-1 block">Descrição</label>
-              <textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
-                rows={3}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
+              <button onClick={() => setShowForm(false)} className="px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all">
+                Cancelar
+              </button>
+              <button
+                onClick={() => createMutation.mutate()}
+                disabled={!form.student_id || createMutation.isPending}
+                className="premium-button bg-primary shadow-primary/30"
+              >
+                <Save className="h-4 w-4 mr-2" /> {createMutation.isPending ? "Processando..." : "Confirmar Registro"}
+              </button>
             </div>
           </div>
-          <div className="flex justify-end">
-            <button onClick={() => createMutation.mutate()} disabled={!form.student_id || createMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
-              <Save className="h-4 w-4" /> {createMutation.isPending ? "Salvando..." : "Registrar"}
-            </button>
+
+          {/* Subtle background icon for form */}
+          <div className="absolute bottom-0 right-0 p-10 opacity-5 pointer-events-none scale-150">
+            <Save className="w-48 h-48 text-primary" />
           </div>
         </div>
       )}
 
-      <div className="space-y-3">
-        {occurrences.length === 0 ? (
-          <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground text-sm">Nenhuma ocorrência registrada</div>
-        ) : (
-          occurrences.map((occ: any) => (
-            <div key={occ.id} className="bg-card rounded-lg border p-4 space-y-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <FileWarning className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold text-foreground">{occ.students?.name}</span>
-                  <span className="text-xs text-muted-foreground">— {occ.students?.series} {occ.students?.class}</span>
-                </div>
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${typeColors[occ.type] || "bg-muted text-muted-foreground"}`}>
-                  {typeLabels[occ.type] || occ.type}
-                </span>
-              </div>
-              {occ.description && <p className="text-sm text-foreground/80 bg-muted/30 p-3 rounded-md border border-border/50">{occ.description}</p>}
+      <div className="space-y-6 pb-20">
+        <div className="flex items-center gap-3 px-2">
+          <History className="h-5 w-5 text-primary" />
+          <h3 className="text-xl font-black text-foreground tracking-tight">Timeline de Registros</h3>
+        </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Registrado em {new Date(occ.created_at).toLocaleDateString("pt-BR")} às {new Date(occ.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                </p>
-                <div className="flex items-center gap-2 self-end sm:self-auto">
-                  <button onClick={() => generatePDF(occ)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors shadow-sm">
-                    <FileDown className="h-3.5 w-3.5" /> Baixar PDF
-                  </button>
-                  <button onClick={() => handleWhatsApp(occ)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] text-white px-3 py-1.5 text-xs font-semibold hover:bg-[#20bd5a] transition-colors shadow-sm">
-                    <MessageCircle className="h-3.5 w-3.5" /> Enviar WhatsApp
-                  </button>
+        <div className="grid grid-cols-1 gap-6">
+          {isLoading ? (
+            <div className="py-20 flex flex-col items-center gap-4 opacity-40">
+              <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+              <p className="text-xs font-black uppercase tracking-widest">Sincronizando registros...</p>
+            </div>
+          ) : occurrences.length === 0 ? (
+            <div className="glass-panel p-20 text-center space-y-4 opacity-50 border-dashed border-2">
+              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+                <FileWarning className="h-10 w-10" />
+              </div>
+              <p className="text-sm font-black uppercase tracking-widest">Nenhuma ocorrência encontrada no período.</p>
+            </div>
+          ) : (
+            occurrences.map((occ: any, i) => (
+              <div key={occ.id} className="group glass-panel p-1 border-none bg-transparent hover:translate-x-2 transition-transform">
+                <div className="bg-card rounded-[2.5rem] border border-border/50 p-8 flex flex-col lg:flex-row lg:items-center gap-8 shadow-xl">
+                  <div className="flex items-center gap-6 flex-1">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-muted to-muted/20 flex items-center justify-center text-muted-foreground group-hover:scale-110 transition-transform">
+                      <User className="h-8 w-8" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-black text-foreground tracking-tight">{occ.students?.name}</span>
+                        <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${typeColors[occ.type] || "bg-muted text-muted-foreground"}`}>
+                          {typeLabels[occ.type] || occ.type}
+                        </div>
+                      </div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        {occ.students?.series} {occ.students?.class} • Matricula {occ.students?.enrollment}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="lg:max-w-md flex-1">
+                    <p className="text-sm text-foreground/70 font-medium leading-relaxed bg-muted/30 p-5 rounded-2xl border border-border/40 italic group-hover:bg-muted/50 transition-colors line-clamp-2 hover:line-clamp-none cursor-help">
+                      "{occ.description || "Nenhuma descrição detalhada inserida."}"
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 lg:border-l border-border/50 lg:pl-8">
+                    <div className="text-right mr-4 hidden sm:block">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registrado em</p>
+                      <p className="text-sm font-black text-foreground mt-1">
+                        {new Date(occ.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => generatePDF(occ)}
+                        title="Exportar como PDF"
+                        className="h-12 w-12 flex items-center justify-center rounded-2xl bg-white dark:bg-black shadow-lg hover:bg-primary hover:text-white border border-border/50 transition-all active:scale-95"
+                      >
+                        <FileDown className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleWhatsApp(occ)}
+                        title="Enviar via WhatsApp"
+                        className="h-12 w-12 flex items-center justify-center rounded-2xl bg-success text-white shadow-lg shadow-success/20 hover:scale-110 transition-all active:scale-95"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
