@@ -39,8 +39,8 @@ export default function JustificationPortal() {
 
         setSubmitting(true);
         try {
-            const { error } = await (supabase
-                .from("absence_justifications") as any)
+            const { error } = await (supabase as any)
+                .from("absence_justifications")
                 .insert({
                     student_id: student.id,
                     justification_date: form.date,
