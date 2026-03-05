@@ -14,8 +14,8 @@ export default function JustificationManagement() {
     const { data: justifications = [], isLoading } = useQuery({
         queryKey: ["justifications"],
         queryFn: async () => {
-            const { data, error } = await (supabase
-                .from("absence_justifications") as any)
+            const { data, error } = await (supabase as any)
+                .from("absence_justifications")
                 .select("*, students(name, series, class)")
                 .order("created_at", { ascending: false });
             if (error) throw error;
@@ -25,8 +25,8 @@ export default function JustificationManagement() {
 
     const reviewMutation = useMutation({
         mutationFn: async ({ id, status, notes }: { id: string; status: 'approved' | 'rejected'; notes?: string }) => {
-            const { error } = await (supabase
-                .from("absence_justifications") as any)
+            const { error } = await (supabase as any)
+                .from("absence_justifications")
                 .update({
                     status,
                     reviewer_notes: notes,

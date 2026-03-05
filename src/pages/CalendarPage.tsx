@@ -23,8 +23,8 @@ export default function CalendarPage() {
     const { data: dbEvents = [] } = useQuery({
         queryKey: ["school-events"],
         queryFn: async () => {
-            const { data, error } = await (supabase
-                .from("school_events") as any)
+            const { data, error } = await (supabase as any)
+                .from("school_events")
                 .select("*")
                 .order("event_date");
             if (error) throw error;
@@ -34,7 +34,7 @@ export default function CalendarPage() {
 
     const createEventMutation = useMutation({
         mutationFn: async (event: any) => {
-            const { error } = await (supabase.from("school_events") as any).insert({
+            const { error } = await (supabase as any).from("school_events").insert({
                 title: event.title,
                 event_date: event.date,
                 event_type: event.type,
@@ -53,7 +53,7 @@ export default function CalendarPage() {
 
     const deleteEventMutation = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await (supabase.from("school_events") as any).delete().eq("id", id);
+            const { error } = await (supabase as any).from("school_events").delete().eq("id", id);
             if (error) throw error;
         },
         onSuccess: () => {
