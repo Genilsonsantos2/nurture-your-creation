@@ -55,7 +55,7 @@ export default function LoginPage() {
 
         <div className="z-10 w-full max-w-lg space-y-8 animate-fade-in text-center">
           <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-white/10 backdrop-blur-md p-4 shadow-2xl ring-1 ring-white/20">
-            <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+            <div className="h-full w-full rounded-full bg-primary-foreground/20 flex items-center justify-center overflow-hidden border border-white/30 shadow-inner">
               <img src="/logo.png" alt="Logo" className="h-[90%] w-[90%] object-contain scale-110" />
             </div>
           </div>
@@ -84,8 +84,8 @@ export default function LoginPage() {
 
           {/* Mobile Branding (hidden on desktop) */}
           <div className="lg:hidden text-center space-y-4 mb-8">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md border border-border overflow-hidden">
-              <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-card shadow-md border border-border/50 overflow-hidden">
+              <img src="/logo.png" alt="Logo" className="h-[80%] w-[80%] object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">CETI NOVA ITARANA</h1>

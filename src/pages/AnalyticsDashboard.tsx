@@ -306,7 +306,7 @@ export default function AnalyticsDashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-6 rounded-3xl bg-white border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
+                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Pico de Atrasos</p>
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-black text-foreground tracking-tight">8:15 AM</h4>
@@ -315,7 +315,7 @@ export default function AnalyticsDashboard() {
                             <p className="text-[10px] text-muted-foreground mt-2">Maior incidência na 3ª Série A.</p>
                         </div>
 
-                        <div className="p-6 rounded-3xl bg-white border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
+                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Risco de Evasão</p>
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-black text-foreground tracking-tight">12 Alunos</h4>
@@ -324,7 +324,7 @@ export default function AnalyticsDashboard() {
                             <p className="text-[10px] text-muted-foreground mt-2">Ausentes por mais de 3 dias.</p>
                         </div>
 
-                        <div className="p-6 rounded-3xl bg-white border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
+                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Saídas Externas</p>
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-black text-foreground tracking-tight">↑ 15%</h4>
@@ -333,7 +333,7 @@ export default function AnalyticsDashboard() {
                             <p className="text-[10px] text-muted-foreground mt-2">Aumento em relação a ontem.</p>
                         </div>
 
-                        <div className="p-6 rounded-3xl bg-white border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
+                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Alertas de Alerta</p>
                             <div className="flex items-center justify-between">
                                 <h4 className="text-lg font-black text-foreground tracking-tight">0 Ativos</h4>

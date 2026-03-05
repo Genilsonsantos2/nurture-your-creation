@@ -63,7 +63,7 @@ export default function Dashboard() {
     <div className="space-y-10 pb-12 animate-in fade-in duration-700">
       {/* Premium Hero Section */}
       <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-primary via-primary/90 to-info p-10 lg:p-14 text-white shadow-2xl shadow-primary/20 group">
-        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[120%] bg-white/10 blur-[100px] rounded-full rotate-12 transition-transform duration-1000 group-hover:rotate-45" />
+        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[120%] bg-primary-foreground/10 blur-[100px] rounded-full rotate-12 transition-transform duration-1000 group-hover:rotate-45" />
         <div className="absolute bottom-10 right-10 opacity-10 pointer-events-none transition-transform duration-1000 group-hover:scale-110 group-hover:rotate-12">
           <Activity className="w-64 h-64" />
         </div>
@@ -76,7 +76,7 @@ export default function Dashboard() {
             Seja bem-vindo ao painel administrativo. O sistema está operacional e monitorando as atividades em tempo real.
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-4">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 shadow-xl">
+            <div className="flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 shadow-xl">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse"></span>
               <span className="text-xs font-black uppercase tracking-widest">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>
             </div>
