@@ -40,6 +40,7 @@ export default function GatePage() {
   const { data: upcomingEvents } = useQuery({
     queryKey: ["upcoming-events-gate"],
     queryFn: async () => {
+      // @ts-ignore
       const { data } = await (supabase.from("school_events") as any)
         .select("*")
         .gte("date", new Date().toISOString().split("T")[0])
@@ -74,15 +75,14 @@ export default function GatePage() {
     },
   });
 
-  const handleScan = useCallback(async (decodedText: string) => {
+  const handleScan = useCallback(async (decodedText: string, forcedType?: "entry" | "exit") => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     try {
-      // Logic to find student by QR code/ID
       const { data: student, error } = await supabase
         .from("students")
-        .select("id, name")
+        .select("id, name, series, class, modality")
         .eq("id", decodedText)
         .single();
 
@@ -90,9 +90,47 @@ export default function GatePage() {
         throw new Error("Estudante não encontrado");
       }
 
-      // Automatically determine if entry or exit based on current state (simplified)
-      // For now, let's assume entry for simplicity or based on a toggle
-      const type = "entry";
+      // Fetch active schedules to determine context
+      const { data: schedules } = await supabase.from("schedules").select("*");
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+
+      let type: "entry" | "exit" = forcedType || "entry";
+
+      if (!forcedType) {
+        // Simple logic: if there's an active exit schedule and we are in it, suggest exit
+        const exitSchedules = schedules?.filter(s => s.type === 'exit') || [];
+        const isExitTime = exitSchedules.some(s => {
+          const [h, m] = s.start_time.split(':').map(Number);
+          const [eh, em] = s.end_time.split(':').map(Number);
+          const start = h * 60 + m - (s.tolerance_minutes || 0);
+          const end = eh * 60 + em + (s.tolerance_minutes || 0);
+          return currentTime >= start && currentTime <= end;
+        });
+
+        if (isExitTime) {
+          // Check if it's the right exit for this student's modality
+          const modality = student.modality || 'technical';
+          const myExit = schedules?.find(s =>
+            s.type === 'exit' &&
+            s.name.toLowerCase().includes(modality === 'integral' ? 'integral' : 'técnico')
+          );
+
+          if (myExit) {
+            const [h, m] = myExit.start_time.split(':').map(Number);
+            const [eh, em] = myExit.end_time.split(':').map(Number);
+            const start = h * 60 + m - (myExit.tolerance_minutes || 0);
+            const end = eh * 60 + em + (myExit.tolerance_minutes || 0);
+
+            if (currentTime >= start && currentTime <= end) {
+              type = "exit";
+            } else {
+              toast.warning(`Horário de saída irregular para aluno ${modality === 'integral' ? 'Integral' : 'Técnico'}.`);
+            }
+          }
+        }
+      }
+
       await registerMovement.mutateAsync({ studentId: student.id, type });
     } catch (err: any) {
       toast.error(err.message);
@@ -108,7 +146,7 @@ export default function GatePage() {
         { fps: 10, qrbox: { width: 250, height: 250 } },
         /* verbose= */ false
       );
-      scannerRef.current.render(handleScan, (err) => {
+      scannerRef.current.render((text) => handleScan(text), (err) => {
         // console.warn(err);
       });
     }

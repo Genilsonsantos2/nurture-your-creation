@@ -13,7 +13,7 @@ export default function StudentForm() {
   const [form, setForm] = useState({
     name: "", series: "", class: "", enrollment: "", exitLimit: "",
     guardianName: "", guardianPhone: "", guardianRelation: "",
-    whatsappEnabled: false, active: true,
+    whatsappEnabled: false, active: true, modality: "technical",
   });
 
   // Load student data if editing
@@ -44,7 +44,7 @@ export default function StudentForm() {
         ...f,
         name: student.name, series: student.series, class: student.class,
         enrollment: student.enrollment, exitLimit: student.exit_limit ? String(student.exit_limit) : "",
-        active: student.active,
+        active: student.active, modality: student.modality || "technical",
       }));
     }
   }, [student]);
@@ -69,7 +69,7 @@ export default function StudentForm() {
         const { error: studentErr } = await supabase.from("students").update({
           name: form.name, series: form.series, class: form.class,
           enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
-          active: form.active,
+          active: form.active, modality: form.modality,
         }).eq("id", id);
         if (studentErr) throw studentErr;
 
@@ -92,6 +92,7 @@ export default function StudentForm() {
         const { data: newStudent, error: studentErr } = await supabase.from("students").insert({
           name: form.name, series: form.series, class: form.class,
           enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
+          modality: form.modality,
         }).select().single();
         if (studentErr) throw studentErr;
 
@@ -161,6 +162,14 @@ export default function StudentForm() {
               <label className="text-sm font-medium text-foreground mb-1 block">Matrícula *</label>
               <input required value={form.enrollment} onChange={(e) => update("enrollment", e.target.value)}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Modalidade *</label>
+              <select required value={form.modality} onChange={(e) => update("modality", e.target.value)}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="technical">Ensino Técnico</option>
+                <option value="integral">Ensino Integral</option>
+              </select>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Limite de Saídas/Semana</label>

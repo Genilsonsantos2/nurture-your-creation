@@ -9,6 +9,7 @@ interface ParsedRow {
   series: string;
   class: string;
   enrollment: string;
+  modality: string;
   guardianName?: string;
   guardianPhone?: string;
 }
@@ -21,7 +22,7 @@ export default function ImportStudentsPage() {
   const [imported, setImported] = useState(false);
 
   const downloadTemplate = () => {
-    const csv = "nome,serie,turma,matricula,responsavel_nome,responsavel_telefone\nJoão Silva,7º Ano,A,2024001,Maria Silva,75988880001";
+    const csv = "nome,serie,turma,matricula,modalidade,responsavel_nome,responsavel_telefone\nJoão Silva,7º Ano,A,2024001,técnico,Maria Silva,75988880001";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "modelo_alunos.csv"; a.click();
@@ -37,11 +38,12 @@ export default function ImportStudentsPage() {
       const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
       if (lines.length < 2) { setErrors(["Arquivo vazio ou sem dados"]); return; }
 
-      const header = lines[0].toLowerCase().split(/[,;]/);
+      const header = lines[0].toLowerCase().split(/[,;]/).map(h => h.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
       const nameIdx = header.findIndex(h => h.includes("nome") && !h.includes("responsavel"));
       const seriesIdx = header.findIndex(h => h.includes("serie"));
       const classIdx = header.findIndex(h => h.includes("turma"));
       const enrollIdx = header.findIndex(h => h.includes("matricula"));
+      const modalityIdx = header.findIndex(h => h.includes("modalidade") || h.includes("tipo"));
       const gNameIdx = header.findIndex(h => h.includes("responsavel") && h.includes("nome"));
       const gPhoneIdx = header.findIndex(h => h.includes("responsavel") && h.includes("telefone"));
 
@@ -63,6 +65,7 @@ export default function ImportStudentsPage() {
           series: cols[seriesIdx],
           class: cols[classIdx],
           enrollment: cols[enrollIdx],
+          modality: modalityIdx >= 0 && cols[modalityIdx].toLowerCase().includes("integral") ? "integral" : "technical",
           guardianName: gNameIdx >= 0 ? cols[gNameIdx] : undefined,
           guardianPhone: gPhoneIdx >= 0 ? cols[gPhoneIdx] : undefined,
         });
@@ -81,6 +84,7 @@ export default function ImportStudentsPage() {
       for (const row of parsed) {
         const { data: student, error: err } = await supabase.from("students").insert({
           name: row.name, series: row.series, class: row.class, enrollment: row.enrollment,
+          modality: row.modality,
         }).select().single();
 
         if (err) {
@@ -116,7 +120,7 @@ export default function ImportStudentsPage() {
       <div className="bg-card rounded-lg border p-5 space-y-4">
         <h2 className="font-semibold text-foreground">1. Baixe o modelo</h2>
         <p className="text-sm text-muted-foreground">
-          Use o modelo CSV com as colunas: nome, serie, turma, matricula, responsavel_nome, responsavel_telefone
+          Use o modelo CSV com as colunas: nome, serie, turma, matricula, modalidade, responsavel_nome, responsavel_telefone
         </p>
         <button onClick={downloadTemplate} className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
           <Download className="h-4 w-4" /> Baixar Modelo CSV
@@ -159,10 +163,11 @@ export default function ImportStudentsPage() {
                 <th className="px-3 py-2 text-left text-muted-foreground">Série</th>
                 <th className="px-3 py-2 text-left text-muted-foreground">Turma</th>
                 <th className="px-3 py-2 text-left text-muted-foreground">Matrícula</th>
+                <th className="px-3 py-2 text-left text-muted-foreground">Modalidade</th>
               </tr></thead>
               <tbody className="divide-y">
                 {parsed.map((row, i) => (
-                  <tr key={i}><td className="px-3 py-2">{row.name}</td><td className="px-3 py-2">{row.series}</td><td className="px-3 py-2">{row.class}</td><td className="px-3 py-2">{row.enrollment}</td></tr>
+                  <tr key={i}><td className="px-3 py-2">{row.name}</td><td className="px-3 py-2">{row.series}</td><td className="px-3 py-2">{row.class}</td><td className="px-3 py-2">{row.enrollment}</td><td className="px-3 py-2 text-xs font-bold uppercase">{row.modality === 'integral' ? 'Integral' : 'Técnico'}</td></tr>
                 ))}
               </tbody>
             </table>

@@ -97,6 +97,7 @@ export default function StudentsPage() {
                 <th className="px-8 py-6 text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Acadêmico</th>
                 <th className="px-8 py-6 text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Matrícula</th>
                 <th className="px-8 py-6 text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Status</th>
+                <th className="px-8 py-6 text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Modalidade</th>
                 <th className="px-8 py-6 text-xs font-black text-muted-foreground uppercase tracking-[0.2em] text-right">Ações</th>
               </tr>
             </thead>
@@ -145,15 +146,18 @@ export default function StudentsPage() {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <code className="px-3 py-1.5 rounded-xl bg-muted font-bold text-xs text-muted-foreground border border-border/50">
-                        {student.enrollment}
-                      </code>
-                    </td>
-                    <td className="px-8 py-6">
                       <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${student.active ? "bg-success/5 text-success border-success/20" : "bg-muted text-muted-foreground border-border/50"}`}>
                         <div className={`h-1.5 w-1.5 rounded-full ${student.active ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
                         {student.active ? "Ativo" : "Inativo"}
                       </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-xl border ${student.modality === 'integral'
+                          ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                          : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        }`}>
+                        {student.modality === 'integral' ? 'Integral' : 'Técnico'}
+                      </span>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -193,7 +197,7 @@ export default function StudentsPage() {
 
         {/* Background pattern */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none -mr-48 -mt-48" />
-      </div>
+      </div >
 
       <div className="p-10 rounded-[3rem] bg-muted/20 border border-border/40 flex items-start gap-6">
         <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
@@ -207,6 +211,6 @@ export default function StudentsPage() {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
