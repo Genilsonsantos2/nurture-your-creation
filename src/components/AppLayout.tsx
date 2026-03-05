@@ -118,7 +118,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[300px] flex-col bg-sidebar backdrop-blur-xl transition-all duration-500 ease-in-out lg:static lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} border-r border-sidebar-border/30`}>
         <div className="flex h-24 items-center justify-between px-8 bg-sidebar/50 backdrop-blur-xl border-b border-sidebar-border/30">
           <div className="flex items-center gap-4 w-full">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden animate-float">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-2xl ring-1 ring-black/5 overflow-hidden animate-float">
               <img src="/logo.png" alt="Logo" className="h-[80%] w-[80%] object-contain scale-110" />
             </div>
             <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Header Overhaul */}
         <header className="glass-header h-24 flex items-center justify-between px-6 sm:px-10 lg:px-12">
           <div className="flex items-center gap-6">
-            <button className="lg:hidden text-foreground p-3 rounded-2xl transition-all bg-background/50 border border-border/50 backdrop-blur-xl hover:bg-accent" onClick={() => setMobileOpen(true)}>
+            <button className="lg:hidden text-foreground p-3 rounded-2xl transition-all bg-card/50 border border-border/50 backdrop-blur-xl hover:bg-accent" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
             <div className="hidden md:block">
