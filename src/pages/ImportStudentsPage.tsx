@@ -4,6 +4,29 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Fix common encoding artifacts in imported text
+function sanitizeText(text: string): string {
+  return text
+    .replace(/\uFFFD/g, '') // replacement character
+    .replace(/[^\x20-\x7E\u00C0-\u024F\u1E00-\u1EFF\u00A0-\u00FF]/g, (ch) => {
+      // Keep valid Portuguese/accented chars, remove garbage
+      return ch.charCodeAt(0) > 31 ? ch : '';
+    })
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+// Map common garbled série patterns to correct ones
+function fixSeries(raw: string): string {
+  const cleaned = sanitizeText(raw);
+  // Match patterns like "1 SRIE", "3 SERIE", "2aSERIE" etc
+  const match = cleaned.match(/^(\d)[^\d]*S[EÉ]?RI?E?/i);
+  if (match) {
+    return `${match[1]}ª SÉRIE`;
+  }
+  return cleaned;
+}
+
 interface ParsedRow {
   name: string;
   series: string;
@@ -100,8 +123,8 @@ export default function ImportStudentsPage() {
           continue;
         }
 
-        let serie = cols[seriesIdx] || "";
-        let turma = cols[classIdx] || "";
+        let serie = sanitizeText(cols[seriesIdx] || "");
+        let turma = sanitizeText(cols[classIdx] || "");
 
         // Smart split if one of the columns contains both (e.g., "3ª SÉRIE • PIINT9T3A")
         if (serie.includes("•")) {
@@ -113,6 +136,9 @@ export default function ImportStudentsPage() {
           serie = parts[0];
           if (!turma) turma = parts[1];
         }
+
+        // Fix garbled série names
+        serie = fixSeries(serie);
 
         if (!cols[nameIdx] || !serie) {
           errs.push(`Linha ${i + 1}: nome ou série vazios`);
@@ -129,7 +155,7 @@ export default function ImportStudentsPage() {
         }
 
         rows.push({
-          name: cols[nameIdx],
+          name: sanitizeText(cols[nameIdx]),
           series: serie,
           class: turma || "A",
           enrollment: cols[enrollIdx] || `MAT-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
