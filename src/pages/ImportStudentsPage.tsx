@@ -44,6 +44,12 @@ export default function ImportStudentsPage() {
         text = decoder.decode(buffer);
       }
 
+      // If TextDecoder swallowed errors and inserted replacement characters, fallback explicitly
+      if (text.includes("\uFFFD")) {
+        const decoder = new TextDecoder("windows-1252");
+        text = decoder.decode(buffer);
+      }
+
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (lines.length < 2) { setErrors(["Arquivo vazio ou sem dados suficientes (precisa de cabeçalho e pelo menos uma linha de dados)"]); return; }
 
