@@ -34,6 +34,7 @@ export default function GatePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [kioskMode, setKioskMode] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const lastScanTimesRef = useRef<Record<string, number>>({});
   const queryClient = useQueryClient();
 
   // Fetch upcoming events for the sidebar
@@ -77,7 +78,17 @@ export default function GatePage() {
 
   const handleScan = useCallback(async (decodedText: string, forcedType?: "entry" | "exit") => {
     if (isProcessing) return;
+
+    // Duplicate prevention: cooldown of 5 seconds per ID
+    const nowTime = Date.now();
+    const lastTime = lastScanTimesRef.current[decodedText] || 0;
+    if (!forcedType && nowTime - lastTime < 5000) {
+      console.log("Ignored duplicate scan within cooldown for:", decodedText);
+      return;
+    }
+
     setIsProcessing(true);
+    lastScanTimesRef.current[decodedText] = nowTime;
 
     try {
       const { data: student, error } = await supabase

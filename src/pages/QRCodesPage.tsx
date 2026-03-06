@@ -37,10 +37,10 @@ export default function QRCodesPage() {
     const logoUrl = `${baseUrl}/logo.png`;
 
     const cards = filtered.map((s) => `
-      <div style="width:340px; height:210px; border-radius:12px; overflow:hidden; border:1px solid #166534; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; box-sizing: border-box; display: flex; flex-direction: row; margin: 10px auto;">
+      <div style="width:340px; height:210px; border-radius:12px; overflow:hidden; border:1px solid #1e3a8a; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; box-sizing: border-box; display: flex; flex-direction: row; margin: 10px auto;">
         <!-- Left Side: Header & Student Data -->
         <div style="flex: 1; display: flex; flex-direction: column;">
-          <div style="background: linear-gradient(135deg, #166534 0%, #15803d 100%); color: white; padding: 10px; text-align: left; position: relative; height: 65px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;">
+          <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 10px; text-align: left; position: relative; height: 65px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;">
             <img src="${logoUrl}" alt="Logo" style="height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" />
             <div>
               <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.2px; line-height: 1.1;">CETI NOVA ITARANA</div>
@@ -48,8 +48,8 @@ export default function QRCodesPage() {
             </div>
           </div>
           <div style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <div style="font-weight: 800; font-size: 14px; color: #064e3b; margin-bottom: 2px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${s.name.toUpperCase()}</div>
-            <div style="font-size: 10px; font-weight: 700; color: #166534; margin-bottom: 6px;">${s.series} • Turma ${s.class}</div>
+            <div style="font-weight: 800; font-size: 14px; color: #1e3a8a; margin-bottom: 2px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${s.name.toUpperCase()}</div>
+            <div style="font-size: 10px; font-weight: 700; color: #15803d; margin-bottom: 6px;">${s.series} • Turma ${s.class}</div>
             <div style="font-size: 9px; font-weight: 700; color: #374151; background: #f0fdf4; display: inline-block; padding: 3px 6px; border-radius: 4px; border: 1px solid #dcfce7;">MATRÍCULA: ${s.enrollment || '---'}</div>
           </div>
           <div style="background: #f8fafc; text-align: center; padding: 4px; font-size: 7px; font-weight: 600; color: #64748b; border-top: 1px dashed #dcfce7; height: 25px; display: flex; align-items: center; justify-content: center;">
@@ -57,9 +57,9 @@ export default function QRCodesPage() {
           </div>
         </div>
         <!-- Right Side: QR Code -->
-        <div style="width: 120px; background: #f0fdf4; display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 4px solid #facc15; padding: 10px; box-sizing: border-box;">
+        <div style="width: 120px; background: #f0f9ff; display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 4px solid #15803d; padding: 10px; box-sizing: border-box;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(s.qr_code)}&margin=1" width="85" height="85" style="border: 2px solid #fff; border-radius: 6px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" />
-          <div style="font-size: 7px; font-weight: 800; color: #166534; margin-top: 8px; tracking: 1px;">QR ACCESS</div>
+          <div style="font-size: 7px; font-weight: 800; color: #1e3a8a; margin-top: 8px; tracking: 1px;">QR ACCESS</div>
         </div>
       </div>
     `).join("");
@@ -197,9 +197,9 @@ export default function QRCodesPage() {
         <div ref={printRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
           {filtered.map((student) => (
             <div key={student.id} className="group relative">
-              <div className="bg-card rounded-[1.5rem] border border-success/20 shadow-xl overflow-hidden flex flex-row h-52 transition-all duration-500 hover:shadow-success/10 hover:-translate-y-1">
+              <div className="bg-card rounded-[1.5rem] border border-primary/20 shadow-xl overflow-hidden flex flex-row h-52 transition-all duration-500 hover:shadow-primary/10 hover:-translate-y-1">
                 {/* Left Side: Photo/Header equivalent */}
-                <div className="w-1/3 bg-gradient-to-br from-success to-green-700 flex flex-col items-center justify-center p-4 border-r-4 border-yellow-400">
+                <div className="w-1/3 bg-gradient-to-br from-primary to-blue-800 flex flex-col items-center justify-center p-4 border-r-4 border-success">
                   <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain drop-shadow-lg mb-3" />
                   <div className="text-center">
                     <p className="text-[7px] font-black text-white/90 uppercase tracking-[0.2em] leading-tight">CETI NOVA ITARANA</p>
@@ -215,12 +215,12 @@ export default function QRCodesPage() {
 
                   <div className="flex items-end justify-between gap-2">
                     <div className="space-y-2">
-                      <div className="px-2 py-1 rounded-md bg-success/5 border border-success/10">
+                      <div className="px-2 py-1 rounded-md bg-primary/5 border border-primary/10">
                         <code className="text-[8px] font-bold text-muted-foreground uppercase">ID: {student.enrollment || '---'}</code>
                       </div>
                       <p className="text-[7px] font-medium text-muted-foreground italic">Válido para 2026</p>
                     </div>
-                    <div className="bg-white p-1.5 rounded-xl shadow-lg border border-success/10">
+                    <div className="bg-white p-1.5 rounded-xl shadow-lg border border-primary/10">
                       <QRCodeSVG value={student.qr_code} size={60} level="M" />
                     </div>
                   </div>
