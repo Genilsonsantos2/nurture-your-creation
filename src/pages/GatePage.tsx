@@ -94,8 +94,8 @@ export default function GatePage() {
       const { data: student, error } = await supabase
         .from("students")
         .select("id, name, series, class, modality")
-        .eq("id", decodedText)
-        .single();
+        .or(`id.eq.${decodedText},qr_code.eq.${decodedText},enrollment.eq.${decodedText}`)
+        .maybeSingle();
 
       if (error || !student) {
         throw new Error("Estudante não encontrado");
