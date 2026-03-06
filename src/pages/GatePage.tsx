@@ -44,12 +44,32 @@ export default function GatePage() {
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const queryClient = useQueryClient();
 
-  // Audio Pre-loading
+  // Audio Pre-loading with more stable URLs
   const audioRefs = useRef({
-    detection: new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_c3507119ff.mp3"),
-    entry: new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7833324f92.mp3"),
-    exit: new Audio("https://cdn.pixabay.com/audio/2021/08/04/audio_0625c13a76.mp3")
+    detection: new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"),
+    entry: new Audio("https://assets.mixkit.co/active_storage/sfx/1073/1073-preview.mp3"),
+    exit: new Audio("https://assets.mixkit.co/active_storage/sfx/1072/1072-preview.mp3")
   });
+
+  // Initialize/Unlock audio on first interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(() => { });
+      });
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
 
   const playSound = (type: 'detection' | 'entry' | 'exit') => {
     if (!soundEnabled) return;
@@ -276,8 +296,7 @@ export default function GatePage() {
             </button>
             <button
               onClick={() => {
-                const testAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_c3507119ff.mp3");
-                testAudio.play().catch(() => toast.error("Clique na tela primeiro para autorizar o som."));
+                playSound('detection');
                 toast.info("Testando som de bip...");
               }}
               className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all hidden md:block"
