@@ -18,7 +18,8 @@ import {
   RotateCcw,
   Shield,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,9 @@ export default function GatePage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [cameraPaused, setCameraPaused] = useState(false);
   const [detectedStudent, setDetectedStudent] = useState<any>(null);
+  const [showOccurrenceModal, setShowOccurrenceModal] = useState(false);
+  const [occurrenceType, setOccurrenceType] = useState<any>("other");
+  const [occurrenceDescription, setOccurrenceDescription] = useState("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const queryClient = useQueryClient();
@@ -76,6 +80,33 @@ export default function GatePage() {
     onError: (error: any) => {
       setLastScan({ error: error.message, success: false });
       toast.error("Erro ao registrar: " + error.message);
+    },
+  });
+
+  const registerOccurrence = useMutation({
+    mutationFn: async ({ studentId, type, description }: { studentId: string; type: "other" | "behavior" | "unauthorized_exit" | "guardian_pickup" | "student_sick" | "late"; description: string }) => {
+      const { data, error } = await supabase
+        .from("occurrences")
+        .insert([{
+          student_id: studentId,
+          type,
+          description,
+          registered_by: (await supabase.auth.getUser()).data.user?.id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Ocorrência registrada com sucesso!");
+      setShowOccurrenceModal(false);
+      setOccurrenceDescription("");
+      setDetectedStudent(null);
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao registrar ocorrência: " + error.message);
     },
   });
 
@@ -285,12 +316,20 @@ export default function GatePage() {
                     </button>
                   </div>
 
-                  <button
-                    onClick={() => setDetectedStudent(null)}
-                    className="flex items-center gap-2 text-sm font-bold text-red-400 uppercase tracking-widest hover:underline pt-4"
-                  >
-                    <RotateCcw className="h-4 w-4" /> Cancelar / Novo Scan
-                  </button>
+                  <div className="w-full grid grid-cols-2 gap-4 items-center pt-4">
+                    <button
+                      onClick={() => setShowOccurrenceModal(true)}
+                      className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 uppercase tracking-tighter text-sm"
+                    >
+                      <FileText className="h-5 w-5" /> Relatar Ocorrência
+                    </button>
+                    <button
+                      onClick={() => setDetectedStudent(null)}
+                      className="flex items-center justify-center gap-2 text-sm font-bold text-red-400 uppercase tracking-widest hover:underline"
+                    >
+                      <RotateCcw className="h-4 w-4" /> Cancelar
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -392,6 +431,71 @@ export default function GatePage() {
           </div>
         </div>
       </div>
+
+      {/* Occurrence Modal */}
+      {showOccurrenceModal && detectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-[#1e293b] w-full max-w-lg rounded-[2.5rem] border border-blue-500/30 p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Registrar Ocorrência</h2>
+              <button onClick={() => setShowOccurrenceModal(false)} className="p-2 hover:bg-white/5 rounded-full transition-all">
+                <X className="h-6 w-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none mb-1">ALUNO</p>
+                <p className="text-lg font-bold">{detectedStudent.name}</p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-black uppercase tracking-widest text-gray-400">Tipo de Incidente</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'late', label: '🕒 Atraso' },
+                    { id: 'behavior', label: '⚠️ Comportamento' },
+                    { id: 'student_sick', label: '🏥 Mal Estar' },
+                    { id: 'other', label: '👤 Sem Farda' },
+                  ].map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={() => setOccurrenceType(tag.id as any)}
+                      className={`p-4 rounded-xl font-bold transition-all border-2 ${occurrenceType === tag.id ? "bg-amber-600/20 border-amber-500 text-amber-500" : "bg-white/5 border-transparent text-gray-400"}`}
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-black uppercase tracking-widest text-gray-400">Observações (Opcional)</p>
+                <textarea
+                  className="w-full bg-black/40 border-2 border-white/5 focus:border-blue-500/50 rounded-xl px-4 py-3 min-h-[100px] font-medium outline-none transition-all"
+                  placeholder="Descreva o que aconteceu..."
+                  value={occurrenceDescription}
+                  onChange={(e) => setOccurrenceDescription(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  onClick={() => registerOccurrence.mutate({
+                    studentId: detectedStudent.id,
+                    type: occurrenceType,
+                    description: occurrenceDescription
+                  })}
+                  disabled={registerOccurrence.isPending}
+                  className="flex-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest"
+                >
+                  {registerOccurrence.isPending ? "Salvando..." : "Salvar Ocorrência"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
