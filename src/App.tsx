@@ -67,9 +67,9 @@ const App = () => (
             <Route path="/filho/:token" element={<ParentPortal />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/alunos" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/alunos/novo" element={<ProtectedRoute><AdminRoute><StudentForm /></AdminRoute></ProtectedRoute>} />
-            <Route path="/alunos/editar/:id" element={<ProtectedRoute><AdminRoute><StudentForm /></AdminRoute></ProtectedRoute>} />
-            <Route path="/alunos/importar" element={<ProtectedRoute><AdminRoute><ImportStudentsPage /></AdminRoute></ProtectedRoute>} />
+            <Route path="/alunos/novo" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
+            <Route path="/alunos/editar/:id" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
+            <Route path="/alunos/importar" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ImportStudentsPage /></RoleRoute></ProtectedRoute>} />
             <Route path="/qrcodes" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><QRCodesPage /></RoleRoute></ProtectedRoute>} />
             <Route path="/portaria" element={<ProtectedRoute><RoleRoute roles={["gatekeeper"]}><GatePage /></RoleRoute></ProtectedRoute>} />
             <Route path="/movimentacoes" element={<ProtectedRoute><RoleRoute roles={["gatekeeper", "coordinator"]}><MovementsPage /></RoleRoute></ProtectedRoute>} />
