@@ -16,7 +16,7 @@ export default function UserManagement() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("profiles")
-                .select("*, user_roles(role)");
+                .select("*");
             if (error) throw error;
             return data;
         },
