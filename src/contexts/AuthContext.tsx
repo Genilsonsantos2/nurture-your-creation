@@ -33,29 +33,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    let mounted = true;
+    let initializing = false;
+
+    async function initializeSession(session: Session | null) {
+      if (!mounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
+
       if (session?.user) {
         await fetchRole(session.user.id);
       } else {
         setRole(null);
       }
-      setLoading(false);
+
+      if (mounted) setLoading(false);
+    }
+
+    // Apenas lidamos com o fluxo principal pelo onAuthStateChange para evitar dupla chamada simultânea
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Ignorar inicializações duplicadas para otimizar a velocidade de abertura
+      if (event === 'INITIAL_SESSION' && initializing) return;
+
+      initializing = true;
+      initializeSession(session);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchRole(session.user.id);
-      } else {
-        setRole(null);
+    // Caso de fallback: Se o onAuthStateChange não disparar rápido o suficiente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!initializing) {
+        initializing = true;
+        initializeSession(session);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
