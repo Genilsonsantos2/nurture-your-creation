@@ -44,6 +44,20 @@ export default function GatePage() {
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const queryClient = useQueryClient();
 
+  // Audio Pre-loading
+  const audioRefs = useRef({
+    detection: new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_c3507119ff.mp3"),
+    entry: new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7833324f92.mp3"),
+    exit: new Audio("https://cdn.pixabay.com/audio/2021/08/04/audio_0625c13a76.mp3")
+  });
+
+  const playSound = (type: 'detection' | 'entry' | 'exit') => {
+    if (!soundEnabled) return;
+    const audio = audioRefs.current[type];
+    audio.currentTime = 0;
+    audio.play().catch(err => console.error("Audio play error:", err));
+  };
+
   // Fetch upcoming events for the sidebar
   const { data: upcomingEvents } = useQuery({
     queryKey: ["upcoming-events-gate"],
@@ -131,9 +145,7 @@ export default function GatePage() {
       setDetectedStudent(student);
       lastScanTimesRef.current[decodedText] = nowTime;
 
-      if (soundEnabled) {
-        new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_c3507119ff.mp3").play().catch(() => { });
-      }
+      playSound('detection');
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -170,13 +182,7 @@ export default function GatePage() {
 
       const result = await registerMovement.mutateAsync({ studentId, type });
 
-      if (soundEnabled) {
-        const audio = new Audio(type === 'entry' ?
-          "https://cdn.pixabay.com/audio/2022/03/15/audio_7833324f92.mp3" :
-          "https://cdn.pixabay.com/audio/2021/08/04/audio_0625c13a76.mp3"
-        );
-        audio.play().catch(() => { });
-      }
+      playSound(type);
 
       setLastScan({
         ...result,
@@ -267,6 +273,16 @@ export default function GatePage() {
               title={soundEnabled ? "Silenciar" : "Ativar Som"}
             >
               {soundEnabled ? <Volume2 className="h-6 w-6" /> : <VolumeX className="h-6 w-6" />}
+            </button>
+            <button
+              onClick={() => {
+                const testAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_c3507119ff.mp3");
+                testAudio.play().catch(() => toast.error("Clique na tela primeiro para autorizar o som."));
+                toast.info("Testando som de bip...");
+              }}
+              className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all hidden md:block"
+            >
+              Testar Som
             </button>
             <button
               onClick={() => setCameraPaused(!cameraPaused)}
