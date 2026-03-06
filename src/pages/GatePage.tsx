@@ -90,14 +90,27 @@ export default function GatePage() {
         throw new Error("Estudante não encontrado");
       }
 
+      // 1. Check for active Exit Authorizations
+      const { data: exitAuth, error: authErr } = await (supabase as any)
+        .from("exit_authorizations")
+        .select("*")
+        .eq("student_id", student.id)
+        .eq("status", "authorized")
+        .gte("expires_at", new Date().toISOString())
+        .maybeSingle();
+
       // Fetch active schedules to determine context
       const { data: schedules } = await supabase.from("schedules").select("*");
       const now = new Date();
       const currentTime = now.getHours() * 60 + now.getMinutes();
 
       let type: "entry" | "exit" = forcedType || "entry";
+      let isAuthorizedExit = false;
 
-      if (!forcedType) {
+      if (exitAuth) {
+        type = "exit";
+        isAuthorizedExit = true;
+      } else if (!forcedType) {
         // Simple logic: if there's an active exit schedule and we are in it, suggest exit
         const exitSchedules = schedules?.filter(s => s.type === 'exit') || [];
         const isExitTime = exitSchedules.some(s => {
@@ -131,7 +144,24 @@ export default function GatePage() {
         }
       }
 
-      await registerMovement.mutateAsync({ studentId: student.id, type });
+      const result = await registerMovement.mutateAsync({ studentId: student.id, type });
+
+      // If it was an authorized exit, mark the authorization as used
+      if (isAuthorizedExit && exitAuth) {
+        await (supabase as any)
+          .from("exit_authorizations")
+          .update({ status: 'used' } as any)
+          .eq("id", exitAuth.id);
+
+        setLastScan({
+          ...result,
+          success: true,
+          isAuthorizedExit: true,
+          authReason: exitAuth.reason
+        });
+        toast.info("Saída autorizada pela coordenação!");
+      }
+
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -150,7 +180,7 @@ export default function GatePage() {
             { fps: 10, qrbox: { width: 250, height: 250 } },
             /* verbose= */ false
           );
-          scannerRef.current.render((text) => handleScan(text), () => {});
+          scannerRef.current.render((text) => handleScan(text), () => { });
         }
       }, 100);
 
@@ -297,9 +327,16 @@ export default function GatePage() {
                     <h3 className="text-2xl font-black tracking-tight text-foreground">
                       {lastScan.success ? `Acesso Liberado: ${lastScan.students.name}` : "Erro na Identificação"}
                     </h3>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {lastScan.success ? `${lastScan.students.series} • ${lastScan.students.class} • ${new Date().toLocaleTimeString()}` : lastScan.error}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {lastScan.success ? `${lastScan.students.series} • ${lastScan.students.class} • ${new Date().toLocaleTimeString()}` : lastScan.error}
+                      </p>
+                      {lastScan.isAuthorizedExit && (
+                        <div className="px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/30 flex items-center gap-2">
+                          <Shield className="h-3 w-3" /> Saída Autorizada: {lastScan.authReason}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -37,24 +37,29 @@ export default function QRCodesPage() {
     const logoUrl = `${baseUrl}/logo.png`;
 
     const cards = filtered.map((s) => `
-      <div style="width:100%; height:320px; border-radius:12px; overflow:hidden; border:2px solid #0f3e7a; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: #fff; box-sizing: border-box; display: flex; flex-direction: column;">
-        <div style="background: linear-gradient(135deg, #0f3e7a 0%, #1e40af 100%); color: white; padding: 12px 8px; text-align: center; border-bottom: 4px solid #f59e0b; position: relative; height: 80px; box-sizing: border-box;">
-          <img src="${logoUrl}" alt="Logo" style="height: 36px; margin-bottom: 4px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" onerror="this.style.display='none'" />
-          <div style="font-size: 13px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CETI NOVA ITARANA</div>
-          <div style="font-size: 9px; font-weight: 600; opacity: 0.9; letter-spacing: 1px; margin-top: 2px;">ACESSO ESTUDANTIL</div>
-        </div>
-        <div style="padding: 12px 10px; flex: 1; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-          <div style="text-align:center; margin-bottom:12px;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(s.qr_code)}&margin=1" width="105" height="105" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" />
+      <div style="width:340px; height:210px; border-radius:12px; overflow:hidden; border:1px solid #166534; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #fff; box-sizing: border-box; display: flex; flex-direction: row; margin: 10px auto;">
+        <!-- Left Side: Header & Student Data -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="background: linear-gradient(135deg, #166534 0%, #15803d 100%); color: white; padding: 10px; text-align: left; position: relative; height: 65px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;">
+            <img src="${logoUrl}" alt="Logo" style="height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" />
+            <div>
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.2px; line-height: 1.1;">CETI NOVA ITARANA</div>
+              <div style="font-size: 8px; font-weight: 600; opacity: 0.9; letter-spacing: 0.5px; margin-top: 1px; color: #facc15;">ACESSO ESTUDANTIL</div>
+            </div>
           </div>
-          <div style="text-align: center; width: 100%;">
-            <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 4px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${s.name.toUpperCase()}</div>
-            <div style="font-size: 12px; font-weight: 700; color: #1d4ed8; margin-bottom: 4px;">${s.series} • Turma ${s.class}</div>
-            <div style="font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; display: inline-block; padding: 4px 8px; border-radius: 6px;">Matrícula: ${s.enrollment || 'Pendente'}</div>
+          <div style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-weight: 800; font-size: 14px; color: #064e3b; margin-bottom: 2px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${s.name.toUpperCase()}</div>
+            <div style="font-size: 10px; font-weight: 700; color: #166534; margin-bottom: 6px;">${s.series} • Turma ${s.class}</div>
+            <div style="font-size: 9px; font-weight: 700; color: #374151; background: #f0fdf4; display: inline-block; padding: 3px 6px; border-radius: 4px; border: 1px solid #dcfce7;">MATRÍCULA: ${s.enrollment || '---'}</div>
+          </div>
+          <div style="background: #f8fafc; text-align: center; padding: 4px; font-size: 7px; font-weight: 600; color: #64748b; border-top: 1px dashed #dcfce7; height: 25px; display: flex; align-items: center; justify-content: center;">
+            Uso pessoal e intransferível. Válido p/ 2026.
           </div>
         </div>
-        <div style="background: #f8fafc; text-align: center; padding: 6px; font-size: 8px; font-weight: 500; color: #64748b; border-top: 1px dashed #cbd5e1; width: 100%; box-sizing: border-box; height: 35px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          Válido para o ano letivo vigente.<br/>Uso pessoal e intransferível.
+        <!-- Right Side: QR Code -->
+        <div style="width: 120px; background: #f0fdf4; display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 4px solid #facc15; padding: 10px; box-sizing: border-box;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(s.qr_code)}&margin=1" width="85" height="85" style="border: 2px solid #fff; border-radius: 6px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);" />
+          <div style="font-size: 7px; font-weight: 800; color: #166534; margin-top: 8px; tracking: 1px;">QR ACCESS</div>
         </div>
       </div>
     `).join("");
@@ -63,11 +68,11 @@ export default function QRCodesPage() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Impressão de Carteirinhas - CETI NOVA ITARANA</title>
+          <title>Identidades - CETI</title>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
           <style>
             @media print {
-              @page { margin: 15mm; size: A4 portrait; }
+              @page { margin: 10mm; size: A4 portrait; }
               body { 
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
@@ -75,34 +80,17 @@ export default function QRCodesPage() {
               }
               .grid-container {
                 display: grid;
-                grid-template-columns: repeat(2, 330px) !important; /* Exactly 2 columns fixed width */
-                grid-auto-rows: 320px !important; /* Fixed height per card */
-                gap: 20px 40px !important; /* Vert and Horiz gap */
-                justify-content: center;
-                padding: 20px 0;
-                max-width: 100%;
-                margin: 0 auto;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 15px !important;
+                padding: 0 !important;
               }
             }
-            body { 
-              font-family: 'Inter', sans-serif; 
-              background: #f8fafc; 
-              margin: 0; 
-              padding: 20px;
-            }
+            body { font-family: 'Inter', sans-serif; background: #fff; margin: 0; padding: 20px; }
             .grid-container {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-              grid-auto-rows: 320px;
-              gap: 20px;
+              grid-template-columns: repeat(2, 360px);
               justify-content: center;
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            /* Reset inline-block wrapper styles for grid */
-            .grid-container > div {
-              margin: 0 auto !important;
-              max-width: 330px;
+              gap: 20px;
             }
           </style>
         </head>
@@ -112,9 +100,7 @@ export default function QRCodesPage() {
           </div>
           <script>
             window.onload = () => {
-              setTimeout(() => {
-                window.print();
-              }, 1500); // Give ample time for all images/fonts to load
+              setTimeout(() => { window.print(); }, 1500);
             };
           </script>
         </body>
@@ -210,35 +196,34 @@ export default function QRCodesPage() {
       ) : (
         <div ref={printRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
           {filtered.map((student) => (
-            <div key={student.id} className="group glass-panel p-1 border-none bg-transparent hover:translate-y-[-8px] transition-all duration-500">
-              <div className="bg-card rounded-[2.5rem] border border-border/50 shadow-2xl overflow-hidden flex flex-col h-full relative">
-
-                {/* Header of the card preview */}
-                <div className="bg-gradient-to-br from-primary to-primary-600 p-6 text-center border-b-[6px] border-warning/80 relative">
-                  <div className="absolute inset-0 bg-white/5 opacity-10 mix-blend-overlay" />
-                  <img src="/logo.png" alt="Logo" className="h-16 w-auto mx-auto mb-4 object-contain drop-shadow-xl relative z-10 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-primary-foreground font-black text-[10px] tracking-[0.2em] relative z-10 drop-shadow-sm uppercase">CETI NOVA ITARANA</h3>
-                  <div className="h-px w-12 bg-white/20 mx-auto my-2" />
-                  <p className="text-primary-foreground/90 font-black text-[9px] tracking-[0.3em] relative z-10 uppercase">Identity Card</p>
+            <div key={student.id} className="group relative">
+              <div className="bg-card rounded-[1.5rem] border border-success/20 shadow-xl overflow-hidden flex flex-row h-52 transition-all duration-500 hover:shadow-success/10 hover:-translate-y-1">
+                {/* Left Side: Photo/Header equivalent */}
+                <div className="w-1/3 bg-gradient-to-br from-success to-green-700 flex flex-col items-center justify-center p-4 border-r-4 border-yellow-400">
+                  <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain drop-shadow-lg mb-3" />
+                  <div className="text-center">
+                    <p className="text-[7px] font-black text-white/90 uppercase tracking-[0.2em] leading-tight">CETI NOVA ITARANA</p>
+                  </div>
                 </div>
 
-                <div className="p-8 flex flex-col items-center flex-1 bg-gradient-to-b from-card to-background relative">
-                  <div className="bg-white p-4 rounded-[2rem] mb-8 shadow-xl ring-2 ring-primary/5 group-hover:ring-primary/20 transition-all duration-500 group-hover:rotate-1">
-                    <QRCodeSVG value={student.qr_code} size={140} level="M" />
+                {/* Right Side: Data and QR */}
+                <div className="flex-1 p-5 flex flex-col justify-between relative bg-gradient-to-b from-card to-background">
+                  <div className="space-y-1">
+                    <p className="text-sm font-black text-foreground truncate uppercase">{student.name}</p>
+                    <p className="text-[10px] font-bold text-success uppercase">{student.series} • {student.class}</p>
                   </div>
 
-                  <div className="text-center w-full relative z-10">
-                    <p className="text-xl font-black text-foreground tracking-tight leading-tight mb-2 uppercase" title={student.name}>{student.name.split(" ")[0]} {student.name.split(" ").slice(-1)}</p>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary/5 border border-primary/10 text-[10px] font-black text-primary uppercase tracking-widest mb-4">
-                      {student.series} • {student.class}
+                  <div className="flex items-end justify-between gap-2">
+                    <div className="space-y-2">
+                      <div className="px-2 py-1 rounded-md bg-success/5 border border-success/10">
+                        <code className="text-[8px] font-bold text-muted-foreground uppercase">ID: {student.enrollment || '---'}</code>
+                      </div>
+                      <p className="text-[7px] font-medium text-muted-foreground italic">Válido para 2026</p>
                     </div>
-                    <div className="block pt-4 border-t border-border/50">
-                      <code className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">ID: {student.enrollment || 'Pendente'}</code>
+                    <div className="bg-white p-1.5 rounded-xl shadow-lg border border-success/10">
+                      <QRCodeSVG value={student.qr_code} size={60} level="M" />
                     </div>
                   </div>
-
-                  {/* Glowing background behind QR */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/5 blur-[60px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
             </div>

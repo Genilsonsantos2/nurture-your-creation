@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, QrCode, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, QrCode, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,14 @@ export default function Dashboard() {
     },
   });
 
+  const { data: pendingJustifications } = useQuery({
+    queryKey: ["justifications-pending"],
+    queryFn: async () => {
+      const { data } = await (supabase as any).from("absence_justifications").select("*, students(name, series, class)").eq("status", "pending");
+      return data || [];
+    },
+  });
+
   const entries = todayMovements?.filter((m) => m.type === "entry").length || 0;
   const exits = todayMovements?.filter((m) => m.type === "exit").length || 0;
 
@@ -51,9 +59,11 @@ export default function Dashboard() {
   const quickActions = [
     { label: "Portaria", icon: ScanLine, path: "/portaria", desc: "Controle de acesso" },
     { label: "Novo Aluno", icon: UserPlus, path: "/alunos/novo", desc: "Cadastrar estudante" },
-    { label: "QR Codes", icon: QrCode, path: "/qrcodes", desc: "Gerar carteirinhas" },
+    { label: "Autorizações", icon: Shield, path: "/autorizacoes-saida", desc: "Saídas antecipadas" },
     { label: "Relatórios", icon: BarChart3, path: "/relatorios", desc: "Análise de dados" },
   ];
+
+  const hasPendingActions = (pendingAlerts?.length || 0) > 0 || (pendingJustifications?.length || 0) > 0;
 
   const recentMovements = (todayMovements || []).slice(0, 6);
 
@@ -62,17 +72,17 @@ export default function Dashboard() {
   return (
     <div className="space-y-10 pb-12 animate-in fade-in duration-700">
       {/* Premium Hero Section */}
-      <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-primary via-primary/90 to-info p-10 lg:p-14 text-white shadow-2xl shadow-primary/20 group">
+      <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-primary via-primary/90 to-success p-6 md:p-14 text-white shadow-2xl shadow-primary/20 group animate-in slide-in-from-bottom-6">
         <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[120%] bg-primary-foreground/10 blur-[100px] rounded-full rotate-12 transition-transform duration-1000 group-hover:rotate-45" />
-        <div className="absolute bottom-10 right-10 opacity-10 pointer-events-none transition-transform duration-1000 group-hover:scale-110 group-hover:rotate-12">
-          <Activity className="w-64 h-64" />
+        <div className="absolute bottom-5 right-5 md:bottom-10 md:right-10 opacity-10 pointer-events-none transition-transform duration-1000 group-hover:scale-110 group-hover:rotate-12">
+          <Activity className="w-32 h-32 md:w-64 md:h-64" />
         </div>
 
-        <div className="relative z-10 max-w-2xl space-y-4">
-          <h1 className="text-4xl lg:text-5xl font-black tracking-tight drop-shadow-sm">
+        <div className="relative z-10 max-w-2xl space-y-2 md:space-y-4">
+          <h1 className="text-2xl md:text-5xl font-black tracking-tight drop-shadow-sm">
             Olá, {userName}! <span className="animate-float inline-block">👋</span>
           </h1>
-          <p className="text-lg lg:text-xl font-medium text-white/80 leading-relaxed">
+          <p className="text-sm md:text-xl font-medium text-white/80 leading-relaxed max-w-md md:max-w-none">
             Seja bem-vindo ao painel administrativo. O sistema está operacional e monitorando as atividades em tempo real.
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-4">
@@ -80,45 +90,66 @@ export default function Dashboard() {
               <span className="h-2 w-2 rounded-full bg-success animate-pulse"></span>
               <span className="text-xs font-black uppercase tracking-widest">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>
             </div>
+            <Link to="/relatorios" className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 shadow-xl transition-all">
+              <UserX className="h-4 w-4" />
+              <span className="text-xs font-black uppercase tracking-widest">Checar Faltas de Hoje</span>
+            </Link>
           </div>
         </div>
       </div>
 
-      {pendingAlerts && pendingAlerts.length > 0 && (
-        <div className="group relative overflow-hidden rounded-[2.5rem] bg-destructive/10 border-2 border-destructive/20 p-8 shadow-2xl shadow-destructive/5 animate-in slide-in-from-top-4 duration-500">
+      {hasPendingActions && (
+        <div className="group relative overflow-hidden rounded-[2.5rem] bg-card border-2 border-primary/20 p-8 shadow-2xl shadow-primary/5 animate-in slide-in-from-top-4 duration-500">
           <div className="flex flex-col md:flex-row md:items-center gap-8 relative z-10">
-            <div className="h-16 w-16 rounded-3xl bg-destructive text-white flex items-center justify-center shadow-2xl shadow-destructive/40 animate-pulse">
-              <AlertTriangle className="h-8 w-8" />
+            <div className="h-16 w-16 rounded-3xl bg-primary text-white flex items-center justify-center shadow-2xl shadow-primary/40 animate-pulse">
+              <ShieldCheck className="h-8 w-8" />
             </div>
             <div className="flex-1 space-y-1">
-              <p className="text-xl font-black text-foreground tracking-tight">{pendingAlerts.length} Ocorrência{pendingAlerts.length > 1 ? 's' : ''} Pendente{pendingAlerts.length > 1 ? 's' : ''}</p>
-              <p className="text-sm text-muted-foreground font-medium max-w-xl">
-                Atenção necessária para registros recentes envolvendo: <span className="font-bold text-foreground">{pendingAlerts.slice(0, 3).map((a: any) => a.students?.name?.split(' ')[0]).filter(Boolean).join(", ")}</span>
-              </p>
+              <p className="text-xl font-black text-foreground tracking-tight">Ações Pendentes de Gestão</p>
+              <div className="flex flex-wrap gap-4 mt-2">
+                {pendingAlerts && pendingAlerts.length > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-destructive/10 border border-destructive/20">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-xs font-black text-destructive uppercase tracking-widest">{pendingAlerts.length} Ocorrência{pendingAlerts.length > 1 ? 's' : ''}</span>
+                  </div>
+                )}
+                {pendingJustifications && pendingJustifications.length > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-info/10 border border-info/20">
+                    <FileCheck className="h-4 w-4 text-info" />
+                    <span className="text-xs font-black text-info uppercase tracking-widest">{pendingJustifications.length} Justificativa{pendingJustifications.length > 1 ? 's' : ''}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <Link to="/ocorrencias" className="premium-button bg-destructive shadow-destructive/20 hover:shadow-destructive/40 min-w-[200px]">
-              Verificar Agora <ArrowRight className="h-5 w-5 ml-2" />
-            </Link>
+            <div className="flex gap-3">
+              {pendingAlerts && pendingAlerts.length > 0 && (
+                <Link to="/ocorrencias" className="premium-button bg-destructive shadow-destructive/20 hover:shadow-destructive/40 whitespace-nowrap">
+                  Resolver Ocorrências
+                </Link>
+              )}
+              {pendingJustifications && pendingJustifications.length > 0 && (
+                <Link to="/justificativas" className="premium-button bg-info shadow-info/20 hover:shadow-info/40 whitespace-nowrap">
+                  Analisar Justificativas
+                </Link>
+              )}
+            </div>
           </div>
-          <div className="absolute -right-20 -top-20 h-64 w-64 bg-destructive/5 blur-[80px] rounded-full" />
+          <div className="absolute -right-20 -top-20 h-64 w-64 bg-primary/5 blur-[80px] rounded-full" />
         </div>
       )}
 
       {/* Bento Grid Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {stats.map((stat, i) => (
-          <div key={stat.label} className="stat-card" style={{ animationDelay: `${i * 100}ms` }}>
-            <div className="flex justify-between items-start mb-6">
-              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-xl ${stat.bgColor}`}>
-                <stat.icon className={`h-7 w-7 ${stat.color}`} />
-              </div>
-              <div className="h-8 w-8 rounded-full bg-muted/20 flex items-center justify-center">
-                <TrendingUp className={`h-4 w-4 ${stat.color} opacity-50`} />
+          <div key={stat.label} className="stat-card p-4 md:p-8" style={{ animationDelay: `${i * 100}ms` }}>
+            <div className="flex justify-between items-start mb-4 md:mb-6">
+              <div className={`h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl ${stat.bgColor}`}>
+                <stat.icon className={`h-5 w-5 md:h-7 md:w-7 ${stat.color}`} />
               </div>
             </div>
             <div>
-              <p className="text-4xl font-black tracking-tight text-foreground mb-1 drop-shadow-sm">{stat.value}</p>
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
+              <p className="text-xl md:text-4xl font-black tracking-tight text-foreground mb-1 drop-shadow-sm">{stat.value}</p>
+              <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
             </div>
           </div>
         ))}

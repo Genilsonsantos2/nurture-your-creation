@@ -25,6 +25,7 @@ import ParentPortal from "./pages/ParentPortal";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import JustificationPortal from "./pages/JustificationPortal";
 import JustificationManagement from "./pages/JustificationManagement";
+import ExitAuthorizations from "./pages/ExitAuthorizations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/relatorios" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ReportsPage /></RoleRoute></ProtectedRoute>} />
             <Route path="/analise" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnalyticsDashboard /></RoleRoute></ProtectedRoute>} />
             <Route path="/justificativas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><JustificationManagement /></RoleRoute></ProtectedRoute>} />
+            <Route path="/autorizacoes-saida" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ExitAuthorizations /></RoleRoute></ProtectedRoute>} />
             <Route path="/justificar/:token" element={<JustificationPortal />} />
             <Route path="/usuarios" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
             <Route path="/turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassesPage /></RoleRoute></ProtectedRoute>} />

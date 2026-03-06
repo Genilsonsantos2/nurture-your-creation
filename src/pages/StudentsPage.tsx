@@ -41,33 +41,33 @@ export default function StudentsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-success/5 to-transparent p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-primary/20 relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
           <Users className="w-64 h-64 text-primary" />
         </div>
-        <div className="relative z-10 flex items-center gap-6">
-          <div className="h-20 w-20 rounded-[2rem] bg-primary shadow-2xl shadow-primary/40 flex items-center justify-center text-primary-foreground">
-            <Users className="h-10 w-10" />
+        <div className="relative z-10 flex items-center gap-4 md:gap-6">
+          <div className="h-14 w-14 md:h-20 md:w-20 rounded-[1.5rem] md:rounded-[2rem] bg-primary shadow-2xl shadow-primary/40 flex items-center justify-center text-primary-foreground">
+            <Users className="h-8 w-8 md:h-10 md:w-10" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-foreground tracking-tight drop-shadow-sm">Gestão de Alunos</h1>
-            <div className="flex items-center gap-4 mt-1">
-              <p className="text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">
+            <h1 className="text-xl md:text-3xl font-black text-foreground tracking-tight drop-shadow-sm">Gestão de Alunos</h1>
+            <div className="flex items-center gap-2 md:gap-4 mt-1">
+              <p className="text-[10px] md:text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary"></span>
                 {students.length} Total
               </p>
-              <p className="text-sm text-success font-black uppercase tracking-widest flex items-center gap-2 border-l border-border/50 pl-4">
+              <p className="text-[10px] md:text-sm text-success font-black uppercase tracking-widest flex items-center gap-2 border-l border-border/50 pl-2 md:pl-4">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse"></span>
                 {activeCount} Ativos
               </p>
             </div>
           </div>
         </div>
-        <div className="relative z-10 flex gap-3">
-          <Link to="/alunos/importar" className="inline-flex items-center gap-2 text-xs font-black text-foreground uppercase tracking-widest bg-white dark:bg-black p-4 rounded-2xl shadow-xl hover:bg-muted transition-all border border-border/50">
-            <Upload className="h-4 w-4" /> Importar CSV
+        <div className="relative z-10 flex gap-2 md:gap-3">
+          <Link to="/alunos/importar" className="inline-flex items-center gap-2 text-[10px] md:text-xs font-black text-foreground uppercase tracking-widest bg-white dark:bg-black p-3 md:p-4 rounded-xl md:rounded-2xl shadow-xl hover:bg-muted transition-all border border-border/50">
+            <Upload className="h-4 w-4" /> <span className="hidden sm:inline">Importar</span> CSV
           </Link>
-          <Link to="/alunos/novo" className="premium-button shadow-primary/20">
+          <Link to="/alunos/novo" className="premium-button py-3 md:py-4 px-4 md:px-6 shadow-primary/20 text-[10px] md:text-sm">
             <Plus className="h-4 w-4" /> Novo Aluno
           </Link>
         </div>
@@ -153,35 +153,35 @@ export default function StudentsPage() {
                     </td>
                     <td className="px-8 py-6">
                       <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-xl border ${student.modality === 'integral'
-                          ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                          : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                        : "bg-blue-500/10 text-blue-500 border-blue-500/20"
                         }`}>
                         {student.modality === 'integral' ? 'Integral' : 'Técnico'}
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => {
                             const link = `${window.location.origin}/filho/${student.id}`;
                             navigator.clipboard.writeText(link);
                             toast.success("Link para pais copiado!");
                           }}
-                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-black shadow-lg hover:bg-primary hover:text-white border border-border/50 transition-all active:scale-95"
+                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-success hover:text-white transition-all active:scale-95"
                           title="Copiar link para pais"
                         >
                           <LinkIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => navigate(`/alunos/editar/${student.id}`)}
-                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-black shadow-lg hover:bg-primary hover:text-white border border-border/50 transition-all active:scale-95"
+                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-primary hover:text-white transition-all active:scale-95"
                           title="Editar aluno"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => { if (confirm("Deseja realmente remover este registro?")) deleteMutation.mutate(student.id); }}
-                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-black shadow-lg hover:bg-destructive hover:text-white border border-border/50 transition-all active:scale-95"
+                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-destructive hover:text-white transition-all active:scale-95"
                           title="Remover aluno"
                         >
                           <Trash2 className="h-4 w-4" />

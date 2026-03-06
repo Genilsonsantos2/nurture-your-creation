@@ -15,6 +15,7 @@
     --popover: 215 100% 99%;
     --popover-foreground: 222 47% 11%;
 
+    /* Updated Primary: A more vibrant blue-green mix */
     --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
 
@@ -34,6 +35,7 @@
     --input: 215 30% 88%;
     --ring: 221 83% 53%;
 
+    /* Responsive Radius Context */
     --radius: 1.5rem;
 
     --sidebar-background: 0 0% 100%;
@@ -48,9 +50,21 @@
     --warning: 48 96% 53%;
     --warning-foreground: 38 92% 15%;
     --success: 142 71% 45%;
+    /* Green */
     --success-foreground: 0 0% 100%;
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
+
+    /* Green Accents */
+    --green-primary: 142 72% 29%;
+    --green-light: 142 76% 95%;
+  }
+
+  /* Specific mobile overrides for spacing/radius */
+  @media (max-width: 640px) {
+    :root {
+      --radius: 1rem;
+    }
   }
 
   .dark {

@@ -28,16 +28,19 @@ export default function UserManagement() {
                 .from("profiles")
                 .update({ role_label: role })
                 .eq("id", id);
-            if (profileError) throw profileError;
+            if (profileError) throw new Error("Erro de Perfil: " + profileError.message);
 
             const { data: existingRoles } = await supabase.from("user_roles").select("id").eq("user_id", user_id);
 
             if (existingRoles && existingRoles.length > 0) {
-                const { error: rolesError } = await supabase.from("user_roles").update({ role: role as any }).eq("user_id", user_id);
-                if (rolesError) console.error("Could not update user_roles:", rolesError);
+                const { error: delError } = await supabase.from("user_roles").delete().eq("user_id", user_id);
+                if (delError) throw new Error("Erro limpando permissões antigas: " + delError.message);
+
+                const { error: insError } = await supabase.from("user_roles").insert({ user_id: user_id, role: role as any });
+                if (insError) throw new Error("Erro salvando permissão base: " + insError.message);
             } else {
                 const { error: rolesError } = await supabase.from("user_roles").insert({ user_id: user_id, role: role as any });
-                if (rolesError) console.error("Could not insert user_roles:", rolesError);
+                if (rolesError) throw new Error("Erro salvando nova permissão: " + rolesError.message);
             }
         },
         onSuccess: () => {
@@ -46,7 +49,8 @@ export default function UserManagement() {
             setEditingProfile(null);
         },
         onError: (err: any) => {
-            toast.error("Você não tem privilégios de Administrador no Banco de Dados para alterar perfis alheios.");
+            console.error(err);
+            toast.error(err.message || "Você não tem privilégios de Administrador no Banco de Dados para alterar perfis.");
         }
     });
 

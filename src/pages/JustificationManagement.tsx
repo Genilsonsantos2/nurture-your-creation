@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 
 export default function JustificationManagement() {
     const queryClient = useQueryClient();
+    const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
     const { data: justifications = [], isLoading } = useQuery({
         queryKey: ["justifications"],
@@ -43,6 +45,10 @@ export default function JustificationManagement() {
         onError: () => toast.error("Erro ao revisar justificativa.")
     });
 
+    const filteredJustifications = justifications.filter(j =>
+        filter === 'all' ? true : j.status === filter
+    );
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'approved': return <span className="px-3 py-1 rounded-full bg-success/10 text-success text-[10px] font-black uppercase tracking-widest border border-success/20">Aprovada</span>;
@@ -53,7 +59,7 @@ export default function JustificationManagement() {
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-success/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
                     <FileCheck className="w-64 h-64 text-primary" />
                 </div>
@@ -64,11 +70,32 @@ export default function JustificationManagement() {
                     <div>
                         <h1 className="text-3xl font-black text-foreground tracking-tight">Gestão de Justificativas</h1>
                         <p className="text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 mt-1">
-                            <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                            <span className="h-2 w-2 rounded-full bg-success animate-pulse"></span>
                             Análise de ausências e dispensas
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 px-2">
+                {[
+                    { id: 'all', label: 'Todas' },
+                    { id: 'pending', label: 'Pendentes' },
+                    { id: 'approved', label: 'Aprovadas' },
+                    { id: 'rejected', label: 'Recusadas' }
+                ].map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => setFilter(item.id as any)}
+                        className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === item.id
+                            ? "bg-primary text-white shadow-lg shadow-primary/20"
+                            : "bg-card border border-border/50 text-muted-foreground hover:bg-muted"
+                            }`}
+                    >
+                        {item.label}
+                    </button>
+                ))}
             </div>
 
             <div className="grid gap-6">
@@ -76,16 +103,16 @@ export default function JustificationManagement() {
                     <div className="h-64 flex items-center justify-center bg-card rounded-[2.5rem] border border-dashed border-border">
                         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
                     </div>
-                ) : justifications.length === 0 ? (
+                ) : filteredJustifications.length === 0 ? (
                     <div className="h-64 flex flex-col items-center justify-center bg-card rounded-[2.5rem] border border-dashed border-border text-center p-10">
                         <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-4">
                             <Info className="h-8 w-8" />
                         </div>
                         <h3 className="text-lg font-black text-foreground tracking-tight">Nenhuma justificativa encontrada</h3>
-                        <p className="text-sm text-muted-foreground mt-1 max-w-sm">As novas justificativas enviadas pelos responsáveis aparecerão aqui para análise.</p>
+                        <p className="text-sm text-muted-foreground mt-1 max-w-sm">Tente ajustar seus filtros ou aguarde novas solicitações dos responsáveis.</p>
                     </div>
                 ) : (
-                    justifications.map((item) => (
+                    filteredJustifications.map((item) => (
                         <div key={item.id} className={`glass-panel p-8 relative overflow-hidden transition-all duration-300 ${item.status === 'pending' ? 'ring-2 ring-primary/20 ring-offset-4' : ''}`}>
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                                 <div className="flex items-start gap-6">

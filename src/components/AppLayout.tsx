@@ -38,6 +38,7 @@ const navItems = [
   { label: "Análise", icon: TrendingUp, path: "/analise", roles: ["admin", "coordinator"] },
   { label: "Ocorrências", icon: FileWarning, path: "/ocorrencias", roles: ["admin", "coordinator"] },
   { label: "Justificativas", icon: FileCheck, path: "/justificativas", roles: ["admin", "coordinator"] },
+  { label: "Autorizações", icon: ShieldAlert, path: "/autorizacoes-saida", roles: ["admin", "coordinator"] },
   { label: "Relatórios", icon: BarChart3, path: "/relatorios", roles: ["admin", "coordinator"] },
   { label: "Usuários", icon: UserCog, path: "/usuarios", roles: ["admin"] },
   { label: "Calendário", icon: CalendarDays, path: "/calendario", roles: ["admin", "coordinator"] },
@@ -66,6 +67,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut, isAdmin, role } = useAuth();
   const [isSystemActive, setIsSystemActive] = useState(true);
+  const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
+  const [pendingJustificationsCount, setPendingJustificationsCount] = useState(0);
 
   const filteredNavItems = navItems.filter(item => {
     if (isAdmin) return true;
@@ -74,6 +77,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    const fetchCounts = async () => {
+      const [alertsRes, justificationsRes] = await Promise.all([
+        supabase.from("alerts" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("absence_justifications" as any).select("id", { count: "exact", head: true }).eq("status", "pending")
+      ]);
+      setPendingAlertsCount(alertsRes.count || 0);
+      setPendingJustificationsCount(justificationsRes.count || 0);
+    };
+
+    fetchCounts();
+
+    const alertsChannel = supabase.channel('realtime-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => fetchCounts())
+      .subscribe();
+
+    const justificationsChannel = supabase.channel('realtime-justifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'absence_justifications' }, () => fetchCounts())
+      .subscribe();
+
     const checkStatus = async () => {
       try {
         const { data } = await supabase.from("settings").select("*").limit(1).maybeSingle();
@@ -87,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     checkStatus();
 
-    const channel = supabase.channel('system-status')
+    const statusChannel = supabase.channel('system-status')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
         if (typeof (payload.new as any).system_active === 'boolean') {
           setIsSystemActive((payload.new as any).system_active);
@@ -95,12 +117,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(alertsChannel);
+      supabase.removeChannel(justificationsChannel);
+      supabase.removeChannel(statusChannel);
+    };
   }, []);
 
   const initials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() || "U";
+
+  const getBadgeCount = (label: string) => {
+    if (label === "Alertas") return pendingAlertsCount;
+    if (label === "Justificativas") return pendingJustificationsCount;
+    return 0;
+  };
 
   return (
     <div className="flex min-h-screen bg-background relative overflow-hidden font-sans">
@@ -108,7 +140,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Premium Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none animate-pulse-slow" />
-      <div className="absolute bottom-[-10%] right-[-20%] w-[60%] h-[60%] rounded-full bg-info/5 blur-[120px] pointer-events-none animate-pulse-slow" />
+      <div className="absolute bottom-[-10%] right-[-20%] w-[60%] h-[60%] rounded-full bg-success/5 blur-[120px] pointer-events-none animate-pulse-slow" />
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-background/40 backdrop-blur-md lg:hidden transition-all duration-500" onClick={() => setMobileOpen(false)} />
@@ -137,11 +169,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto px-6 py-8 space-y-1 custom-scrollbar">
           {filteredNavItems.map((item) => {
             const active = location.pathname === item.path;
+            const badgeCount = getBadgeCount(item.label);
             return (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
                 className={`sidebar-link ${active ? "sidebar-link-active" : ""}`}>
                 <item.icon className={`h-5 w-5 shrink-0 transition-transform duration-500 ${active ? "scale-110" : "group-hover:scale-110 group-hover:text-primary"}`} />
                 <span className="relative z-10">{item.label}</span>
+                {badgeCount > 0 && !active && (
+                  <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-black text-white shadow-lg shadow-destructive/20 animate-in zoom-in duration-300">
+                    {badgeCount}
+                  </span>
+                )}
                 {active && <div className="absolute right-4 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_10px_white]"></div>}
               </Link>
             );
@@ -159,32 +197,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-1 flex-col min-w-0 relative z-10 overflow-hidden">
         {/* Header Overhaul */}
-        <header className="glass-header h-24 flex items-center justify-between px-6 sm:px-10 lg:px-12">
-          <div className="flex items-center gap-6">
-            <button className="lg:hidden text-foreground p-3 rounded-2xl transition-all bg-card/50 border border-border/50 backdrop-blur-xl hover:bg-accent" onClick={() => setMobileOpen(true)}>
+        <header className="glass-header h-20 md:h-24 flex items-center justify-between px-4 sm:px-10 lg:px-12">
+          <div className="flex items-center gap-3 md:gap-6">
+            <button className="lg:hidden text-foreground p-2 md:p-3 rounded-xl md:rounded-2xl transition-all bg-card/50 border border-border/50 backdrop-blur-xl hover:bg-accent" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
             <div className="hidden md:block">
               <h2 className="text-xl font-black text-foreground tracking-tight">Painel de Controle</h2>
               <p className="text-xs text-muted-foreground font-semibold">Olá, seja bem-vindo ao portal institucional.</p>
             </div>
+            {/* Mobile Title */}
+            <div className="md:hidden">
+              <h2 className="text-sm font-black text-foreground tracking-tight uppercase">CETI Digital</h2>
+            </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <div className="hidden sm:flex flex-col items-end justify-center mr-2">
               <span className="text-sm font-black text-foreground tracking-tight">{user?.user_metadata?.full_name || "Usuário"}</span>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary/40"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-success/40"></span>
                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{role || "Membro"}</span>
               </div>
             </div>
-            <div className="h-14 w-14 rounded-[1.2rem] bg-gradient-to-tr from-primary to-info flex items-center justify-center text-primary-foreground text-base font-black shadow-2xl shadow-primary/20 ring-4 ring-background cursor-pointer hover:scale-110 transition-all duration-500">
+            <div className="h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-[1.2rem] bg-gradient-to-tr from-primary to-success flex items-center justify-center text-primary-foreground text-xs md:text-base font-black shadow-2xl shadow-primary/20 ring-2 md:ring-4 ring-background cursor-pointer hover:scale-110 transition-all duration-500">
               {initials}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 sm:p-10 lg:p-12 animate-fade-in custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-10 lg:p-12 animate-fade-in custom-scrollbar">
           <div className="mx-auto max-w-7xl pb-12">
             {children}
           </div>
