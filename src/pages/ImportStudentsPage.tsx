@@ -35,29 +35,58 @@ export default function ImportStudentsPage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
-      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-      if (lines.length < 2) { setErrors(["Arquivo vazio ou sem dados"]); return; }
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) { setErrors(["Arquivo vazio ou sem dados suficientes (precisa de cabeçalho e pelo menos uma linha de dados)"]); return; }
 
-      const header = lines[0].toLowerCase().split(/[,;]/).map(h => h.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-      const nameIdx = header.findIndex(h => h.includes("nome") && !h.includes("responsavel"));
-      const seriesIdx = header.findIndex(h => h.includes("serie"));
-      const classIdx = header.findIndex(h => h.includes("turma"));
-      const enrollIdx = header.findIndex(h => h.includes("matricula"));
-      const modalityIdx = header.findIndex(h => h.includes("modalidade") || h.includes("tipo"));
-      const gNameIdx = header.findIndex(h => h.includes("responsavel") && h.includes("nome"));
-      const gPhoneIdx = header.findIndex(h => h.includes("responsavel") && h.includes("telefone"));
+      // Detect separator: check first line for common delimiters
+      const firstLine = lines[0];
+      const delims = [",", ";", "\t", "|"];
+      let delim = ",";
+      let maxCols = 0;
+      delims.forEach(d => {
+        const count = firstLine.split(d).length;
+        if (count > maxCols) {
+          maxCols = count;
+          delim = d;
+        }
+      });
+
+      const headerRaw = firstLine.split(delim).map(h => h.trim().replace(/^"|"$/g, ""));
+      const headerNormalized = headerRaw.map(h =>
+        h.toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+      );
+
+      const nameIdx = headerNormalized.findIndex(h => h.includes("nome") && !h.includes("responsavel"));
+      const seriesIdx = headerNormalized.findIndex(h => h.includes("serie"));
+      const classIdx = headerNormalized.findIndex(h => h.includes("turma"));
+      const enrollIdx = headerNormalized.findIndex(h => h.includes("matricula"));
+      const modalityIdx = headerNormalized.findIndex(h => h.includes("modalidade") || h.includes("tipo"));
+      const gNameIdx = headerNormalized.findIndex(h => h.includes("responsavel") && h.includes("nome"));
+      const gPhoneIdx = headerNormalized.findIndex(h => h.includes("responsavel") && h.includes("telefone"));
 
       if (nameIdx < 0 || seriesIdx < 0 || classIdx < 0 || enrollIdx < 0) {
-        setErrors(["Colunas obrigatórias não encontradas: nome, serie, turma, matricula"]);
+        setErrors([
+          "Colunas obrigatórias não encontradas no cabeçalho.",
+          `Encontradas: ${headerRaw.join(" | ")}`,
+          "O arquivo deve conter: nome, serie, turma, matricula."
+        ]);
         return;
       }
 
       const rows: ParsedRow[] = [];
       const errs: string[] = [];
       for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(/[,;]/).map(c => c.replace(/^"|"$/g, "").trim());
-        if (!cols[nameIdx] || !cols[seriesIdx] || !cols[classIdx] || !cols[enrollIdx]) {
-          errs.push(`Linha ${i + 1}: campos obrigatórios vazios`);
+        const cols = lines[i].split(delim).map(c => c.replace(/^"|"$/g, "").trim());
+
+        if (cols.length < 4) {
+          errs.push(`Linha ${i + 1}: número de colunas insuficiente`);
+          continue;
+        }
+
+        if (!cols[nameIdx] || !cols[seriesIdx] || !cols[classIdx]) {
+          errs.push(`Linha ${i + 1}: campos obrigatórios vazios (nome, série ou turma)`);
           continue;
         }
         rows.push({
