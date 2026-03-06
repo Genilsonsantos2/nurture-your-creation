@@ -25,7 +25,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function GatePage() {
   const [scanning, setScanning] = useState(false);
@@ -33,7 +33,7 @@ export default function GatePage() {
   const [manualInput, setManualInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [kioskMode, setKioskMode] = useState(false);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const queryClient = useQueryClient();
 
@@ -181,37 +181,41 @@ export default function GatePage() {
   }, [isProcessing, registerMovement]);
 
   useEffect(() => {
+    let html5QrCode: Html5Qrcode | null = null;
+
     if (scanning) {
       // Small delay to ensure the container is in the DOM
-      const timer = setTimeout(() => {
-        const container = document.getElementById("reader");
-        if (container && !scannerRef.current) {
-          scannerRef.current = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            /* verbose= */ false
+      const timer = setTimeout(async () => {
+        try {
+          const container = document.getElementById("reader");
+          if (!container) return;
+
+          html5QrCode = new Html5Qrcode("reader");
+          scannerRef.current = html5QrCode;
+
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0
+            },
+            (text) => handleScan(text),
+            () => { } // Ignore frame errors
           );
-          scannerRef.current.render((text) => handleScan(text), () => { });
+        } catch (err) {
+          console.error("Scanner error:", err);
+          toast.error("Erro ao acessar a câmera. Verifique se deu permissão.");
+          setScanning(false);
         }
-      }, 100);
+      }, 300);
 
       return () => {
         clearTimeout(timer);
-        if (scannerRef.current) {
-          scannerRef.current.clear().then(() => {
-            scannerRef.current = null;
-            // Clean up any leftover DOM nodes the scanner injected
-            const container = document.getElementById("reader");
-            if (container) {
-              container.innerHTML = "";
-            }
-          }).catch(() => {
-            scannerRef.current = null;
-            const container = document.getElementById("reader");
-            if (container) {
-              container.innerHTML = "";
-            }
-          });
+        if (html5QrCode) {
+          if (html5QrCode.isScanning) {
+            html5QrCode.stop().catch(console.error);
+          }
         }
       };
     }
