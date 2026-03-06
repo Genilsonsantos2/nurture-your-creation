@@ -34,7 +34,16 @@ export default function ImportStudentsPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const text = ev.target?.result as string;
+      const buffer = ev.target?.result as ArrayBuffer;
+      let text = "";
+      try {
+        const decoder = new TextDecoder("utf-8", { fatal: true });
+        text = decoder.decode(buffer);
+      } catch (err) {
+        const decoder = new TextDecoder("windows-1252");
+        text = decoder.decode(buffer);
+      }
+
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (lines.length < 2) { setErrors(["Arquivo vazio ou sem dados suficientes (precisa de cabeçalho e pelo menos uma linha de dados)"]); return; }
 
@@ -127,7 +136,7 @@ export default function ImportStudentsPage() {
       setErrors(errs);
       setImported(false);
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const importMutation = useMutation({
