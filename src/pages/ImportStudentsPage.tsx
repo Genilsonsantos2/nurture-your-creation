@@ -85,16 +85,40 @@ export default function ImportStudentsPage() {
           continue;
         }
 
-        if (!cols[nameIdx] || !cols[seriesIdx] || !cols[classIdx]) {
-          errs.push(`Linha ${i + 1}: campos obrigatórios vazios (nome, série ou turma)`);
+        let serie = cols[seriesIdx] || "";
+        let turma = cols[classIdx] || "";
+
+        // Smart split if one of the columns contains both (e.g., "3ª SÉRIE • PIINT9T3A")
+        if (serie.includes("•")) {
+          const parts = serie.split("•").map(p => p.trim());
+          serie = parts[0];
+          if (!turma) turma = parts[1];
+        } else if (serie.includes(" - ")) {
+          const parts = serie.split(" - ").map(p => p.trim());
+          serie = parts[0];
+          if (!turma) turma = parts[1];
+        }
+
+        if (!cols[nameIdx] || !serie) {
+          errs.push(`Linha ${i + 1}: nome ou série vazios`);
           continue;
         }
+
+        // Smart Modality Detection
+        let modality = "technical";
+        const rawModality = modalityIdx >= 0 ? cols[modalityIdx].toLowerCase() : "";
+        const classCode = turma.toLowerCase();
+
+        if (rawModality.includes("integral") || classCode.includes("int") || classCode.includes("piint")) {
+          modality = "integral";
+        }
+
         rows.push({
           name: cols[nameIdx],
-          series: cols[seriesIdx],
-          class: cols[classIdx],
-          enrollment: cols[enrollIdx],
-          modality: modalityIdx >= 0 && cols[modalityIdx].toLowerCase().includes("integral") ? "integral" : "technical",
+          series: serie,
+          class: turma || "A",
+          enrollment: cols[enrollIdx] || `MAT-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+          modality: modality,
           guardianName: gNameIdx >= 0 ? cols[gNameIdx] : undefined,
           guardianPhone: gPhoneIdx >= 0 ? cols[gPhoneIdx] : undefined,
         });
