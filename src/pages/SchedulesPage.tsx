@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export default function SchedulesPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit", start_time: "", end_time: "", tolerance_minutes: "5", notify_whatsapp: true });
+  const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit" | "break", start_time: "", end_time: "", tolerance_minutes: "5", notify_whatsapp: true });
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["schedules"],
@@ -78,10 +78,11 @@ export default function SchedulesPage() {
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Tipo *</label>
-              <select value={form.type} onChange={(e) => setForm(p => ({ ...p, type: e.target.value as "entry" | "exit" }))}
+              <select value={form.type} onChange={(e) => setForm(p => ({ ...p, type: e.target.value as "entry" | "exit" | "break" }))}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                 <option value="entry">Entrada</option>
                 <option value="exit">Saída</option>
+                <option value="break">Intervalo</option>
               </select>
             </div>
             <div>
@@ -132,9 +133,9 @@ export default function SchedulesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  schedule.type === "entry" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+                  schedule.type === "entry" ? "bg-success/15 text-success" : schedule.type === "exit" ? "bg-warning/15 text-warning" : "bg-info/15 text-info"
                 }`}>
-                  {schedule.type === "entry" ? "Entrada" : "Saída"}
+                  {schedule.type === "entry" ? "Entrada" : schedule.type === "exit" ? "Saída" : "Intervalo"}
                 </span>
                 {schedule.notify_whatsapp && (
                   <span className="text-xs font-medium px-2 py-1 rounded-full bg-info/15 text-info">
