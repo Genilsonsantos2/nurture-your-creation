@@ -7,9 +7,6 @@ import { toast } from "sonner";
 export default function UserManagement() {
     const queryClient = useQueryClient();
     const [isAdding, setIsAdding] = useState(false);
-    const [newEmail, setNewEmail] = useState("");
-    const [newName, setNewName] = useState("");
-    const [newRole, setNewRole] = useState<"admin" | "coordinator" | "gatekeeper">("gatekeeper");
 
     const [editingProfile, setEditingProfile] = useState<any>(null);
     const [editRoleStr, setEditRoleStr] = useState<string>("user");
@@ -52,24 +49,6 @@ export default function UserManagement() {
         },
         onError: (err: any) => {
             toast.error("Você não tem privilégios de Administrador no Banco de Dados para alterar perfis alheios.");
-        }
-    });
-
-    const addUserMutation = useMutation({
-        mutationFn: async () => {
-            // Em Supabase, a criação de usuários reais exige a Auth API (normalmente via servidor/Edge Function com Service Role),
-            // ou um convite. Inserir direto na tabela `profiles` gera erro de ForeignKey pois `auth.users` não possui o respectivo UUID.
-            // Para mantermos a gestão visual da tela sem quebrar a UI, simularemos o sucesso do convite.
-            return new Promise((resolve) => setTimeout(resolve, 1000));
-        },
-        onSuccess: () => {
-            toast.success(`Convite de acesso enviado com sucesso para ${newEmail}! O perfil aparecerá quando o usuário acessar o sistema.`);
-            setIsAdding(false);
-            setNewEmail("");
-            setNewName("");
-        },
-        onError: (error: any) => {
-            toast.error("Erro ao enviar convite.");
         }
     });
 
@@ -193,54 +172,26 @@ export default function UserManagement() {
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black text-foreground tracking-tight">Novo Colaborador</h2>
-                                <p className="text-sm text-muted-foreground font-medium">Expanda sua equipe operacional.</p>
+                                <p className="text-sm text-muted-foreground font-medium">Como adicionar membros à equipe.</p>
                             </div>
                         </div>
 
-                        <div className="space-y-8">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] ml-1">Nome Completo</label>
-                                <input
-                                    type="text"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    placeholder="Ex: Dr. Alberto Santos"
-                                    className="premium-input w-full"
-                                />
+                        <div className="space-y-6 text-sm text-muted-foreground">
+                            <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                                <p className="font-bold text-foreground mb-2">1. O próprio membro cria a conta</p>
+                                <p>Peça para o novo funcionário acessar a tela inicial do sistema e clicar em <strong>"Solicite acesso"</strong> ou <strong>"Criar Conta"</strong> para ele mesmo cadastrar seu E-mail e Senha.</p>
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] ml-1">E-mail Institucional</label>
-                                <input
-                                    type="email"
-                                    value={newEmail}
-                                    onChange={(e) => setNewEmail(e.target.value)}
-                                    placeholder="email@instituicao.gov.br"
-                                    className="premium-input w-full"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] ml-1">Papel no Sistema</label>
-                                <div className="relative">
-                                    <select
-                                        value={newRole}
-                                        onChange={(e) => setNewRole(e.target.value as any)}
-                                        className="premium-input w-full appearance-none cursor-pointer pr-12"
-                                    >
-                                        <option value="gatekeeper">Porteiro (Controle de Acesso)</option>
-                                        <option value="coordinator">Coordenação (Gestão de Alunos)</option>
-                                        <option value="admin">Administrador (Total)</option>
-                                    </select>
-                                    <Shield className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                                </div>
+                            <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                                <p className="font-bold text-foreground mb-2">2. Você define a permissão</p>
+                                <p>Assim que ele finalizar o cadastro, o perfil dele aparecerá automaticamente na lista desta página. Basta você clicar em <strong>"Configurar"</strong> e alterar o papel dele para Porteiro, Coordenador, etc.</p>
                             </div>
 
                             <button
-                                onClick={() => addUserMutation.mutate()}
-                                className="w-full premium-button bg-info text-white py-6 shadow-info/40 text-sm"
+                                onClick={() => setIsAdding(false)}
+                                className="w-full premium-button bg-info text-white py-4 shadow-info/40 text-sm mt-4"
                             >
-                                <CheckCircle2 className="h-5 w-5 mr-3" /> Efetuar Cadastro
+                                <CheckCircle2 className="h-5 w-5 mr-3" /> Entendi
                             </button>
                         </div>
                     </div>
