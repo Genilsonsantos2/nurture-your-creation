@@ -37,23 +37,23 @@ export default function QRCodesPage() {
     const logoUrl = `${baseUrl}/logo.png`;
 
     const cards = filtered.map((s) => `
-      <div style="display:inline-block; width:220px; height:340px; margin:8px; border-radius:12px; overflow:hidden; border:2px solid #0f3e7a; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: #fff; vertical-align:top;">
-        <div style="background: linear-gradient(135deg, #0f3e7a 0%, #1e40af 100%); color: white; padding: 12px 8px; text-align: center; border-bottom: 4px solid #f59e0b; position: relative; height: 85px; box-sizing: border-box;">
-          <img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 4px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" onerror="this.style.display='none'" />
-          <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CETI NOVA ITARANA</div>
+      <div style="width:100%; height:320px; border-radius:12px; overflow:hidden; border:2px solid #0f3e7a; font-family: 'Inter', system-ui, sans-serif; position:relative; page-break-inside:avoid; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: #fff; box-sizing: border-box; display: flex; flex-direction: column;">
+        <div style="background: linear-gradient(135deg, #0f3e7a 0%, #1e40af 100%); color: white; padding: 12px 8px; text-align: center; border-bottom: 4px solid #f59e0b; position: relative; height: 80px; box-sizing: border-box;">
+          <img src="${logoUrl}" alt="Logo" style="height: 36px; margin-bottom: 4px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" onerror="this.style.display='none'" />
+          <div style="font-size: 13px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">CETI NOVA ITARANA</div>
           <div style="font-size: 9px; font-weight: 600; opacity: 0.9; letter-spacing: 1px; margin-top: 2px;">ACESSO ESTUDANTIL</div>
         </div>
-        <div style="padding: 15px 10px; height: 215px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="padding: 12px 10px; flex: 1; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;">
           <div style="text-align:center; margin-bottom:12px;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(s.qr_code)}&margin=1" width="120" height="120" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" />
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(s.qr_code)}&margin=1" width="105" height="105" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" />
           </div>
           <div style="text-align: center; width: 100%;">
-            <div style="font-weight: 800; font-size: 14px; color: #0f172a; margin-bottom: 4px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${s.name.toUpperCase()}</div>
-            <div style="font-size: 11px; font-weight: 700; color: #1d4ed8; margin-bottom: 4px;">${s.series} • Turma ${s.class}</div>
-            <div style="font-size: 10px; font-weight: 600; color: #475569; background: #f1f5f9; display: inline-block; padding: 2px 6px; border-radius: 4px;">Matrícula: ${s.enrollment || 'Pendente'}</div>
+            <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 4px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${s.name.toUpperCase()}</div>
+            <div style="font-size: 12px; font-weight: 700; color: #1d4ed8; margin-bottom: 4px;">${s.series} • Turma ${s.class}</div>
+            <div style="font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; display: inline-block; padding: 4px 8px; border-radius: 6px;">Matrícula: ${s.enrollment || 'Pendente'}</div>
           </div>
         </div>
-        <div style="background: #f8fafc; text-align: center; padding: 6px; font-size: 8px; font-weight: 500; color: #64748b; border-top: 1px dashed #cbd5e1; position: absolute; bottom: 0; width: 100%; box-sizing: border-box; height: 40px; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #f8fafc; text-align: center; padding: 6px; font-size: 8px; font-weight: 500; color: #64748b; border-top: 1px dashed #cbd5e1; width: 100%; box-sizing: border-box; height: 35px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
           Válido para o ano letivo vigente.<br/>Uso pessoal e intransferível.
         </div>
       </div>
@@ -67,34 +67,42 @@ export default function QRCodesPage() {
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
           <style>
             @media print {
-              @page { margin: 10mm; size: A4; }
+              @page { margin: 15mm; size: A4 portrait; }
               body { 
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
                 margin: 0;
               }
-              .page-container {
-                display: block;
+              .grid-container {
+                display: grid;
+                grid-template-columns: repeat(2, 330px) !important; /* Exactly 2 columns fixed width */
+                grid-auto-rows: 320px !important; /* Fixed height per card */
+                gap: 20px 40px !important; /* Vert and Horiz gap */
+                justify-content: center;
+                padding: 20px 0;
+                max-width: 100%;
+                margin: 0 auto;
               }
             }
             body { 
               font-family: 'Inter', sans-serif; 
-              background: #fff; 
+              background: #f8fafc; 
               margin: 0; 
-              padding: 0;
+              padding: 20px;
             }
             .grid-container {
               display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 10px;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              grid-auto-rows: 320px;
+              gap: 20px;
               justify-content: center;
-              padding: 10px;
-              max-width: 800px; /* A4 width roughly */
+              max-width: 800px;
               margin: 0 auto;
             }
             /* Reset inline-block wrapper styles for grid */
             .grid-container > div {
-              margin: 0 !important;
+              margin: 0 auto !important;
+              max-width: 330px;
             }
           </style>
         </head>
