@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { lovable } from "@/integrations/lovable/index";
 
 export default function LoginPage() {
   const { user, loading, signIn, signUp } = useAuth();
