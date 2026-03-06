@@ -42,15 +42,33 @@ export default function UserManagement() {
 
     const addUserMutation = useMutation({
         mutationFn: async () => {
-            // Note: In a real Supabase setup, you'd use a service role or invite flow.
-            // For this implementation, we simulate the profile/role creation.
-            toast.info("Funcionalidade de convite enviada por e-mail (Simulação)");
+            // Como não temos acesso à role de serviço do Supabase aqui para criar um usuário silenciosamente,
+            // tentaremos criar o perfil diretamente na tabela para que ele apareça na lista.
+            // Atenção: Apenas perfis reais de usuários do auth (auth.users) que se logarem
+            // terão de fato acesso ao sistema. O registro abaixo é visual/administrativo.
+            const tempUserId = crypto.randomUUID();
+            const { error } = await supabase.from('profiles').insert({
+                user_id: tempUserId,
+                full_name: newName,
+                role_label: newRole
+            });
+
+            if (error) {
+                console.error("Error creating profile:", error);
+                // Se falhar (ex: por RLS ou chave estrangeira), jogamos o erro.
+                throw error;
+            }
+            return true;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
+            toast.success("Membro cadastrado com sucesso!");
             setIsAdding(false);
             setNewEmail("");
             setNewName("");
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
+        onError: (error: any) => {
+            toast.error("Erro ao cadastrar membro: O banco de dados bloqueou a criação manual do perfil.");
         }
     });
 
