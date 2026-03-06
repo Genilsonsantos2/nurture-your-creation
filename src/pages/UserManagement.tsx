@@ -26,17 +26,32 @@ export default function UserManagement() {
     });
 
     const updateRoleMutation = useMutation({
-        mutationFn: async ({ id, role }: { id: string, role: string }) => {
-            const { error } = await supabase
+        mutationFn: async ({ id, user_id, role }: { id: string, user_id: string, role: string }) => {
+            const { error: profileError } = await supabase
                 .from("profiles")
                 .update({ role_label: role })
                 .eq("id", id);
-            if (error) throw error;
+            if (profileError) throw profileError;
+
+            // Garante sync do poder backend para "admin" ou "user"
+            const dbRole = role === "admin" ? "admin" : "user";
+            const { data: existingRoles } = await supabase.from("user_roles").select("id").eq("user_id", user_id);
+
+            if (existingRoles && existingRoles.length > 0) {
+                const { error: rolesError } = await supabase.from("user_roles").update({ role: dbRole as any }).eq("user_id", user_id);
+                if (rolesError) console.error("Could not update user_roles:", rolesError);
+            } else {
+                const { error: rolesError } = await supabase.from("user_roles").insert({ user_id: user_id, role: dbRole as any });
+                if (rolesError) console.error("Could not insert user_roles:", rolesError);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
             toast.success("Função atualizada com sucesso!");
             setEditingProfile(null);
+        },
+        onError: (err: any) => {
+            toast.error("Você não tem privilégios de Administrador no Banco de Dados para alterar perfis alheios.");
         }
     });
 
@@ -271,7 +286,7 @@ export default function UserManagement() {
                             </div>
 
                             <button
-                                onClick={() => updateRoleMutation.mutate({ id: editingProfile.id, role: editRoleStr })}
+                                onClick={() => updateRoleMutation.mutate({ id: editingProfile.id, user_id: editingProfile.user_id, role: editRoleStr })}
                                 className="w-full premium-button bg-info text-white py-6 shadow-info/40 text-sm"
                             >
                                 <CheckCircle2 className="h-5 w-5 mr-3" /> Salvar Alterações
