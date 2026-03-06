@@ -121,10 +121,13 @@ export default function ImportStudentsPage() {
           continue;
         }
 
-        if (row.guardianName && row.guardianPhone) {
-          await supabase.from("guardians").insert({
-            student_id: student.id, name: row.guardianName, phone: row.guardianPhone,
+        if (row.guardianName?.trim()) {
+          const { error: gErr } = await supabase.from("guardians").insert({
+            student_id: student.id,
+            name: row.guardianName.trim(),
+            phone: row.guardianPhone?.trim() || "Não informado",
           });
+          if (gErr) importErrors.push(`Erro no responsável de ${row.name}: ${gErr.message}`);
         }
         successCount++;
       }
@@ -193,10 +196,21 @@ export default function ImportStudentsPage() {
                 <th className="px-3 py-2 text-left text-muted-foreground">Turma</th>
                 <th className="px-3 py-2 text-left text-muted-foreground">Matrícula</th>
                 <th className="px-3 py-2 text-left text-muted-foreground">Modalidade</th>
+                <th className="px-3 py-2 text-left text-muted-foreground">Responsável</th>
               </tr></thead>
               <tbody className="divide-y">
                 {parsed.map((row, i) => (
-                  <tr key={i}><td className="px-3 py-2">{row.name}</td><td className="px-3 py-2">{row.series}</td><td className="px-3 py-2">{row.class}</td><td className="px-3 py-2">{row.enrollment}</td><td className="px-3 py-2 text-xs font-bold uppercase">{row.modality === 'integral' ? 'Integral' : 'Técnico'}</td></tr>
+                  <tr key={i}>
+                    <td className="px-3 py-2">{row.name}</td>
+                    <td className="px-3 py-2">{row.series}</td>
+                    <td className="px-3 py-2">{row.class}</td>
+                    <td className="px-3 py-2">{row.enrollment}</td>
+                    <td className="px-3 py-2 text-xs font-bold uppercase">{row.modality === 'integral' ? 'Integral' : 'Técnico'}</td>
+                    <td className="px-3 py-2">
+                      <div className="text-sm">{row.guardianName || '-'}</div>
+                      <div className="text-xs text-muted-foreground">{row.guardianPhone || '-'}</div>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
