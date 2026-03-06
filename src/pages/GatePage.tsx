@@ -140,23 +140,40 @@ export default function GatePage() {
   }, [isProcessing, registerMovement]);
 
   useEffect(() => {
-    if (scanning && !scannerRef.current) {
-      scannerRef.current = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        /* verbose= */ false
-      );
-      scannerRef.current.render((text) => handleScan(text), (err) => {
-        // console.warn(err);
-      });
-    }
+    if (scanning) {
+      // Small delay to ensure the container is in the DOM
+      const timer = setTimeout(() => {
+        const container = document.getElementById("reader");
+        if (container && !scannerRef.current) {
+          scannerRef.current = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            /* verbose= */ false
+          );
+          scannerRef.current.render((text) => handleScan(text), () => {});
+        }
+      }, 100);
 
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
-      }
-    };
+      return () => {
+        clearTimeout(timer);
+        if (scannerRef.current) {
+          scannerRef.current.clear().then(() => {
+            scannerRef.current = null;
+            // Clean up any leftover DOM nodes the scanner injected
+            const container = document.getElementById("reader");
+            if (container) {
+              container.innerHTML = "";
+            }
+          }).catch(() => {
+            scannerRef.current = null;
+            const container = document.getElementById("reader");
+            if (container) {
+              container.innerHTML = "";
+            }
+          });
+        }
+      };
+    }
   }, [scanning, handleScan]);
 
   const toggleKiosk = () => {
