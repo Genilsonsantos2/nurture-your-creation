@@ -30,15 +30,13 @@ export default function UserManagement() {
                 .eq("id", id);
             if (profileError) throw profileError;
 
-            // Garante sync do poder backend para "admin" ou "user"
-            const dbRole = role === "admin" ? "admin" : "user";
             const { data: existingRoles } = await supabase.from("user_roles").select("id").eq("user_id", user_id);
 
             if (existingRoles && existingRoles.length > 0) {
-                const { error: rolesError } = await supabase.from("user_roles").update({ role: dbRole as any }).eq("user_id", user_id);
+                const { error: rolesError } = await supabase.from("user_roles").update({ role: role as any }).eq("user_id", user_id);
                 if (rolesError) console.error("Could not update user_roles:", rolesError);
             } else {
-                const { error: rolesError } = await supabase.from("user_roles").insert({ user_id: user_id, role: dbRole as any });
+                const { error: rolesError } = await supabase.from("user_roles").insert({ user_id: user_id, role: role as any });
                 if (rolesError) console.error("Could not insert user_roles:", rolesError);
             }
         },
