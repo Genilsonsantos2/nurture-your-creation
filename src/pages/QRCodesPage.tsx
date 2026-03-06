@@ -50,7 +50,7 @@ export default function QRCodesPage() {
           <div style="text-align: center; width: 100%;">
             <div style="font-weight: 800; font-size: 14px; color: #0f172a; margin-bottom: 4px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${s.name.toUpperCase()}</div>
             <div style="font-size: 11px; font-weight: 700; color: #1d4ed8; margin-bottom: 4px;">${s.series} • Turma ${s.class}</div>
-            <div style="font-size: 10px; font-weight: 600; color: #475569; background: #f1f5f9; display: inline-block; padding: 2px 6px; border-radius: 4px;">Matrícula: ${s.enrollment}</div>
+            <div style="font-size: 10px; font-weight: 600; color: #475569; background: #f1f5f9; display: inline-block; padding: 2px 6px; border-radius: 4px;">Matrícula: ${s.enrollment || 'Pendente'}</div>
           </div>
         </div>
         <div style="background: #f8fafc; text-align: center; padding: 6px; font-size: 8px; font-weight: 500; color: #64748b; border-top: 1px dashed #cbd5e1; position: absolute; bottom: 0; width: 100%; box-sizing: border-box; height: 40px; display: flex; align-items: center; justify-content: center;">
@@ -225,7 +225,7 @@ export default function QRCodesPage() {
                       {student.series} • {student.class}
                     </div>
                     <div className="block pt-4 border-t border-border/50">
-                      <code className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">ID: {student.enrollment}</code>
+                      <code className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">ID: {student.enrollment || 'Pendente'}</code>
                     </div>
                   </div>
 
