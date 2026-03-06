@@ -11,6 +11,9 @@ export default function UserManagement() {
     const [newName, setNewName] = useState("");
     const [newRole, setNewRole] = useState<"admin" | "coordinator" | "gatekeeper">("gatekeeper");
 
+    const [editingProfile, setEditingProfile] = useState<any>(null);
+    const [editRoleStr, setEditRoleStr] = useState<string>("user");
+
     const { data: profiles, isLoading } = useQuery({
         queryKey: ["user-profiles"],
         queryFn: async () => {
@@ -20,6 +23,21 @@ export default function UserManagement() {
             if (error) throw error;
             return data;
         },
+    });
+
+    const updateRoleMutation = useMutation({
+        mutationFn: async ({ id, role }: { id: string, role: string }) => {
+            const { error } = await supabase
+                .from("profiles")
+                .update({ role_label: role })
+                .eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
+            toast.success("Função atualizada com sucesso!");
+            setEditingProfile(null);
+        }
     });
 
     const addUserMutation = useMutation({
@@ -88,12 +106,13 @@ export default function UserManagement() {
                                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-info/20 to-primary/20 flex items-center justify-center text-info border border-info/10 group-hover:scale-110 transition-transform">
                                     <User className="h-8 w-8" />
                                 </div>
-                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${profile.user_roles?.[0]?.role === "admin" ? "bg-primary text-white border-primary/20" :
-                                        profile.user_roles?.[0]?.role === "coordinator" ? "bg-info text-white border-info/20" :
-                                            "bg-success text-white border-success/20"
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${profile.role_label === "admin" ? "bg-primary text-white border-primary/20" :
+                                    profile.role_label === "coordinator" ? "bg-info text-white border-info/20" :
+                                        profile.role_label === "gatekeeper" ? "bg-success text-white border-success/20" :
+                                            "bg-muted text-muted-foreground border-border/50"
                                     }`}>
                                     <Shield className="h-3 w-3" />
-                                    {profile.user_roles?.[0]?.role || "Usuário"}
+                                    {profile.role_label || "Usuário"}
                                 </div>
                             </div>
 
@@ -106,7 +125,12 @@ export default function UserManagement() {
                             </div>
 
                             <div className="pt-6 border-t border-border/50 flex items-center justify-between relative z-10">
-                                <button className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-info transition-all flex items-center gap-2 group/btn">
+                                <button
+                                    onClick={() => {
+                                        setEditingProfile(profile);
+                                        setEditRoleStr(profile.role_label || "user");
+                                    }}
+                                    className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-info transition-all flex items-center gap-2 group/btn">
                                     <UserCog className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
                                     Configurar
                                 </button>
@@ -198,6 +222,55 @@ export default function UserManagement() {
                                 className="w-full premium-button bg-info text-white py-6 shadow-info/40 text-sm"
                             >
                                 <CheckCircle2 className="h-5 w-5 mr-3" /> Efetuar Cadastro
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Edit User Role Modal */}
+            {editingProfile && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/60 backdrop-blur-xl animate-in fade-in duration-500">
+                    <div className="w-full max-w-lg bg-card border-2 border-info/20 rounded-[3rem] p-12 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] relative animate-in zoom-in-95 duration-500">
+                        <button
+                            onClick={() => setEditingProfile(null)}
+                            className="absolute top-8 right-8 h-12 w-12 rounded-2xl hover:bg-muted flex items-center justify-center transition-all active:scale-90"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+
+                        <div className="flex items-center gap-5 mb-10">
+                            <div className="h-16 w-16 rounded-[1.5rem] bg-info/10 flex items-center justify-center text-info">
+                                <UserCog className="h-8 w-8" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black text-foreground tracking-tight">Editar Permissões</h2>
+                                <p className="text-sm text-muted-foreground font-medium">Altere o papel de {editingProfile.full_name}.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-foreground uppercase tracking-[0.2em] ml-1">Papel no Sistema</label>
+                                <div className="relative">
+                                    <select
+                                        value={editRoleStr}
+                                        onChange={(e) => setEditRoleStr(e.target.value)}
+                                        className="premium-input w-full appearance-none cursor-pointer pr-12"
+                                    >
+                                        <option value="user">Usuário Comum</option>
+                                        <option value="gatekeeper">Porteiro (Controle de Acesso)</option>
+                                        <option value="coordinator">Coordenação (Gestão de Alunos)</option>
+                                        <option value="admin">Administrador (Total)</option>
+                                    </select>
+                                    <Shield className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => updateRoleMutation.mutate({ id: editingProfile.id, role: editRoleStr })}
+                                className="w-full premium-button bg-info text-white py-6 shadow-info/40 text-sm"
+                            >
+                                <CheckCircle2 className="h-5 w-5 mr-3" /> Salvar Alterações
                             </button>
                         </div>
                     </div>

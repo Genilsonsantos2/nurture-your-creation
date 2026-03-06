@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, BellRing, UserX } from "lucide-react";
+import { toast } from "sonner";
 import { getLastNSchoolDays } from "@/lib/calendar";
 
 export default function ReportsPage() {
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState<"week" | "month">("week");
 
   const { data: movements = [] } = useQuery({
@@ -38,10 +40,64 @@ export default function ReportsPage() {
   const lastThreeSchoolDays = getLastNSchoolDays(3);
   const oldestSchoolDay = lastThreeSchoolDays[lastThreeSchoolDays.length - 1];
 
-  // Students with a recent entry in the last 3 school days
   const recentEntries = movements.filter(m => m.type === "entry" && new Date(m.registered_at) >= oldestSchoolDay);
   const studentsWithRecentEntry = new Set(recentEntries.map(m => m.student_id));
   const absentStudents = students.filter(s => !studentsWithRecentEntry.has(s.id));
+
+  // Calculate today's absences
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todaysEntries = movements.filter(m => m.type === "entry" && new Date(m.registered_at) >= todayStart);
+  const studentsWithEntryToday = new Set(todaysEntries.map(m => m.student_id));
+  const absentToday = students.filter(s => !studentsWithEntryToday.has(s.id));
+
+  // Check which absent students already have an alert today
+  const { data: todaysAlerts = [] } = useQuery({
+    queryKey: ["todays-absent-alerts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("alerts")
+        .select("student_id")
+        .eq("type", "absent")
+        .gte("created_at", todayStart.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const todaysAlertedStudentIds = new Set(todaysAlerts.map(a => a.student_id));
+
+  const notifyAbsentees = useMutation({
+    mutationFn: async () => {
+      const alertsToInsert = absentToday
+        .filter(s => !todaysAlertedStudentIds.has(s.id))
+        .map(s => ({
+          student_id: s.id,
+          type: "absent" as any,
+          message: `Aluno(a) ${s.name} não registrou entrada na escola hoje.`,
+          status: "pending" as any
+        }));
+
+      if (alertsToInsert.length === 0) return 0;
+
+      const { error } = await supabase.from("alerts").insert(alertsToInsert);
+      if (error) throw error;
+      return alertsToInsert.length;
+    },
+    onSuccess: (count) => {
+      if (count > 0) {
+        toast.success(`${count} alertas de falta gerados para a coordenação.`);
+        queryClient.invalidateQueries({ queryKey: ["todays-absent-alerts"] });
+      } else {
+        toast.info("Todos os alunos ausentes hoje já foram notificados.");
+      }
+    },
+    onError: () => {
+      toast.error("Erro ao gerar alertas.");
+    }
+  });
 
   // Group by day of week
   const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sexta", "Sáb"];
@@ -168,6 +224,50 @@ export default function ReportsPage() {
                   <span className="text-sm font-bold text-foreground">{student.exits}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Absent Today Section */}
+        <div className="bg-warning/5 border border-warning/20 rounded-2xl p-6 lg:col-span-2 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3 text-warning">
+              <UserX className="h-6 w-6" />
+              <div>
+                <h2 className="text-lg font-bold">Ausentes Hoje</h2>
+                <p className="text-sm font-medium text-warning/80">Alunos que ainda não registraram entrada na data de hoje</p>
+              </div>
+            </div>
+            {absentToday.length > 0 && (
+              <button
+                onClick={() => notifyAbsentees.mutate()}
+                disabled={notifyAbsentees.isPending}
+                className="premium-button bg-warning text-warning-foreground shadow-warning/20 text-sm py-2 px-4 md:w-auto w-full"
+              >
+                <BellRing className="h-4 w-4 mr-2" />
+                {notifyAbsentees.isPending ? "Notificando..." : "Notificar Coordenação"}
+              </button>
+            )}
+          </div>
+
+          {absentToday.length === 0 ? (
+            <div className="text-center p-6 bg-background/50 rounded-xl border border-warning/10">
+              <p className="text-sm font-semibold text-success">Excelente! 100% de presença registrada hoje.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {absentToday.map(student => {
+                const isNotified = todaysAlertedStudentIds.has(student.id);
+                return (
+                  <div key={student.id} className="bg-background rounded-xl p-4 border border-warning/20 shadow-sm flex flex-col relative overflow-hidden group">
+                    <span className="font-bold text-sm text-foreground mb-1 truncate pr-6" title={student.name}>{student.name}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{student.series} • {student.class}</span>
+                    {isNotified && (
+                      <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive" title="Coordenação Notificada" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
