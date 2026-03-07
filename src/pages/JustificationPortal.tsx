@@ -21,16 +21,38 @@ export default function JustificationPortal() {
 
     useEffect(() => {
         const fetchStudent = async () => {
-            const { data, error } = await supabase
-                .from("students")
-                .select("*, guardians!inner(*)")
-                .eq("guardians.parent_access_token", token)
-                .maybeSingle();
+            if (!token) return;
 
-            if (data) setStudent(data);
-            setLoading(false);
+            try {
+                // Step 1: Find guardian by token
+                const { data: guardian, error: gError } = await supabase
+                    .from("guardians")
+                    .select("student_id")
+                    .eq("parent_access_token", token)
+                    .maybeSingle();
+
+                if (gError || !guardian) {
+                    setLoading(false);
+                    return;
+                }
+
+                // Step 2: Get student details
+                const { data: studentData, error: sError } = await supabase
+                    .from("students")
+                    .select("*")
+                    .eq("id", guardian.student_id)
+                    .maybeSingle();
+
+                if (studentData) {
+                    setStudent(studentData);
+                }
+            } catch (err) {
+                console.error("Portal error:", err);
+            } finally {
+                setLoading(false);
+            }
         };
-        if (token) fetchStudent();
+        fetchStudent();
     }, [token]);
 
     const handleSubmit = async (e: React.FormEvent) => {

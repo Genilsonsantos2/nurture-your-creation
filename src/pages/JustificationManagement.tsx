@@ -12,6 +12,8 @@ import { ptBR } from "date-fns/locale";
 export default function JustificationManagement() {
     const queryClient = useQueryClient();
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+    const [showTokenGenerator, setShowTokenGenerator] = useState(false);
+    const [testLink, setTestLink] = useState("");
 
     const { data: justifications = [], isLoading } = useQuery({
         queryKey: ["justifications"],
@@ -45,6 +47,17 @@ export default function JustificationManagement() {
         onError: () => toast.error("Erro ao revisar justificativa.")
     });
 
+    const generateTestLink = async () => {
+        const { data } = await supabase.from("guardians").select("parent_access_token").limit(1).maybeSingle();
+        if (data) {
+            const url = `${window.location.origin}/justificar/${data.parent_access_token}`;
+            setTestLink(url);
+            setShowTokenGenerator(true);
+            navigator.clipboard.writeText(url);
+            toast.success("Link de teste copiado!");
+        }
+    };
+
     const filteredJustifications = justifications.filter(j =>
         filter === 'all' ? true : j.status === filter
     );
@@ -75,7 +88,20 @@ export default function JustificationManagement() {
                         </p>
                     </div>
                 </div>
+                <button
+                    onClick={generateTestLink}
+                    className="relative z-10 px-8 py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                >
+                    <Info className="h-4 w-4" /> Gerar Link de Teste
+                </button>
             </div>
+
+            {showTokenGenerator && (
+                <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-in slide-in-from-top-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">Link Gerado (já copiado):</p>
+                    <code className="text-xs font-mono break-all text-primary/70">{testLink}</code>
+                </div>
+            )}
 
             {/* Filters */}
             <div className="flex flex-wrap gap-2 px-2">
