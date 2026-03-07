@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { MANUAL_ASSETS } from "./manualAssets";
 
 // ==================== PREMIUM DESIGN SYSTEM ====================
 const COLORS = {
@@ -37,13 +38,19 @@ function drawFullBleedHeader(doc: jsPDF, accent: [number, number, number] = COLO
 
 function addHeader(doc: jsPDF, title: string, subtitle: string) {
   drawFullBleedHeader(doc);
+
+  // School Logo in Header
+  try {
+    doc.addImage(MANUAL_ASSETS.logo, "PNG", MARGIN, 8, 12, 12);
+  } catch (e) { }
+
   doc.setTextColor(...COLORS.white);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(title, MARGIN, 18);
-  doc.setFontSize(9);
+  doc.setFontSize(14);
+  doc.text(title, MARGIN + 16, 16);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text(subtitle, MARGIN, 28);
+  doc.text(subtitle, MARGIN + 16, 24);
 
   // School Name Badge
   doc.setFillColor(255, 255, 255);
@@ -65,7 +72,7 @@ function addFooter(doc: jsPDF, pageNum: number) {
   doc.line(MARGIN, PAGE_H - 15, PAGE_W - MARGIN, PAGE_H - 15);
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.muted);
-  doc.text(`CETI Digital — Manual de Operações • v${new Date().getFullYear()}.1`, MARGIN, PAGE_H - 10);
+  doc.text(`CETI Digital — Manual de Operações • v${new Date().getFullYear()}.2 • CONFIDENCIAL`, MARGIN, PAGE_H - 10);
   doc.text(`Página ${pageNum}`, PAGE_W - MARGIN, PAGE_H - 10, { align: "right" });
 }
 
@@ -124,6 +131,17 @@ function printBody(doc: jsPDF, y: number, text: string): number {
   return y + (lines.length * 5) + 6;
 }
 
+function printDetailedBody(doc: jsPDF, y: number, text: string): number {
+  doc.setTextColor(...COLORS.secondary);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setLineHeightFactor(1.5);
+  const lines = doc.splitTextToSize(text, CONTENT_W);
+  doc.text(lines, MARGIN, y);
+  doc.setLineHeightFactor(1.15);
+  return y + (lines.length * 5.5) + 6;
+}
+
 function printModuleBox(doc: jsPDF, y: number, title: string, items: string[]): number {
   const boxHeight = (items.length * 6) + 15;
   doc.setFillColor(...COLORS.bg);
@@ -143,6 +161,28 @@ function printModuleBox(doc: jsPDF, y: number, title: string, items: string[]): 
   });
 
   return y + boxHeight + 8;
+}
+
+function printIllustration(doc: jsPDF, y: number, imageKey: keyof typeof MANUAL_ASSETS, caption: string): number {
+  const imgW = 120;
+  const imgH = 68;
+  const x = (PAGE_W - imgW) / 2;
+
+  doc.setFillColor(...COLORS.bg);
+  doc.roundedRect(x - 5, y - 5, imgW + 10, imgH + 20, 8, 8, "F");
+
+  try {
+    doc.addImage(MANUAL_ASSETS[imageKey], "PNG", x, y, imgW, imgH);
+  } catch (e) {
+    doc.text("[Imagem não carregada]", PAGE_W / 2, y + 30, { align: "center" });
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.muted);
+  doc.setFont("helvetica", "italic");
+  doc.text(caption, PAGE_W / 2, y + imgH + 8, { align: "center" });
+
+  return y + imgH + 25;
 }
 
 function printProTip(doc: jsPDF, y: number, text: string, type: "info" | "warning" | "danger" = "info"): number {
@@ -178,7 +218,7 @@ function printProTip(doc: jsPDF, y: number, text: string, type: "info" | "warnin
 function generateCover(doc: jsPDF, title: string, subtitle: string) {
   // Full screen background accent
   doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, PAGE_W, PAGE_H / 1.8, "F");
+  doc.rect(0, 0, PAGE_W, PAGE_H / 2.2, "F");
 
   // Decorative Geometry
   doc.setFillColor(255, 255, 255);
@@ -187,177 +227,152 @@ function generateCover(doc: jsPDF, title: string, subtitle: string) {
     doc.circle(0, 0, 100, "F");
     doc.circle(PAGE_W, PAGE_H / 2, 80, "F");
     doc.setGState(new (doc as any).GState({ opacity: 1 }));
-  } catch (e) {
-    console.warn("GState not supported", e);
-  }
+  } catch (e) { }
 
-  // White area title
+  // Real School Logo
+  try {
+    doc.addImage(MANUAL_ASSETS.logo, "PNG", PAGE_W / 2 - 20, 25, 40, 40);
+  } catch (e) { }
+
+  // Titles
   doc.setTextColor(...COLORS.white);
-  doc.setFontSize(48);
+  doc.setFontSize(32);
   doc.setFont("helvetica", "bold");
-  doc.text("CETI", PAGE_W / 2, 70, { align: "center" });
-  doc.setFontSize(52);
-  doc.text("NOVA ITARANA", PAGE_W / 2, 92, { align: "center" });
+  doc.text("CETI NOVA ITARANA", PAGE_W / 2, 85, { align: "center" });
 
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text("TECNOLOGIA A SERVIÇO DA EDUCAÇÃO", PAGE_W / 2, 108, { align: "center" });
-
-  // Horizontal Line
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(2);
-  doc.line(PAGE_W / 2 - 40, 118, PAGE_W / 2 + 40, 118);
+  doc.text("TECNOLOGIA A SERVIÇO DA EDUCAÇÃO BRASILEIRA", PAGE_W / 2, 95, { align: "center" });
 
   // Main Manual Box
   doc.setFillColor(...COLORS.white);
-  doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 10, CONTENT_W - 20, 70, 8, 8, "F");
+  doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 20, CONTENT_W - 20, 80, 8, 8, "F");
   doc.setDrawColor(...COLORS.primary);
   doc.setLineWidth(0.5);
-  doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 10, CONTENT_W - 20, 70, 8, 8, "S");
+  doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 20, CONTENT_W - 20, 80, 8, 8, "S");
 
   doc.setTextColor(...COLORS.primary);
-  doc.setFontSize(28);
+  doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text(title, PAGE_W / 2, PAGE_H / 2 + 20, { align: "center" });
+  doc.text(title, PAGE_W / 2, PAGE_H / 2 + 15, { align: "center" });
 
   doc.setTextColor(...COLORS.muted);
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text(subtitle, PAGE_W / 2, PAGE_H / 2 + 35, { align: "center" });
+  const subLines = doc.splitTextToSize(subtitle, CONTENT_W - 40);
+  doc.text(subLines, PAGE_W / 2, PAGE_H / 2 + 30, { align: "center" });
 
   // Bottom Branding
   doc.setTextColor(...COLORS.secondary);
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("CETI DIGITAL", PAGE_W / 2, PAGE_H - 40, { align: "center" });
+  doc.text("CETI DIGITAL v2.0", PAGE_W / 2, PAGE_H - 40, { align: "center" });
   doc.setFont("helvetica", "normal");
-  doc.text(`Edição ${new Date().getFullYear()}`, PAGE_W / 2, PAGE_H - 34, { align: "center" });
+  doc.text(`Expedido em Março de ${new Date().getFullYear()}`, PAGE_W / 2, PAGE_H - 34, { align: "center" });
 }
-
-// ==================== DATA CONFIGS ====================
-const ADMIN_CHAPTERS = [
-  { id: "01", title: "Fundamentos do Ecossistema", subtitle: "Arquitetura e Filosofia" },
-  { id: "02", title: "Business Intelligence", subtitle: "Gestão Baseada em Dados" },
-  { id: "03", title: "Controle de Acesso 360", subtitle: "Portaria e Segurança" },
-  { id: "04", title: "Gestão Disciplinar", subtitle: "Protocolos e Ocorrências" },
-  { id: "05", title: "Comunicação Integrada", subtitle: "WhatsApp e Portal" }
-];
 
 // ==================== EXPORTS ====================
 export function generateUserGuidePDF() {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const page = { val: 1 };
-  const T = "GUIA DO USUÁRIO";
-  const S = "MANUAL MESTRE DO ADMINISTRADOR";
+  const T = "GUIA MASTER";
+  const S = "MANUAL TÉCNICO E ESTRATÉGICO PARA ADMINISTRADORES";
 
-  generateCover(doc, "MANUAL MASTER", "GESTÃO ESCOLAR 4.0");
+  generateCover(doc, "MANUAL MESTRE", "Este guia contém os protocolos críticos e a lógica operacional do ecossistema CETI Digital. Uso exclusivo da Diretoria e Coordenação Geral.");
 
   // --- INTRODUÇÃO ---
   let y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "01", "Fundamentos do Sistema");
-  y = printBody(doc, y, "O CETI Digital não é apenas um software de registro; é um ecossistema de gestão inteligente desenhado para elevar a eficiência operacional da escola. Através de monitoramento em tempo real, ele cria uma ponte entre a portaria, coordenação e família.");
+  y = printDisplayTitle(doc, y, "01", "Visão Geral do Ecossistema");
+  y = printDetailedBody(doc, y, "O CETI Digital foi arquitetado para ser o sistema nervoso central da unidade escolar. Sua lógica não se baseia apenas em registros, mas em validação em tempo real de fluxos e análise preditiva de comportamento discente. Cada interação no portão ou na coordenação alimenta uma base de dados unificada.");
 
-  y = printSectionHeading(doc, y, "A Tríade do Cetidital");
-  y = printModuleBox(doc, y, "Pilares Estratégicos", [
-    "Monitoramento de Fluxo: Controle total de quem entra e sai.",
-    "Transparência Radical: Informação instantânea para os pais.",
-    "Decisões Baseadas em Dados: Relatórios que mostram a realidade da escola."
-  ]);
+  y = printIllustration(doc, y, "dashboard", "Figura 1.1: Interface de monitoramento estratégico unificado.");
 
-  y = printProTip(doc, y, "O sistema é otimizado para navegadores baseados em Chromium. Mantenha seu navegador atualizado para garantir a performance dos gráficos.");
+  y = printSectionHeading(doc, y, "Gestão Baseada em Evidências");
+  y = printDetailedBody(doc, y, "Diferente de sistemas legados, aqui as decisões são disparadas por triggers automáticos. Uma falta registrada no portão aciona imediatamente a engine de notificação para os pais e atualiza o termômetro de risco do aluno.");
 
-  // --- BI & RELATÓRIOS ---
+  y = printProTip(doc, y, "Para um desempenho máximo no Dashboard, recomendamos processar os alertas logo na primeira hora da manhã. O sistema prioriza eventos recentes para facilitar a triagem.");
+
+  // --- ANALYTICS ---
   y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "02", "Business Intelligence");
-  y = printBody(doc, y, "Nossa engine de Analytics transforma registros de portaria em inteligência pedagógica. O administrador deve focar nos indicadores de risco para antecipar problemas de evasão.");
+  y = printDisplayTitle(doc, y, "02", "Analytics e Business Intelligence");
+  y = printDetailedBody(doc, y, "O motor de Analytics do sistema (representado no gráfico acima) processa três KPIs fundamentais que o administrador deve monitorar semanalmente:");
 
-  y = printSectionHeading(doc, y, "Métricas de Performance");
   autoTable(doc, {
     startY: y,
-    head: [['Indicador', 'Objetivo', 'Ação Crítica']],
+    head: [['KPI', 'Lógica de Cálculo', 'Ação Estratégica']],
     body: [
-      ['Taxa de Assiduidade', 'Medir presença geral', 'Identificar turmas ociosas'],
-      ['Alertas Ativos', 'Resolver pendências', 'Contactar responsáveis'],
-      ['Índice Disciplinar', 'Monitorar conduta', 'Geração de relatórios'],
+      ['Flow Efficiency', 'Proporção entre scans válidos vs exceções manuais.', 'Treinamento de portaria se < 90%'],
+      ['Student Risk Score', 'Ponderação de faltas recorrentes e ocorrências.', 'Intervenção pedagógica imediata'],
+      ['Peak Load Hour', 'Identificação de gargalos de tempo no portão.', 'Otimização de escalas de apoio'],
     ],
     theme: 'grid',
-    headStyles: { fillColor: COLORS.primary },
-    margin: { left: MARGIN, right: MARGIN }
+    headStyles: { fillColor: COLORS.primary }
   });
   y = (doc as any).lastAutoTable.finalY + 15;
 
-  y = printProTip(doc, y, "Use o filtro de data no Dashboard para comparar a frequência entre meses diferentes e notar sazonalidades.", "info");
+  y = printSectionHeading(doc, y, "Termômetro de Risco");
+  y = printDetailedBody(doc, y, "O algoritmo calcula o 'nível de calor' de cada aluno. Alunos em 'Estado Crítico' são aqueles com mais de 3 ocorrências ativas ou 5 faltas injustificadas. O sistema os coloca no topo da sua lista de alertas automaticamente.");
 
   // --- PORTARIA ---
   y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "03", "Controle de Acesso 360");
-  y = printBody(doc, y, "O módulo de portaria é o coração do sistema. Cada 'scan' de QR Code valida o perfil do aluno, seus horários permitidos e gera notificações automáticas.");
+  y = printDisplayTitle(doc, y, "03", "Portaria Inteligente (Gatekeeper)");
+  y = printDetailedBody(doc, y, "O módulo de portaria integra hardware (câmera/scanner) e software de segurança. Ao escanear um QR Code, o sistema realiza as seguintes validações em < 500ms:");
 
-  y = printModuleBox(doc, y, "Operação Padrão", [
-    "Verificação de Identidade: Foto do aluno aparece instantaneamente.",
-    "Gestão de Exceção: Registro de saídas autorizadas fora de horário.",
-    "Modo Offline: Sincronização automática para instabilidades de rede."
+  y = printModuleBox(doc, y, "Pipeline de Validação", [
+    "Status de Matrícula: Identifica se o aluno está ativo.",
+    "Grade de Horários: Valida se é o momento permitido de entrada/saída.",
+    "Alertas Médicos: Exibe restrições de saúde instantaneamente.",
+    "Exceções de Saída: Verifica se há autorização prévia da coordenação."
   ]);
 
-  y = printProTip(doc, y, "Sempre oriente os porteiros a verificarem a foto na tela. O QR Code é único, mas a conferência visual é a camada final de segurança.", "warning");
+  y = printIllustration(doc, y, "gate", "Figura 2.1: Terminal de controle de acesso otimizado para scanners móveis.");
+
+  y = printProTip(doc, y, "Em caso de falha de conexão, o sistema entra em Modo Offline. Os dados ficam em cache local e são sincronizados com o Supabase assim que o sinal retorna.", "warning");
 
   // --- GESTÃO DISCIPLINAR ---
   y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "04", "Gestão Disciplinar");
-  y = printBody(doc, y, "O CETI Digital formaliza o acompanhamento comportamental. O registro de ocorrências permite que nada 'se perca no papel', criando uma timeline histórica do aluno.");
+  y = printDisplayTitle(doc, y, "04", "Protocolos Disciplinares");
+  y = printDetailedBody(doc, y, "As ocorrências são a materialização jurídica do acompanhamento escolar. O sistema gera documentos com validade administrativa.");
 
-  y = printSectionHeading(doc, y, "Fluxo de Ocorrência");
-  y = printBody(doc, y, "1. Registro do Incidente com evidências descritivas.\n2. Geração de PDF oficial timbrado.\n3. Envio de Notificação Push/WhatsApp.\n4. Assinatura e arquivamento digital.");
+  y = printIllustration(doc, y, "report", "Figura 3.1: Modelo de relatório disciplinar assinado digitalmente.");
 
-  y = printProTip(doc, y, "Ocorrências graves geram alertas imediatos para a coordenação. Fique atento ao Sino de Notificações.", "danger");
+  y = printSectionHeading(doc, y, "Fluxo de Formalização");
+  y = printDetailedBody(doc, y, "1. Registro: O fato é narrado com tags de categoria.\n2. Notificação: O responsável recebe um resumo via WhatsApp/Portal.\n3. PDF Oficial: Um termo é gerado com QR Code de autenticidade para assinatura física quando necessário.");
 
-  // --- COMUNICAÇÃO ---
-  y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "05", "Comunicação com a Família");
-  y = printBody(doc, y, "Reduzir o distanciamento entre escola e família é chave para o sucesso do aluno. O sistema oferece dois portais de transparência.");
+  y = printProTip(doc, y, "Nunca delete uma ocorrência por erro. O sistema mantém logs de auditoria. Use a função 'Arquivar' para manter o histórico íntegro.", "danger");
 
-  y = printModuleBox(doc, y, "Canais de Integração", [
-    "Portal do Aluno: Acesso via Token único para cada responsável.",
-    "Bot de WhatsApp: Notificações em tempo real de chegada e saída.",
-    "Mural Digital: Avisos e comunicados da escola na palma da mão."
-  ]);
-
-  doc.save(`MASTER_GUIDE_CETI_${new Date().getFullYear()}.pdf`);
+  doc.save(`MASTER_GUIDE_CETI_DIGITAL_${new Date().getFullYear()}.pdf`);
 }
 
 export function generateGatekeeperGuidePDF() {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const page = { val: 1 };
   const T = "GUIA DO PORTEIRO";
-  const S = "PROTOCOLOS DE ACESSO E SEGURANÇA";
+  const S = "MANUAL DE PROCEDIMENTOS E SEGURANÇA DE ACESSO";
 
-  generateCover(doc, "GUIA PORTARIA", "PROTOCOLO DE SEGURANÇA");
+  generateCover(doc, "GUIA PORTARIA", "Instruções críticas para o controle de fluxo e segurança das entradas e saídas.");
 
   let y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "01", "Atenção Total");
-  y = printBody(doc, y, "Você é o guardião dos acessos da escola. O uso correto do scanner garante que a coordenação saiba exatamente onde cada aluno está em tempo real.");
+  y = printDisplayTitle(doc, y, "01", "Operação do Scanner");
+  y = printDetailedBody(doc, y, "O scanner é o ponto de entrada de todos os dados do sistema. O porteiro deve assegurar que cada aluno passe individualmente pelo controle.");
 
-  y = printSectionHeading(doc, y, "Como Operar o Scanner");
-  y = printBody(doc, y, "1. Abra a página 'Portaria'.\n2. Ative a câmera frontal ou traseira.\n3. Enquadre o QR Code da carteirinha.\n4. Aguarde o retorno VISUAL (Verde: OK, Vermelho: Bloqueado).");
+  y = printIllustration(doc, y, "gate", "Visão correta do terminal de leitura.");
 
-  y = printProTip(doc, y, "Se a internet cair, o sistema continuará funcionando no 'Modo Offline'. Não pare de escanear!", "warning");
-
-  y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "02", "Protocolos de Saída");
-  y = printBody(doc, y, "Nunca libere um aluno fora do horário sem que o sistema mostre a mensagem 'Saída Autorizada' em verde.");
-
-  y = printSectionHeading(doc, y, "Cores do Sistema");
+  y = printSectionHeading(doc, y, "Entendendo os Retornos");
   autoTable(doc, {
     startY: y,
-    head: [['Cor', 'Status', 'O que fazer']],
+    head: [['Visual', 'Status', 'Procedimento']],
     body: [
-      ['Verde', 'Liberado', 'Permitir passagem'],
-      ['Amarelo', 'Alerta', 'Chamar coordenação'],
-      ['Vermelho', 'Bloqueado', 'NÃO LIBERAR'],
+      ['Bip Verde', 'LIBERADO', 'Permitir entrada/saída'],
+      ['Bip Amarelo', 'ATRASO', 'Avisar que está fora do horário'],
+      ['Bip Vermelho', 'BLOQUEADO', 'Encaminhar à coordenação'],
     ],
     theme: 'grid',
-    headStyles: { fillColor: COLORS.primary }
+    headStyles: { fillColor: COLORS.accent }
   });
+  y = (doc as any).lastAutoTable.finalY + 15;
+
+  y = printProTip(doc, y, "Se o QR Code estiver danificado, use a 'Busca Manual' inserindo o nome ou matrícula do aluno.", "info");
 
   doc.save(`GUIA_PORTARIA_CETI_${new Date().getFullYear()}.pdf`);
 }
@@ -366,22 +381,22 @@ export function generateCoordinationGuidePDF() {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const page = { val: 1 };
   const T = "GUIA DA COORDENAÇÃO";
-  const S = "GESTÃO PEDAGÓGICA E DISCIPLINAR";
+  const S = "MANUAL DE GESTÃO PEDAGÓGICA E DISCIPLINAR";
 
-  generateCover(doc, "GUIA COORDENAÇÃO", "FOCO NO SUCESSO DO ALUNO");
+  generateCover(doc, "GUIA COORDENAÇÃO", "Ferramentas para o acompanhamento da vida escolar e intervenção pedagógica.");
 
   let y = newPage(doc, T, S, page);
-  y = printDisplayTitle(doc, y, "01", "Gestão do Aluno");
-  y = printBody(doc, y, "Sua missão é acompanhar o desenvolvimento e a frequência dos discentes. O sistema sinaliza alunos que estão fugindo do padrão habitual.");
+  y = printDisplayTitle(doc, y, "01", "Tratamento de Alertas");
+  y = printDetailedBody(doc, y, "Sua tela principal é o Dashboard de Alertas. O sistema sinaliza automaticamente quando um aluno se torna uma 'anomalia' no fluxo escolar.");
 
-  y = printSectionHeading(doc, y, "Principais Ferramentas");
-  y = printModuleBox(doc, y, "Rotina do Coordenador", [
-    "Análise de Alertas: Tratar faltas recorrentes.",
-    "Justificativas: Validar atestados e motivos de ausência.",
-    "Ocorrências: Registrar fatos disciplinares com precisão."
-  ]);
+  y = printIllustration(doc, y, "dashboard", "Dashboard de análise de risco e frequência.");
 
-  y = printProTip(doc, y, "Um aluno com 3 dias de ausência sem justificativa gera um 'Alerta Crítico'. É o momento de ligar para a família.", "danger");
+  y = printSectionHeading(doc, y, "Ocorrências e Família");
+  y = printDetailedBody(doc, y, "Ao registrar uma ocorrência, certifique-se de ser o mais descritivo possível. O texto inserido aqui é o que será enviado para o WhatsApp dos pais.");
+
+  y = printIllustration(doc, y, "report", "Gestão de formulários e relatórios.");
+
+  y = printProTip(doc, y, "Aprovar justificativas rápidas aumenta a confiança dos pais no sistema. Tente revisar o portal de justificativas pelo menos duas vezes ao dia.", "info");
 
   doc.save(`GUIA_COORDENACAO_CETI_${new Date().getFullYear()}.pdf`);
 }
