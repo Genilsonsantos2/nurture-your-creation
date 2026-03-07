@@ -60,7 +60,7 @@ export function AnnouncementsManager() {
 
     const toggleStatus = useMutation({
         mutationFn: async ({ id, active }: { id: string, active: boolean }) => {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from("gate_announcements")
                 .update({ active: !active })
                 .eq("id", id);
