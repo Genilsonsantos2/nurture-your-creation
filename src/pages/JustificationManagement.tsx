@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
     FileCheck, FileX, Clock, Search, Filter,
-    CheckCircle2, XCircle, AlertCircle, Info
+    CheckCircle2, XCircle, AlertCircle, Info, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -155,6 +155,18 @@ export default function JustificationManagement() {
                                         <div className="mt-4 p-4 rounded-2xl bg-muted/50 border border-border/50 max-w-2xl">
                                             <p className="text-sm text-foreground font-medium italic">"{item.reason}"</p>
                                         </div>
+                                        {item.document_url && (
+                                            <div className="mt-4">
+                                                <a
+                                                    href={item.document_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all border border-primary/10"
+                                                >
+                                                    <ExternalLink className="h-3 w-3" /> Ver Anexo / Atestado
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

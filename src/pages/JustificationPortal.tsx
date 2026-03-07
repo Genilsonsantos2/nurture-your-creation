@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
     FileCheck, Send, ShieldCheck, AlertCircle,
-    Calendar, User, BookOpen, CheckCircle
+    Calendar, User, BookOpen, CheckCircle, Camera, Image as ImageIcon, X, Paperclip
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +18,8 @@ export default function JustificationPortal() {
         date: new Date().toISOString().split('T')[0],
         reason: ""
     });
+    const [file, setFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -55,18 +57,56 @@ export default function JustificationPortal() {
         fetchStudent();
     }, [token]);
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            if (selectedFile.size > 5 * 1024 * 1024) {
+                toast.error("O arquivo é muito grande. Máximo 5MB.");
+                return;
+            }
+            setFile(selectedFile);
+            if (selectedFile.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onloadend = () => setPreviewUrl(reader.result as string);
+                reader.readAsDataURL(selectedFile);
+            } else {
+                setPreviewUrl(null);
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!student || !form.reason) return;
 
         setSubmitting(true);
         try {
+            let documentUrl = null;
+
+            if (file) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${student.id}/${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('justifications')
+                    .upload(fileName, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('justifications')
+                    .getPublicUrl(fileName);
+
+                documentUrl = publicUrl;
+            }
+
             const { error } = await (supabase as any)
                 .from("absence_justifications")
                 .insert({
                     student_id: student.id,
                     justification_date: form.date,
                     reason: form.reason,
+                    document_url: documentUrl,
                     status: 'pending'
                 } as any);
 
@@ -84,7 +124,7 @@ export default function JustificationPortal() {
     if (loading) return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
             <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
-            <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Validando acesso...</p>
+            <p className="text-muted-foreground font-medium">Buscando informações do aluno...</p>
         </div>
     );
 
@@ -172,9 +212,53 @@ export default function JustificationPortal() {
                                 value={form.reason}
                                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
                                 placeholder="Ex: Aluno apresentou febre ou consulta médica agendada..."
-                                rows={5}
+                                rows={4}
                                 className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 focus:bg-background p-6 rounded-3xl font-bold text-foreground transition-all outline-none resize-none"
                             />
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Anexar Documento / Foto (Opcional)</label>
+                            <div className="relative">
+                                <input
+                                    type="file"
+                                    id="file-upload"
+                                    onChange={handleFileChange}
+                                    accept="image/*,application/pdf"
+                                    className="hidden"
+                                />
+                                <label
+                                    htmlFor="file-upload"
+                                    className={`flex flex-col items-center justify-center w-full min-h-[120px] rounded-3xl border-2 border-dashed transition-all cursor-pointer hover:bg-muted/30 ${file ? 'border-primary bg-primary/5' : 'border-muted-foreground/30 bg-muted/20'}`}
+                                >
+                                    {previewUrl ? (
+                                        <div className="relative w-full h-full p-4 flex flex-col items-center">
+                                            <img src={previewUrl} alt="Preview" className="h-40 w-full object-cover rounded-xl mb-3 shadow-lg" />
+                                            <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
+                                                <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.preventDefault(); setFile(null); setPreviewUrl(null); }} /> Alterar Foto
+                                            </div>
+                                        </div>
+                                    ) : file ? (
+                                        <div className="p-6 flex flex-col items-center gap-3">
+                                            <div className="h-12 w-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
+                                                <Paperclip className="h-6 w-6" />
+                                            </div>
+                                            <p className="text-sm font-bold text-foreground max-w-[200px] truncate text-center">{file.name}</p>
+                                            <button type="button" onClick={(e) => { e.preventDefault(); setFile(null); }} className="text-[10px] font-black uppercase text-red-500 hover:underline">Remover</button>
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 flex flex-col items-center gap-4 text-center">
+                                            <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+                                                <Camera className="h-8 w-8" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">Clique para tirar foto ou anexar</p>
+                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Atestado médico, declaração, etc.</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
                         </div>
 
                         <button
