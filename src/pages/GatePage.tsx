@@ -43,6 +43,8 @@ export default function GatePage() {
   const [occurrenceDescription, setOccurrenceDescription] = useState("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanTimesRef = useRef<Record<string, number>>({});
+  const isProcessingRef = useRef(false);
+  const detectedStudentRef = useRef<any>(null);
   const queryClient = useQueryClient();
 
   // Audio Pre-loading with more stable URLs
@@ -167,14 +169,16 @@ export default function GatePage() {
   });
 
   const handleDetection = useCallback(async (decodedText: string) => {
-    if (isProcessing || detectedStudent) return;
+    if (isProcessingRef.current || detectedStudentRef.current) return;
 
     // Cooldown
     const nowTime = Date.now();
     const lastTime = lastScanTimesRef.current[decodedText] || 0;
     if (nowTime - lastTime < 3000) return;
 
+    isProcessingRef.current = true;
     setIsProcessing(true);
+
     try {
       const { data: student, error } = await supabase
         .from("students")
@@ -184,6 +188,7 @@ export default function GatePage() {
 
       if (error || !student) throw new Error("Estudante não encontrado");
 
+      detectedStudentRef.current = student;
       setDetectedStudent(student);
       lastScanTimesRef.current[decodedText] = nowTime;
 
@@ -191,13 +196,15 @@ export default function GatePage() {
     } catch (err: any) {
       toast.error(err.message);
     } finally {
+      isProcessingRef.current = false;
       setIsProcessing(false);
     }
-  }, [isProcessing, soundEnabled, detectedStudent]);
+  }, [isProcessing, soundEnabled]);
 
   const confirmMovement = async (type: "entry" | "exit") => {
-    if (!detectedStudent) return;
+    if (!detectedStudent || isProcessing) return;
     setIsProcessing(true);
+    isProcessingRef.current = true;
 
     try {
       const studentId = detectedStudent.id;
@@ -256,17 +263,23 @@ export default function GatePage() {
 
       playSound(type);
 
+      // Only set last scan here if mutation success handler didn't handle it
+      // Actually, mutation success handler is redundant now for some properties, 
+      // but let's keep it consistent.
       setLastScan({
         ...result,
         success: true,
         isAuthorizedExit,
         authReason
       });
+
+      detectedStudentRef.current = null;
       setDetectedStudent(null);
     } catch (err: any) {
       toast.error("Erro ao registrar: " + err.message);
     } finally {
       setIsProcessing(false);
+      isProcessingRef.current = false;
     }
   };
 
@@ -389,14 +402,16 @@ export default function GatePage() {
                   <div className="grid grid-cols-2 gap-6 w-full pt-4">
                     <button
                       onClick={() => confirmMovement("entry")}
-                      className="group flex flex-col items-center justify-center gap-4 bg-emerald-600 hover:bg-emerald-500 p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/40 transition-all active:scale-95"
+                      disabled={isProcessing}
+                      className="group flex flex-col items-center justify-center gap-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:grayscale p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/40 transition-all active:scale-95"
                     >
                       <LogIn className="h-12 w-12" />
                       <span className="text-2xl font-black uppercase tracking-tighter">ENTRADA</span>
                     </button>
                     <button
                       onClick={() => confirmMovement("exit")}
-                      className="group flex flex-col items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/40 transition-all active:scale-95"
+                      disabled={isProcessing}
+                      className="group flex flex-col items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:grayscale p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/40 transition-all active:scale-95"
                     >
                       <LogOut className="h-12 w-12" />
                       <span className="text-2xl font-black uppercase tracking-tighter">SAÍDA</span>
@@ -411,7 +426,10 @@ export default function GatePage() {
                       <FileText className="h-5 w-5" /> Relatar Ocorrência
                     </button>
                     <button
-                      onClick={() => setDetectedStudent(null)}
+                      onClick={() => {
+                        setDetectedStudent(null);
+                        detectedStudentRef.current = null;
+                      }}
                       className="flex items-center justify-center gap-2 text-sm font-bold text-red-400 uppercase tracking-widest hover:underline"
                     >
                       <RotateCcw className="h-4 w-4" /> Cancelar
@@ -491,8 +509,8 @@ export default function GatePage() {
                     <div
                       key={announcement.id}
                       className={`p-4 rounded-2xl border ${announcement.priority === 'critical' ? 'bg-destructive/20 border-destructive/50 animate-pulse text-white' :
-                          announcement.priority === 'high' ? 'bg-warning/20 border-warning/50 text-white' :
-                            'bg-white/5 border-white/10 text-gray-200'
+                        announcement.priority === 'high' ? 'bg-warning/20 border-warning/50 text-white' :
+                          'bg-white/5 border-white/10 text-gray-200'
                         }`}
                     >
                       <p className="text-sm font-bold leading-relaxed">{announcement.message}</p>
