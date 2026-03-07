@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Upload, Edit, Trash2, Link as LinkIcon, Copy, UserCheck, Users, SearchSlash } from "lucide-react";
+import { Plus, Search, Upload, Edit, Trash2, Link as LinkIcon, Copy, UserCheck, Users, SearchSlash, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -162,6 +162,13 @@ export default function StudentsPage() {
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => navigate(`/alunos/${student.id}/timeline`)}
+                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-info hover:text-white transition-all active:scale-95"
+                          title="Ver Dossiê / Linha do Tempo"
+                        >
+                          <Clock className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => {
                             const link = `${window.location.origin}/filho/${student.id}`;

@@ -21,6 +21,7 @@ import CalendarPage from "./pages/CalendarPage";
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/UserManagement";
 import ClassesPage from "./pages/ClassesPage";
+import StudentDossier from "./pages/StudentDossier";
 import ParentPortal from "./pages/ParentPortal";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import JustificationPortal from "./pages/JustificationPortal";
@@ -66,6 +67,7 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/filho/:token" element={<ParentPortal />} />
+      <Route path="/alunos/:id/timeline" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentDossier /></RoleRoute></ProtectedRoute>} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/alunos" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentsPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/alunos/novo" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
