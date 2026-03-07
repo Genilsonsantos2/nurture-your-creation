@@ -1,4 +1,5 @@
-import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones } from "lucide-react";
+import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones, BookOpen } from "lucide-react";
+import { generateUserGuidePDF } from "@/lib/userGuideGenerator";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
