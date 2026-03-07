@@ -17,7 +17,7 @@ export function AnnouncementsManager() {
     const { data: announcements = [], isLoading } = useQuery({
         queryKey: ["gate_announcements_manager"],
         queryFn: async () => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from("gate_announcements")
                 .select("*, created_by_auth:created_by") // simplified user fetch
                 .order("created_at", { ascending: false })
