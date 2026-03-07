@@ -1,5 +1,5 @@
-import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones, BookOpen } from "lucide-react";
-import { generateUserGuidePDF } from "@/lib/userGuideGenerator";
+import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones, BookOpen, DoorOpen, GraduationCap } from "lucide-react";
+import { generateUserGuidePDF, generateGatekeeperGuidePDF, generateCoordinationGuidePDF } from "@/lib/userGuideGenerator";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -257,23 +257,43 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* User Guide */}
-        <div className="glass-panel p-10 border-primary/10">
-          <div className="flex items-center gap-4 mb-6">
+        {/* User Guides */}
+        <div className="glass-panel p-10 border-primary/10 lg:col-span-2">
+          <div className="flex items-center gap-4 mb-8">
             <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h2 className="text-lg font-black text-foreground tracking-tight">Documentação</h2>
-              <p className="text-xs text-muted-foreground font-medium">Guia completo do sistema em PDF</p>
+              <p className="text-xs text-muted-foreground font-medium">Guias do sistema em PDF para cada perfil</p>
             </div>
           </div>
-          <button
-            onClick={() => generateUserGuidePDF()}
-            className="w-full py-5 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/10 active:scale-95"
-          >
-            <BookOpen className="h-4 w-4" /> Baixar Guia do Usuário (PDF)
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => generateUserGuidePDF()}
+              className="py-5 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex flex-col items-center justify-center gap-3 hover:bg-primary hover:text-primary-foreground transition-all shadow-lg shadow-primary/10 active:scale-95"
+            >
+              <BookOpen className="h-6 w-6" />
+              Guia Completo
+              <span className="text-[8px] font-medium opacity-70 normal-case tracking-normal">Todos os módulos</span>
+            </button>
+            <button
+              onClick={() => generateGatekeeperGuidePDF()}
+              className="py-5 rounded-2xl bg-success/10 text-success text-[10px] font-black uppercase tracking-[0.2em] flex flex-col items-center justify-center gap-3 hover:bg-success hover:text-success-foreground transition-all shadow-lg shadow-success/10 active:scale-95"
+            >
+              <DoorOpen className="h-6 w-6" />
+              Guia do Porteiro
+              <span className="text-[8px] font-medium opacity-70 normal-case tracking-normal">Operações de portaria</span>
+            </button>
+            <button
+              onClick={() => generateCoordinationGuidePDF()}
+              className="py-5 rounded-2xl bg-info/10 text-info text-[10px] font-black uppercase tracking-[0.2em] flex flex-col items-center justify-center gap-3 hover:bg-info hover:text-info-foreground transition-all shadow-lg shadow-info/10 active:scale-95"
+            >
+              <GraduationCap className="h-6 w-6" />
+              Guia da Coordenação
+              <span className="text-[8px] font-medium opacity-70 normal-case tracking-normal">Gestão pedagógica</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
