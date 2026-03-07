@@ -25,7 +25,11 @@ export default function AlertsPage() {
   const { data: alerts = [] } = useQuery({
     queryKey: ["alerts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("alerts").select("*, students(name, series, class)").order("created_at", { ascending: false });
+      // Modificamos a busca para incluir também o telefone do responsável p/ contato rápido do WhatsApp
+      const { data, error } = await supabase
+        .from("alerts")
+        .select("*, students(name, series, class, guardians(phone, name))")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -79,7 +83,18 @@ export default function AlertsPage() {
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" /> {new Date(alert.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                <button onClick={() => resolveMutation.mutate(alert.id)} className="text-xs font-medium text-primary hover:underline">Resolver</button>
+                {alert.type === "absent" && alert.students?.guardians?.[0] && (
+                  <button
+                    onClick={() => {
+                      const phone = alert.students.guardians[0].phone.replace(/\D/g, '');
+                      const msg = encodeURIComponent(`Olá, responsável por ${alert.students.name}. Notamos que o(a) aluno(a) não registra entrada na escola há alguns dias. Está tudo bem?`);
+                      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+                    }}
+                    className="text-xs font-medium bg-success/10 text-success px-3 py-1.5 rounded-full hover:bg-success/20 transition-all">
+                    Chamar no Whats
+                  </button>
+                )}
+                <button onClick={() => resolveMutation.mutate(alert.id)} className="text-xs font-medium text-primary hover:underline ml-2">Resolver</button>
               </div>
             </div>
           ))

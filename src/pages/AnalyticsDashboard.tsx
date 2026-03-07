@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { RiskThermometer } from "@/components/RiskThermometer";
 
 export default function AnalyticsDashboard() {
     const [timeRange, setTimeRange] = useState<7 | 30>(7);
@@ -293,56 +294,8 @@ export default function AnalyticsDashboard() {
                     </div>
                 </div>
 
-                {/* Alerts & Critical Insights */}
-                <div className="glass-panel p-10 space-y-8 bg-gradient-to-br from-destructive/[0.03] to-transparent border-destructive/10">
-                    <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center">
-                            <AlertCircle className="h-7 w-7" />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-black text-foreground tracking-tight whitespace-nowrap">Insights Críticos</h3>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1 text-destructive/70">Anomalias detectadas pelo sistema</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Pico de Atrasos</p>
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-lg font-black text-foreground tracking-tight">8:15 AM</h4>
-                                <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-2">Maior incidência na 3ª Série A.</p>
-                        </div>
-
-                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Risco de Evasão</p>
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-lg font-black text-foreground tracking-tight">12 Alunos</h4>
-                                <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-2">Ausentes por mais de 3 dias.</p>
-                        </div>
-
-                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Saídas Externas</p>
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-lg font-black text-foreground tracking-tight">↑ 15%</h4>
-                                <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-2">Aumento em relação a ontem.</p>
-                        </div>
-
-                        <div className="p-6 rounded-3xl bg-card border border-border shadow-sm group hover:scale-[1.02] transition-transform cursor-pointer">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Alertas de Alerta</p>
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-lg font-black text-foreground tracking-tight">0 Ativos</h4>
-                                <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-2">Todos os alertas resolvidos.</p>
-                        </div>
-                    </div>
-                </div>
+                {/* Alerts & Critical Insights - Substituted by Risk Thermometer */}
+                <RiskThermometer />
             </div>
         </div>
     );

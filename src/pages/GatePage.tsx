@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
+import { saveToSyncQueue } from "@/lib/offlineStorage";
 
 export default function GatePage() {
   const [scanning, setScanning] = useState(false);
@@ -90,6 +91,27 @@ export default function GatePage() {
         .limit(3);
       return data || [];
     },
+  });
+
+  // Fetch Active Announcements
+  const { data: gateAnnouncements = [] } = useQuery({
+    queryKey: ["active-gate-announcements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gate_announcements")
+        .select("*")
+        .eq("active", true)
+        .gte("expires_at", new Date().toISOString())
+        .order("priority", { ascending: false }) // 'high', 'normal', 'low' etc
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching announcements", error);
+        return [];
+      }
+      return data || [];
+    },
+    refetchInterval: 30000 // Poll every 30s to stay up-to-date
   });
 
   const registerMovement = useMutation({
@@ -176,31 +198,61 @@ export default function GatePage() {
   const confirmMovement = async (type: "entry" | "exit") => {
     if (!detectedStudent) return;
     setIsProcessing(true);
+
     try {
       const studentId = detectedStudent.id;
 
+      // Handle Exit authorizations if requested
       let isAuthorizedExit = false;
       let authReason = "";
       if (type === "exit") {
-        const { data: exitAuth } = await (supabase as any)
-          .from("exit_authorizations")
-          .select("*")
-          .eq("student_id", studentId)
-          .eq("status", "authorized")
-          .gte("expires_at", new Date().toISOString())
-          .maybeSingle();
-
-        if (exitAuth) {
-          isAuthorizedExit = true;
-          authReason = exitAuth.reason;
-          await (supabase as any)
+        try {
+          const { data: exitAuth } = await (supabase as any)
             .from("exit_authorizations")
-            .update({ status: 'used' } as any)
-            .eq("id", exitAuth.id);
+            .select("*")
+            .eq("student_id", studentId)
+            .eq("status", "authorized")
+            .gte("expires_at", new Date().toISOString())
+            .maybeSingle();
+
+          if (exitAuth) {
+            isAuthorizedExit = true;
+            authReason = exitAuth.reason;
+            await (supabase as any)
+              .from("exit_authorizations")
+              .update({ status: 'used' } as any)
+              .eq("id", exitAuth.id);
+          }
+        } catch (e) {
+          console.log("Could not fetch exit_authorizations, possibly offline");
         }
       }
 
-      const result = await registerMovement.mutateAsync({ studentId, type });
+      let result;
+      const isOnline = navigator.onLine;
+
+      if (isOnline) {
+        result = await registerMovement.mutateAsync({ studentId, type });
+      } else {
+        // OFFLINE FALLBACK
+        const fallbackData = {
+          studentId,
+          type,
+          studentName: detectedStudent.name,
+          series: detectedStudent.series,
+          class: detectedStudent.class
+        };
+
+        await saveToSyncQueue('movement', fallbackData);
+
+        result = {
+          id: 'offline-' + Date.now(),
+          created_at: new Date().toISOString(),
+          type: type,
+          students: { name: detectedStudent.name, series: detectedStudent.series, class: detectedStudent.class }
+        };
+        toast.warning("Modo Offline: Registro salvo localmente. Sincronização automática pendente.");
+      }
 
       playSound(type);
 
@@ -424,6 +476,32 @@ export default function GatePage() {
 
           {/* Porter Sidebar: History and Stats */}
           <div className="space-y-6">
+
+            {/* Dynamic Announcements Board */}
+            {gateAnnouncements.length > 0 && (
+              <div className="bg-[#1e293b] rounded-[2.5rem] border border-blue-500/30 p-8 space-y-4 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                  <AlertCircle className="w-24 h-24" />
+                </div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-warning flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" /> Quadro de Avisos
+                </h3>
+                <div className="space-y-3 relative z-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {gateAnnouncements.map((announcement) => (
+                    <div
+                      key={announcement.id}
+                      className={`p-4 rounded-2xl border ${announcement.priority === 'critical' ? 'bg-destructive/20 border-destructive/50 animate-pulse text-white' :
+                          announcement.priority === 'high' ? 'bg-warning/20 border-warning/50 text-white' :
+                            'bg-white/5 border-white/10 text-gray-200'
+                        }`}
+                    >
+                      <p className="text-sm font-bold leading-relaxed">{announcement.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-[#1e293b] rounded-[2.5rem] border border-white/5 p-8 space-y-6">
               <h3 className="text-lg font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
                 <RotateCcw className="h-5 w-5" /> Recentes

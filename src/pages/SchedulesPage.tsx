@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export default function SchedulesPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit" | "break", start_time: "", end_time: "", tolerance_minutes: "5", notify_whatsapp: true });
+  const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit" | "break", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["schedules"],
@@ -34,7 +34,7 @@ export default function SchedulesPage() {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
       toast.success("Horário criado!");
       setShowForm(false);
-      setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "5", notify_whatsapp: true });
+      setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
     },
     onError: () => toast.error("Erro ao criar horário."),
   });
@@ -78,7 +78,10 @@ export default function SchedulesPage() {
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Tipo *</label>
-              <select value={form.type} onChange={(e) => setForm(p => ({ ...p, type: e.target.value as "entry" | "exit" | "break" }))}
+              <select value={form.type} onChange={(e) => {
+                const newType = e.target.value as "entry" | "exit" | "break";
+                setForm(p => ({ ...p, type: newType, tolerance_minutes: newType === "entry" ? "10" : p.tolerance_minutes }));
+              }}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                 <option value="entry">Entrada</option>
                 <option value="exit">Saída</option>
@@ -87,8 +90,10 @@ export default function SchedulesPage() {
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Tolerância (min)</label>
-              <input type="number" value={form.tolerance_minutes} onChange={(e) => setForm(p => ({ ...p, tolerance_minutes: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input type="number" value={form.tolerance_minutes}
+                onChange={(e) => setForm(p => ({ ...p, tolerance_minutes: e.target.value }))}
+                disabled={form.type === "entry"}
+                className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${form.type === "entry" ? "opacity-60 cursor-not-allowed bg-muted" : ""}`} />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Início *</label>
@@ -132,9 +137,8 @@ export default function SchedulesPage() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  schedule.type === "entry" ? "bg-success/15 text-success" : schedule.type === "exit" ? "bg-warning/15 text-warning" : "bg-info/15 text-info"
-                }`}>
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${schedule.type === "entry" ? "bg-success/15 text-success" : schedule.type === "exit" ? "bg-warning/15 text-warning" : "bg-info/15 text-info"
+                  }`}>
                   {schedule.type === "entry" ? "Entrada" : schedule.type === "exit" ? "Saída" : "Intervalo"}
                 </span>
                 {schedule.notify_whatsapp && (
@@ -145,7 +149,7 @@ export default function SchedulesPage() {
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" /> {schedule.start_time.slice(0,5)} — {schedule.end_time.slice(0,5)}
+                  <Clock className="h-4 w-4" /> {schedule.start_time.slice(0, 5)} — {schedule.end_time.slice(0, 5)}
                 </span>
                 <span>Tolerância: {schedule.tolerance_minutes}min</span>
               </div>

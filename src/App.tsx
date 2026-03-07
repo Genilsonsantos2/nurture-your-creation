@@ -56,6 +56,41 @@ function RoleRoute({ children, roles }: { children: React.ReactNode, roles: stri
   return <>{children}</>;
 }
 
+import { useOfflineSync } from "./hooks/useOfflineSync";
+
+// Add wrapper to consume hooks
+function AppContent() {
+  useOfflineSync();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/filho/:token" element={<ParentPortal />} />
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/alunos" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentsPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/alunos/novo" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
+      <Route path="/alunos/editar/:id" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
+      <Route path="/alunos/importar" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ImportStudentsPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/qrcodes" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><QRCodesPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/portaria" element={<ProtectedRoute><RoleRoute roles={["gatekeeper"]}><GatePage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/movimentacoes" element={<ProtectedRoute><RoleRoute roles={["gatekeeper", "coordinator"]}><MovementsPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/alertas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AlertsPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/horarios" element={<ProtectedRoute><AdminRoute><SchedulesPage /></AdminRoute></ProtectedRoute>} />
+      <Route path="/ocorrencias" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><OccurrencesPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/relatorios" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ReportsPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/analise" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnalyticsDashboard /></RoleRoute></ProtectedRoute>} />
+      <Route path="/justificativas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><JustificationManagement /></RoleRoute></ProtectedRoute>} />
+      <Route path="/autorizacoes-saida" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ExitAuthorizations /></RoleRoute></ProtectedRoute>} />
+      <Route path="/justificar/:token" element={<JustificationPortal />} />
+      <Route path="/usuarios" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
+      <Route path="/turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassesPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/calendario" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><CalendarPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -63,31 +98,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/filho/:token" element={<ParentPortal />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/alunos" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/alunos/novo" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
-            <Route path="/alunos/editar/:id" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><StudentForm /></RoleRoute></ProtectedRoute>} />
-            <Route path="/alunos/importar" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ImportStudentsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/qrcodes" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><QRCodesPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/portaria" element={<ProtectedRoute><RoleRoute roles={["gatekeeper"]}><GatePage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/movimentacoes" element={<ProtectedRoute><RoleRoute roles={["gatekeeper", "coordinator"]}><MovementsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/alertas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AlertsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/horarios" element={<ProtectedRoute><AdminRoute><SchedulesPage /></AdminRoute></ProtectedRoute>} />
-            <Route path="/ocorrencias" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><OccurrencesPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/relatorios" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ReportsPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/analise" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnalyticsDashboard /></RoleRoute></ProtectedRoute>} />
-            <Route path="/justificativas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><JustificationManagement /></RoleRoute></ProtectedRoute>} />
-            <Route path="/autorizacoes-saida" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ExitAuthorizations /></RoleRoute></ProtectedRoute>} />
-            <Route path="/justificar/:token" element={<JustificationPortal />} />
-            <Route path="/usuarios" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
-            <Route path="/turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassesPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/calendario" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><CalendarPage /></RoleRoute></ProtectedRoute>} />
-            <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppContent />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

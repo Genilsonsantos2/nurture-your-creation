@@ -6,9 +6,15 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isSchoolDay } from "@/lib/calendar";
+import { useAbsenceChecker } from "@/hooks/useAbsenceChecker";
+import { AnnouncementsManager } from "@/components/AnnouncementsManager";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
+
+  // Audita no background se existem alunos sem entradas recents
+  useAbsenceChecker();
+
   const isManagement = isAdmin || role === "coordinator";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
 
@@ -282,6 +288,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <div className="mt-8">
+        <AnnouncementsManager />
+      </div>
+
     </div>
   );
 }

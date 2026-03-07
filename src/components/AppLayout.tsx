@@ -22,9 +22,11 @@ import {
   CalendarDays,
   TrendingUp,
   FileCheck,
+  Power
 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const navItems = [
   { label: "Painel Geral", icon: LayoutDashboard, path: "/", roles: ["admin", "coordinator"] },
@@ -124,6 +126,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const toggleSystemStatus = async () => {
+    if (!isAdmin) return;
+    try {
+      // Usar select("*") para evitar erro de tipos com colunas dinâmicas como system_active
+      const { data: currentSettings, error: fetchErr } = await supabase.from("settings").select("*").limit(1).maybeSingle();
+      if (fetchErr || !currentSettings) throw new Error("Could not fetch settings");
+
+      const newStatus = !(currentSettings as any).system_active;
+      const { error: updateErr } = await supabase.from("settings").update({ system_active: newStatus } as any).eq("id", currentSettings.id);
+
+      if (updateErr) throw new Error("Could not update settings");
+
+      setIsSystemActive(newStatus);
+      toast.success(newStatus ? "Sistema Ativado com sucesso!" : "Sistema Suspenso para Manutenção.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao alterar o status do sistema.");
+    }
+  };
+
   const initials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() || "U";
@@ -213,6 +235,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
+            {isAdmin && (
+              <button
+                onClick={toggleSystemStatus}
+                title={isSystemActive ? "Suspender Sistema" : "Ativar Sistema"}
+                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${isSystemActive
+                  ? "bg-success/10 text-success hover:bg-success/20 ring-1 ring-success/30"
+                  : "bg-destructive/10 text-destructive hover:bg-destructive/20 ring-1 ring-destructive/30 animate-pulse"
+                  }`}
+              >
+                {isSystemActive ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                {isSystemActive ? "Ativo" : "Suspenso"}
+              </button>
+            )}
             <div className="hidden sm:flex flex-col items-end justify-center mr-2">
               <span className="text-sm font-black text-foreground tracking-tight">{user?.user_metadata?.full_name || "Usuário"}</span>
               <div className="flex items-center gap-1.5 mt-0.5">
