@@ -97,7 +97,7 @@ export default function GatePage() {
   const { data: gateAnnouncements = [] } = useQuery({
     queryKey: ["active-gate-announcements"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("gate_announcements")
         .select("*")
         .eq("active", true)

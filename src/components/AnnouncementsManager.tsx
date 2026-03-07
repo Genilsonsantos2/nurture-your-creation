@@ -17,7 +17,7 @@ export function AnnouncementsManager() {
     const { data: announcements = [], isLoading } = useQuery({
         queryKey: ["gate_announcements_manager"],
         queryFn: async () => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from("gate_announcements")
                 .select("*, created_by_auth:created_by") // simplified user fetch
                 .order("created_at", { ascending: false })
@@ -35,7 +35,7 @@ export function AnnouncementsManager() {
 
             const { data: { user } } = await supabase.auth.getUser();
 
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from("gate_announcements")
                 .insert([{
                     message: newMessage,
@@ -60,7 +60,7 @@ export function AnnouncementsManager() {
 
     const toggleStatus = useMutation({
         mutationFn: async ({ id, active }: { id: string, active: boolean }) => {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from("gate_announcements")
                 .update({ active: !active })
                 .eq("id", id);
@@ -74,7 +74,7 @@ export function AnnouncementsManager() {
 
     const deleteAnnouncement = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from("gate_announcements").delete().eq("id", id);
+            const { error } = await (supabase as any).from("gate_announcements").delete().eq("id", id);
             if (error) throw error;
         },
         onSuccess: () => {
