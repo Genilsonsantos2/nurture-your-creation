@@ -25,10 +25,14 @@ function drawFullBleedHeader(doc: jsPDF, accent: [number, number, number] = COLO
   doc.setFillColor(...accent);
   doc.rect(0, 0, PAGE_W, 40, "F");
   doc.setFillColor(255, 255, 255);
-  doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
-  doc.circle(PAGE_W, 0, 60, "F");
-  doc.circle(20, 10, 30, "F");
-  doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  try {
+    doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+    doc.circle(PAGE_W, 0, 60, "F");
+    doc.circle(20, 10, 30, "F");
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  } catch (e) {
+    console.warn("GState not supported", e);
+  }
 }
 
 function addHeader(doc: jsPDF, title: string, subtitle: string) {
@@ -43,9 +47,13 @@ function addHeader(doc: jsPDF, title: string, subtitle: string) {
 
   // School Name Badge
   doc.setFillColor(255, 255, 255);
-  doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
-  doc.roundedRect(PAGE_W - 65, 10, 50, 20, 5, 5, "F");
-  doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  try {
+    doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
+    doc.roundedRect(PAGE_W - 65, 10, 50, 20, 5, 5, "F");
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  } catch (e) {
+    doc.roundedRect(PAGE_W - 65, 10, 50, 20, 5, 5, "S");
+  }
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
   doc.text("CETI NOVA ITARANA", PAGE_W - 40, 21.5, { align: "center" });
@@ -174,10 +182,14 @@ function generateCover(doc: jsPDF, title: string, subtitle: string) {
 
   // Decorative Geometry
   doc.setFillColor(255, 255, 255);
-  doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
-  doc.circle(0, 0, 100, "F");
-  doc.circle(PAGE_W, PAGE_H / 2, 80, "F");
-  doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  try {
+    doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+    doc.circle(0, 0, 100, "F");
+    doc.circle(PAGE_W, PAGE_H / 2, 80, "F");
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  } catch (e) {
+    console.warn("GState not supported", e);
+  }
 
   // White area title
   doc.setTextColor(...COLORS.white);
@@ -198,9 +210,10 @@ function generateCover(doc: jsPDF, title: string, subtitle: string) {
 
   // Main Manual Box
   doc.setFillColor(...COLORS.white);
-  doc.setShadow(0, 5, [0, 0, 0], 10);
   doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 10, CONTENT_W - 20, 70, 8, 8, "F");
-  doc.setShadow(0, 0, [0, 0, 0], 0);
+  doc.setDrawColor(...COLORS.primary);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(MARGIN + 10, PAGE_H / 2 - 10, CONTENT_W - 20, 70, 8, 8, "S");
 
   doc.setTextColor(...COLORS.primary);
   doc.setFontSize(28);
