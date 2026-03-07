@@ -107,7 +107,7 @@ export default function SchedulesPage() {
               <label className="text-sm font-medium text-foreground mb-1 block">Tipo *</label>
               <select value={form.type} onChange={(e) => {
                 const newType = e.target.value as "entry" | "exit" | "break";
-                setForm(p => ({ ...p, type: newType, tolerance_minutes: newType === "entry" ? "10" : p.tolerance_minutes }));
+                setForm(p => ({ ...p, type: newType }));
               }}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                 <option value="entry">Entrada</option>
@@ -119,8 +119,7 @@ export default function SchedulesPage() {
               <label className="text-sm font-medium text-foreground mb-1 block">Tolerância (min)</label>
               <input type="number" value={form.tolerance_minutes}
                 onChange={(e) => setForm(p => ({ ...p, tolerance_minutes: e.target.value }))}
-                disabled={form.type === "entry"}
-                className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${form.type === "entry" ? "opacity-60 cursor-not-allowed bg-muted" : ""}`} />
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Início *</label>
