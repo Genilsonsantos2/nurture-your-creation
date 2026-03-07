@@ -74,7 +74,7 @@ export function AnnouncementsManager() {
 
     const deleteAnnouncement = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from("gate_announcements").delete().eq("id", id);
+            const { error } = await (supabase as any).from("gate_announcements").delete().eq("id", id);
             if (error) throw error;
         },
         onSuccess: () => {
