@@ -2,16 +2,16 @@ import jsPDF from "jspdf";
 
 // ==================== DESIGN SYSTEM ====================
 const COLORS = {
-  primary: [13, 71, 161] as [number, number, number],      // Deep blue
-  primaryLight: [33, 150, 243] as [number, number, number], // Bright blue
+  primary: [23, 84, 248] as [number, number, number],      // Vibrant blue (#1754F8)
+  primaryLight: [238, 242, 255] as [number, number, number], // Light blue bgColor
   dark: [15, 23, 42] as [number, number, number],
   muted: [100, 116, 139] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-  bgLight: [240, 245, 255] as [number, number, number],
+  bgLight: [248, 250, 252] as [number, number, number],
   bgWarm: [248, 250, 252] as [number, number, number],
-  border: [203, 213, 225] as [number, number, number],
-  accent: [16, 185, 129] as [number, number, number],      // Green
-  accentLight: [209, 250, 229] as [number, number, number],
+  border: [226, 232, 240] as [number, number, number],
+  accent: [22, 163, 74] as [number, number, number],       // Green
+  accentLight: [220, 253, 232] as [number, number, number],
   warning: [245, 158, 11] as [number, number, number],
   danger: [239, 68, 68] as [number, number, number],
   purple: [124, 58, 237] as [number, number, number],
@@ -62,12 +62,12 @@ function addHeader(doc: jsPDF, title: string, subtitle: string) {
 
   // Badge on the right
   doc.setFillColor(255, 255, 255);
-  doc.setGState(new (doc as any).GState({ opacity: 0.2 }));
-  doc.roundedRect(PAGE_W - 55, 8, 40, 20, 3, 3, "F");
+  doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
+  doc.roundedRect(PAGE_W - 60, 8, 45, 20, 4, 4, "F");
   doc.setGState(new (doc as any).GState({ opacity: 1 }));
-  doc.setFontSize(7);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text("CETI DIGITAL", PAGE_W - 35, 20, { align: "center" });
+  doc.text("CETI NOVA ITARANA", PAGE_W - 37.5, 20, { align: "center" });
 }
 
 function addFooter(doc: jsPDF, pageNum: number, totalLabel?: string) {
@@ -93,7 +93,7 @@ function newPage(doc: jsPDF, title: string, subtitle: string, pageNum: number): 
 }
 
 function checkPage(doc: jsPDF, y: number, needed: number, title: string, subtitle: string, page: { val: number }): number {
-  if (y + needed > PAGE_H - 28) {
+  if (y + needed > PAGE_H - 30) {
     page.val++;
     return newPage(doc, title, subtitle, page.val);
   }
@@ -101,93 +101,98 @@ function checkPage(doc: jsPDF, y: number, needed: number, title: string, subtitl
 }
 
 function sectionTitle(doc: jsPDF, y: number, num: string, title: string, color: [number, number, number] = COLORS.primary): number {
-  // Colored left bar + number badge
+  y += 5; // Extra spacing before new sections
+
+  // Colored left bar
   doc.setFillColor(...color);
-  doc.roundedRect(MARGIN, y - 4, 4, 14, 1, 1, "F");
+  doc.roundedRect(MARGIN, y - 4, 5, 16, 2, 2, "F");
 
   // Number circle
   doc.setFillColor(...color);
-  doc.circle(MARGIN + 14, y + 3, 5, "F");
+  doc.circle(MARGIN + 16, y + 4, 6, "F");
   doc.setTextColor(...COLORS.white);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text(num, MARGIN + 14, y + 5, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(num, MARGIN + 16, y + 6.5, { align: "center" });
 
   // Title text
   doc.setTextColor(...color);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text(title, MARGIN + 23, y + 6);
+  doc.setFontSize(16);
+  doc.text(title, MARGIN + 27, y + 7);
 
-  // Underline
-  doc.setDrawColor(...color);
+  // Decorative separator
+  doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.5);
-  doc.line(MARGIN + 23, y + 9, MARGIN + 23 + doc.getTextWidth(title), y + 9);
+  doc.line(MARGIN, y + 16, PAGE_W - MARGIN, y + 16);
 
-  return y + 20;
+  return y + 26;
 }
 
 function subTitle(doc: jsPDF, y: number, title: string): number {
   doc.setFillColor(...COLORS.primaryLight);
-  doc.roundedRect(MARGIN + 4, y - 3, 3, 10, 1, 1, "F");
+  doc.roundedRect(MARGIN + 4, y - 4, 4, 12, 1.5, 1.5, "F");
   doc.setTextColor(...COLORS.primary);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text(title, MARGIN + 11, y + 4);
-  return y + 12;
+  doc.setFontSize(12);
+  doc.text(title, MARGIN + 12, y + 4);
+  return y + 14;
 }
 
 function paragraph(doc: jsPDF, y: number, text: string): number {
   doc.setTextColor(...COLORS.dark);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(10.5);
   const lines = doc.splitTextToSize(text, CONTENT_W - 6);
   doc.text(lines, MARGIN + 3, y);
-  return y + lines.length * 5 + 4;
+  return y + lines.length * 5.5 + 4;
 }
 
 function bullet(doc: jsPDF, y: number, items: string[]): number {
-  doc.setFontSize(10);
+  doc.setFontSize(10.5);
   for (const item of items) {
     // Bullet dot
-    doc.setFillColor(...COLORS.primaryLight);
-    doc.circle(MARGIN + 9, y - 1.2, 1.5, "F");
+    doc.setFillColor(...COLORS.primary);
+    doc.circle(MARGIN + 9, y - 1.2, 1.8, "F");
     doc.setTextColor(...COLORS.dark);
     doc.setFont("helvetica", "normal");
     const lines = doc.splitTextToSize(item, CONTENT_W - 16);
-    doc.text(lines, MARGIN + 14, y);
-    y += lines.length * 5 + 2.5;
+    doc.text(lines, MARGIN + 15, y);
+    y += lines.length * 5.5 + 3;
   }
-  return y + 2;
+  return y + 3;
 }
 
 function tipBox(doc: jsPDF, y: number, text: string, type: "tip" | "warning" | "info" = "tip"): number {
   const config = {
     tip: { bg: COLORS.accentLight, border: COLORS.accent, icon: "💡", label: "DICA" },
-    warning: { bg: [255, 243, 205] as [number, number, number], border: COLORS.warning, icon: "⚠️", label: "ATENÇÃO" },
+    warning: { bg: [254, 243, 199] as [number, number, number], border: COLORS.warning, icon: "⚠️", label: "ATENÇÃO" },
     info: { bg: COLORS.bgLight, border: COLORS.primaryLight, icon: "ℹ️", label: "INFO" },
   };
   const c = config[type];
 
-  const lines = doc.splitTextToSize(text, CONTENT_W - 22);
-  const boxH = lines.length * 5 + 14;
+  // Increase spacing slightly
+  y += 2;
+
+  const lines = doc.splitTextToSize(text, CONTENT_W - 24);
+  const boxH = lines.length * 5.5 + 16;
 
   doc.setFillColor(...c.bg);
-  doc.roundedRect(MARGIN, y, CONTENT_W, boxH, 3, 3, "F");
+  doc.roundedRect(MARGIN, y, CONTENT_W, boxH, 4, 4, "F");
   doc.setFillColor(...c.border);
-  doc.roundedRect(MARGIN, y, 4, boxH, 2, 0, "F");
+  // Replicating a left colored border
+  doc.roundedRect(MARGIN, y, 5, boxH, 3, 0, "F");
 
   doc.setTextColor(...c.border);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text(`${c.icon}  ${c.label}`, MARGIN + 8, y + 7);
+  doc.setFontSize(9);
+  doc.text(`${c.icon}  ${c.label}`, MARGIN + 10, y + 8);
 
   doc.setTextColor(...COLORS.dark);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(lines, MARGIN + 8, y + 13);
+  doc.setFontSize(10);
+  doc.text(lines, MARGIN + 10, y + 14.5);
 
-  return y + boxH + 6;
+  return y + boxH + 8;
 }
 
 function numberedList(doc: jsPDF, y: number, items: string[]): number {
@@ -218,8 +223,8 @@ function buildCover(doc: jsPDF, guideTitle: string, guideSubtitle: string, accen
   doc.rect(0, 0, PAGE_W, PAGE_H, "F");
 
   // Decorative circles
-  try { drawDecoCircles(doc, PAGE_W - 30, 40, COLORS.white, 0.06); } catch {}
-  try { drawDecoCircles(doc, 30, PAGE_H - 60, COLORS.white, 0.04); } catch {}
+  try { drawDecoCircles(doc, PAGE_W - 30, 40, COLORS.white, 0.06); } catch { }
+  try { drawDecoCircles(doc, 30, PAGE_H - 60, COLORS.white, 0.04); } catch { }
 
   // Top accent bar
   doc.setFillColor(...accentColor);
@@ -231,24 +236,24 @@ function buildCover(doc: jsPDF, guideTitle: string, guideSubtitle: string, accen
     doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
     doc.roundedRect(55, 50, 100, 100, 50, 50, "F");
     doc.setGState(new (doc as any).GState({ opacity: 1 }));
-  } catch {}
+  } catch { }
 
   // Main title
   doc.setTextColor(...COLORS.white);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(42);
+  doc.setFontSize(36);
   doc.text("CETI", PAGE_W / 2, 90, { align: "center" });
-  doc.setFontSize(42);
-  doc.text("DIGITAL", PAGE_W / 2, 108, { align: "center" });
+  doc.setFontSize(38);
+  doc.text("NOVA ITARANA", PAGE_W / 2, 108, { align: "center" });
 
   // Subtitle
-  doc.setFontSize(12);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "normal");
-  doc.text("Sistema de Gestão Escolar", PAGE_W / 2, 122, { align: "center" });
+  doc.text("Sistema Escolar Inteligente", PAGE_W / 2, 122, { align: "center" });
 
   // Divider
   doc.setFillColor(...accentColor);
-  doc.roundedRect(PAGE_W / 2 - 30, 135, 60, 2, 1, 1, "F");
+  doc.roundedRect(PAGE_W / 2 - 30, 135, 60, 3, 1.5, 1.5, "F");
 
   // Guide title box
   doc.setFillColor(255, 255, 255);
@@ -256,7 +261,7 @@ function buildCover(doc: jsPDF, guideTitle: string, guideSubtitle: string, accen
     doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
     doc.roundedRect(35, 148, 140, 50, 6, 6, "F");
     doc.setGState(new (doc as any).GState({ opacity: 1 }));
-  } catch {}
+  } catch { }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
@@ -266,8 +271,8 @@ function buildCover(doc: jsPDF, guideTitle: string, guideSubtitle: string, accen
   doc.text(guideSubtitle, PAGE_W / 2, 182, { align: "center" });
 
   // Bottom info
-  doc.setFontSize(10);
-  doc.text("CETI Nova Itarana", PAGE_W / 2, 230, { align: "center" });
+  doc.setFontSize(11);
+  doc.text("CETI Digital", PAGE_W / 2, 230, { align: "center" });
 
   const dateStr = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
   doc.text(`Gerado em: ${dateStr}`, PAGE_W / 2, 240, { align: "center" });
