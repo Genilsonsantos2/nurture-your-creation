@@ -45,7 +45,13 @@ export default function GatePage() {
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const isProcessingRef = useRef(false);
   const detectedStudentRef = useRef<any>(null);
+  const soundEnabledRef = useRef(soundEnabled);
   const queryClient = useQueryClient();
+
+  // Keep soundEnabledRef in sync
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
 
   // Audio Pre-loading with more stable URLs
   const audioRefs = useRef({
@@ -75,7 +81,7 @@ export default function GatePage() {
   }, []);
 
   const playSound = (type: 'detection' | 'entry' | 'exit') => {
-    if (!soundEnabled) return;
+    if (!soundEnabledRef.current) return;
     const audio = audioRefs.current[type];
     audio.currentTime = 0;
     audio.play().catch(err => console.error("Audio play error:", err));
@@ -162,6 +168,7 @@ export default function GatePage() {
       setShowOccurrenceModal(false);
       setOccurrenceDescription("");
       setDetectedStudent(null);
+      detectedStudentRef.current = null;
     },
     onError: (error: any) => {
       toast.error("Erro ao registrar ocorrência: " + error.message);
@@ -169,9 +176,10 @@ export default function GatePage() {
   });
 
   const handleDetection = useCallback(async (decodedText: string) => {
+    // Check refs to avoid re-detection during processing
     if (isProcessingRef.current || detectedStudentRef.current) return;
 
-    // Cooldown
+    // Cooldown logic
     const nowTime = Date.now();
     const lastTime = lastScanTimesRef.current[decodedText] || 0;
     if (nowTime - lastTime < 3000) return;
@@ -196,10 +204,12 @@ export default function GatePage() {
     } catch (err: any) {
       toast.error(err.message);
     } finally {
+      // We DO NOT set detectedStudentRef to null here because we want to stop 
+      // scanning until the user clicks Entry/Exit or Cancel.
       isProcessingRef.current = false;
       setIsProcessing(false);
     }
-  }, [isProcessing, soundEnabled]);
+  }, []); // ZERO dependencies means this function is 100% stable!
 
   const confirmMovement = async (type: "entry" | "exit") => {
     if (!detectedStudent || isProcessing) return;
