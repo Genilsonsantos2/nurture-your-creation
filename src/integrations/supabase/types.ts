@@ -140,6 +140,36 @@ export type Database = {
           },
         ]
       }
+      gate_announcements: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          message: string
+          priority: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          message: string
+          priority?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          message?: string
+          priority?: string
+        }
+        Relationships: []
+      }
       guardians: {
         Row: {
           callmebot_api_key: string | null
