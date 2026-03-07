@@ -1,4 +1,4 @@
-import { Plus, Clock, Trash2, X, Save } from "lucide-react";
+import { Plus, Clock, Trash2, X, Save, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 export default function SchedulesPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit" | "break", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
 
   const { data: schedules = [], isLoading } = useQuery({
@@ -33,11 +34,37 @@ export default function SchedulesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
       toast.success("Horário criado!");
-      setShowForm(false);
-      setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
+      resetForm();
     },
     onError: () => toast.error("Erro ao criar horário."),
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingId) return;
+      const { error } = await supabase.from("schedules").update({
+        name: form.name,
+        type: form.type,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        tolerance_minutes: parseInt(form.tolerance_minutes) || 5,
+        notify_whatsapp: form.notify_whatsapp,
+      }).eq("id", editingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      toast.success("Horário atualizado com sucesso!");
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao atualizar horário."),
+  });
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -58,7 +85,7 @@ export default function SchedulesPage() {
           <h1 className="text-2xl font-bold text-foreground">Horários</h1>
           <p className="text-sm text-muted-foreground">Configure as janelas de entrada e saída</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
           <Plus className="h-4 w-4" /> Nova Regra
         </button>
       </div>
@@ -66,8 +93,8 @@ export default function SchedulesPage() {
       {showForm && (
         <div className="bg-card rounded-lg border p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Novo Horário</h2>
-            <button onClick={() => setShowForm(false)} className="p-1 hover:bg-muted rounded"><X className="h-4 w-4" /></button>
+            <h2 className="font-semibold text-foreground">{editingId ? "Editar Horário" : "Novo Horário"}</h2>
+            <button onClick={resetForm} className="p-1 hover:bg-muted rounded"><X className="h-4 w-4" /></button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -113,50 +140,71 @@ export default function SchedulesPage() {
             </div>
           </div>
           <div className="flex justify-end">
-            <button onClick={() => createMutation.mutate()} disabled={!form.name || !form.start_time || !form.end_time || createMutation.isPending}
+            <button onClick={() => editingId ? updateMutation.mutate() : createMutation.mutate()}
+              disabled={!form.name || !form.start_time || !form.end_time || createMutation.isPending || updateMutation.isPending}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
-              <Save className="h-4 w-4" /> {createMutation.isPending ? "Salvando..." : "Salvar"}
+              <Save className="h-4 w-4" /> {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
             </button>
           </div>
         </div>
-      )}
+      )
+      }
 
-      {isLoading ? (
-        <div className="text-center text-muted-foreground py-8">Carregando...</div>
-      ) : schedules.length === 0 ? (
-        <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground text-sm">Nenhum horário cadastrado</div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {schedules.map((schedule) => (
-            <div key={schedule.id} className="bg-card rounded-lg border p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-foreground">{schedule.name}</h3>
-                <button onClick={() => { if (confirm("Remover este horário?")) deleteMutation.mutate(schedule.id); }}
-                  className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${schedule.type === "entry" ? "bg-success/15 text-success" : schedule.type === "exit" ? "bg-warning/15 text-warning" : "bg-info/15 text-info"
-                  }`}>
-                  {schedule.type === "entry" ? "Entrada" : schedule.type === "exit" ? "Saída" : "Intervalo"}
-                </span>
-                {schedule.notify_whatsapp && (
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-info/15 text-info">
-                    Notifica WhatsApp
+      {
+        isLoading ? (
+          <div className="text-center text-muted-foreground py-8">Carregando...</div>
+        ) : schedules.length === 0 ? (
+          <div className="bg-card rounded-lg border p-8 text-center text-muted-foreground text-sm">Nenhum horário cadastrado</div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {schedules.map((schedule) => (
+              <div key={schedule.id} className="bg-card rounded-lg border p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">{schedule.name}</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => {
+                      setEditingId(schedule.id);
+                      setForm({
+                        name: schedule.name,
+                        type: schedule.type as "entry" | "exit" | "break",
+                        start_time: schedule.start_time,
+                        end_time: schedule.end_time,
+                        tolerance_minutes: schedule.tolerance_minutes.toString(),
+                        notify_whatsapp: schedule.notify_whatsapp || false,
+                      });
+                      setShowForm(true);
+                    }}
+                      className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Editar">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => { if (confirm("Remover este horário?")) deleteMutation.mutate(schedule.id); }}
+                      className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Remover">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${schedule.type === "entry" ? "bg-success/15 text-success" : schedule.type === "exit" ? "bg-warning/15 text-warning" : "bg-info/15 text-info"
+                    }`}>
+                    {schedule.type === "entry" ? "Entrada" : schedule.type === "exit" ? "Saída" : "Intervalo"}
                   </span>
-                )}
+                  {schedule.notify_whatsapp && (
+                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-info/15 text-info">
+                      Notifica WhatsApp
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" /> {schedule.start_time.slice(0, 5)} — {schedule.end_time.slice(0, 5)}
+                  </span>
+                  <span>Tolerância: {schedule.tolerance_minutes}min</span>
+                </div>
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" /> {schedule.start_time.slice(0, 5)} — {schedule.end_time.slice(0, 5)}
-                </span>
-                <span>Tolerância: {schedule.tolerance_minutes}min</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )
+      }
+    </div >
   );
 }
