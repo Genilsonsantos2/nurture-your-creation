@@ -256,6 +256,25 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* User Guide */}
+        <div className="glass-panel p-10 border-primary/10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <BookOpen className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-foreground tracking-tight">Documentação</h2>
+              <p className="text-xs text-muted-foreground font-medium">Guia completo do sistema em PDF</p>
+            </div>
+          </div>
+          <button
+            onClick={() => generateUserGuidePDF()}
+            className="w-full py-5 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/10 active:scale-95"
+          >
+            <BookOpen className="h-4 w-4" /> Baixar Guia do Usuário (PDF)
+          </button>
+        </div>
       </div>
     </div>
   );
