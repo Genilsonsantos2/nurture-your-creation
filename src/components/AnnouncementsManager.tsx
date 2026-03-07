@@ -35,7 +35,7 @@ export function AnnouncementsManager() {
 
             const { data: { user } } = await supabase.auth.getUser();
 
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from("gate_announcements")
                 .insert([{
                     message: newMessage,
