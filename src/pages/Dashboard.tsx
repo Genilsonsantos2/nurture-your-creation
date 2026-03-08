@@ -165,6 +165,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 pb-12 animate-in fade-in duration-700">
+      {/* Launch Ceremony - Admin only */}
+      {isAdmin && <LaunchCeremony />}
+
       {/* Premium Hero Section */}
       <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-gradient-to-br from-primary via-primary/90 to-success p-6 md:p-14 text-white shadow-2xl shadow-primary/20 group animate-in slide-in-from-bottom-6">
         <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[120%] bg-primary-foreground/10 blur-[100px] rounded-full rotate-12 transition-transform duration-1000 group-hover:rotate-45" />
