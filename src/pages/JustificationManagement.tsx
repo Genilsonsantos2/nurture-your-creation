@@ -3,16 +3,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
     FileCheck, FileX, Clock, Search, Filter,
-    CheckCircle2, XCircle, AlertCircle, Info, ExternalLink
+    CheckCircle2, XCircle, AlertCircle, Info, ExternalLink, Brain
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import DocumentReader from "@/components/DocumentReader";
 
 export default function JustificationManagement() {
     const queryClient = useQueryClient();
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
     const [showTokenGenerator, setShowTokenGenerator] = useState(false);
+    const [showDocReader, setShowDocReader] = useState(false);
     const [testLink, setTestLink] = useState("");
 
     const { data: justifications = [], isLoading } = useQuery({
@@ -88,13 +90,48 @@ export default function JustificationManagement() {
                         </p>
                     </div>
                 </div>
-                <button
-                    onClick={generateTestLink}
-                    className="relative z-10 px-8 py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                >
-                    <Info className="h-4 w-4" /> Gerar Link de Teste
-                </button>
+                <div className="relative z-10 flex flex-wrap gap-3">
+                    <button
+                        onClick={() => setShowDocReader(true)}
+                        className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Brain className="h-4 w-4" /> Ler Atestado com IA
+                    </button>
+                    <button
+                        onClick={generateTestLink}
+                        className="px-8 py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Info className="h-4 w-4" /> Gerar Link de Teste
+                    </button>
+                </div>
             </div>
+
+            {showDocReader && (
+                <DocumentReader
+                    onClose={() => setShowDocReader(false)}
+                    onDataExtracted={async (data) => {
+                        if (data.matched_student_id && data.reason) {
+                            try {
+                                const { error } = await (supabase as any)
+                                    .from("absence_justifications")
+                                    .insert({
+                                        student_id: data.matched_student_id,
+                                        reason: `[Atestado Médico] ${data.reason}${data.doctor_name ? ` - Dr(a). ${data.doctor_name}` : ""}${data.crm ? ` (CRM: ${data.crm})` : ""}${data.period_start ? ` | Período: ${data.period_start} a ${data.period_end || data.period_start}` : ""}`,
+                                        justification_date: data.date || new Date().toISOString().split("T")[0],
+                                        status: "pending",
+                                    });
+                                if (error) throw error;
+                                queryClient.invalidateQueries({ queryKey: ["justifications"] });
+                                toast.success(`Justificativa criada para ${data.matched_student_name}!`);
+                            } catch {
+                                toast.error("Erro ao criar justificativa.");
+                            }
+                        } else {
+                            toast.warning("Não foi possível criar automaticamente. Aluno não identificado ou motivo ausente.");
+                        }
+                    }}
+                />
+            )}
 
             {showTokenGenerator && (
                 <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-in slide-in-from-top-4">
