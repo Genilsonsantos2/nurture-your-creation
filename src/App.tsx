@@ -28,6 +28,7 @@ import JustificationPortal from "./pages/JustificationPortal";
 import JustificationManagement from "./pages/JustificationManagement";
 import ExitAuthorizations from "./pages/ExitAuthorizations";
 import AllocationPortal from "./pages/AllocationPortal";
+import DropoutPredictionPage from "./pages/DropoutPredictionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -89,6 +90,7 @@ function AppContent() {
       <Route path="/turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassesPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/alocacao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AllocationPortal /></RoleRoute></ProtectedRoute>} />
       <Route path="/calendario" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><CalendarPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/predicao-evasao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><DropoutPredictionPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
