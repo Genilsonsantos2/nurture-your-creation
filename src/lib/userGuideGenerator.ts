@@ -866,7 +866,7 @@ export async function generateGatekeeperGuidePDF() {
 
   // Section 1
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Sua Função no Sistema", "O que o porteiro faz no CETINI Digital");
+  y = sectionHeader(doc, y, "1", "Sua Função no Sistema", "O que o porteiro faz no CETI Digital");
   y = bodyText(doc, y, "Você é responsável por registrar todas as entradas e saídas dos alunos usando o scanner de QR Code. Quando um aluno passa pela portaria, você escaneia a carteirinha dele e o sistema faz o resto: registra a movimentação, avisa os pais por WhatsApp e monitora a presença.");
   y = infoBox(doc, y, "Importante", "Cada scan conta! Se o aluno não escanear ao entrar, ele será marcado como ausente e os pais serão notificados. Garanta que todos os alunos passem pelo scanner.", "warning");
 
