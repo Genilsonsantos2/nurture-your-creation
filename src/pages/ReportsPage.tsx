@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, BellRing, UserX } from "lucide-react";
+import { AlertCircle, BellRing, UserX, FileSpreadsheet, FileText, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { getLastNSchoolDays } from "@/lib/calendar";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ReportsPage() {
   const queryClient = useQueryClient();
@@ -123,16 +125,81 @@ export default function ReportsPage() {
   const totalExits = movements.filter((m) => m.type === "exit").length;
   const maxVal = Math.max(...dailyStats.map((d) => d.entries + d.exits), 1);
 
-  const handleExport = () => {
-    const csv = ["Aluno,Série,Tipo,Data,Horário"];
-    movements.forEach((m: any) => {
-      csv.push(`"${m.students?.name || ""}","${m.students?.series || ""} ${m.students?.class || ""}",${m.type === "entry" ? "Entrada" : "Saída"},${new Date(m.registered_at).toLocaleDateString("pt-BR")},${new Date(m.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`);
-    });
-    const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const getExportRows = () => movements.map((m: any) => ({
+    aluno: m.students?.name || "",
+    serie: `${m.students?.series || ""} ${m.students?.class || ""}`,
+    tipo: m.type === "entry" ? "Entrada" : "Saída",
+    data: new Date(m.registered_at).toLocaleDateString("pt-BR"),
+    horario: new Date(m.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+  }));
+
+  const handleExportCSV = () => {
+    const rows = getExportRows();
+    const csv = ["Aluno,Série,Tipo,Data,Horário", ...rows.map(r => `"${r.aluno}","${r.serie}",${r.tipo},${r.data},${r.horario}`)];
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `relatorio-${period}.csv`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `relatorio-${period}.csv`; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportExcel = async () => {
+    const XLSX = await import("xlsx");
+    const rows = getExportRows();
+    const ws = XLSX.utils.json_to_sheet(rows.map(r => ({ Aluno: r.aluno, Série: r.serie, Tipo: r.tipo, Data: r.data, Horário: r.horario })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+    XLSX.writeFile(wb, `relatorio-${period}.xlsx`);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Relatório de Movimentações", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Período: ${period === "week" ? "Última Semana" : "Último Mês"} | Gerado em: ${new Date().toLocaleDateString("pt-BR")}`, 14, 28);
+    doc.text(`Total: ${movements.length} movimentações | ${totalEntries} entradas | ${totalExits} saídas`, 14, 34);
+
+    const rows = getExportRows();
+    autoTable(doc, {
+      startY: 42,
+      head: [["Aluno", "Série", "Tipo", "Data", "Horário"]],
+      body: rows.map(r => [r.aluno, r.serie, r.tipo, r.data, r.horario]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    doc.save(`relatorio-${period}.pdf`);
+  };
+
+  const handleExportWord = async () => {
+    const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, WidthType, HeadingLevel } = await import("docx");
+    const { saveAs } = await import("file-saver");
+    const rows = getExportRows();
+
+    const headerCells = ["Aluno", "Série", "Tipo", "Data", "Horário"].map(text =>
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 20 })] })], width: { size: 20, type: WidthType.PERCENTAGE } })
+    );
+
+    const dataRows = rows.map(r =>
+      new TableRow({
+        children: [r.aluno, r.serie, r.tipo, r.data, r.horario].map(text =>
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, size: 18 })] })], width: { size: 20, type: WidthType.PERCENTAGE } })
+        ),
+      })
+    );
+
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ text: "Relatório de Movimentações", heading: HeadingLevel.HEADING_1 }),
+          new Paragraph({ children: [new TextRun({ text: `Período: ${period === "week" ? "Última Semana" : "Último Mês"} | ${movements.length} movimentações`, size: 20 })] }),
+          new Paragraph({ text: "" }),
+          new Table({ rows: [new TableRow({ children: headerCells }), ...dataRows] }),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `relatorio-${period}.docx`);
   };
 
   return (
@@ -142,14 +209,23 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
           <p className="text-sm text-muted-foreground">Estatísticas e análises de presença</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <select value={period} onChange={(e) => setPeriod(e.target.value as any)}
             className="rounded-lg border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
             <option value="week">Última Semana</option>
             <option value="month">Último Mês</option>
           </select>
-          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
-            Exportar CSV
+          <button onClick={handleExportCSV} className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
+            <FileDown className="h-4 w-4" /> CSV
+          </button>
+          <button onClick={handleExportExcel} className="inline-flex items-center gap-1.5 rounded-lg border bg-success/10 text-success px-3 py-2 text-sm font-medium hover:bg-success/20 transition-colors">
+            <FileSpreadsheet className="h-4 w-4" /> Excel
+          </button>
+          <button onClick={handleExportPDF} className="inline-flex items-center gap-1.5 rounded-lg border bg-destructive/10 text-destructive px-3 py-2 text-sm font-medium hover:bg-destructive/20 transition-colors">
+            <FileText className="h-4 w-4" /> PDF
+          </button>
+          <button onClick={handleExportWord} className="inline-flex items-center gap-1.5 rounded-lg border bg-primary/10 text-primary px-3 py-2 text-sm font-medium hover:bg-primary/20 transition-colors">
+            <FileText className="h-4 w-4" /> Word
           </button>
         </div>
       </div>
