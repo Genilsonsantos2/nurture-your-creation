@@ -40,7 +40,16 @@ export const generateDeclarationPDF = (student: any, schoolName: string = "CETI 
     // Dynamic Content
     const contentText = `Declaramos para os devidos fins que o(a) aluno(a) ${student.name.toUpperCase()}, portador(a) da matrícula ${student.enrollment}, encontra-se regularmente matriculado(a) e frequentando as aulas neste estabelecimento de ensino, no ano letivo de ${today.getFullYear()}.`;
 
-    const contextInfo = `Série/Ano: ${student.series} \nTurma: ${student.class} \nModalidade: ${student.modality === 'integral' ? 'Ensino Integral' : 'Ensino Técnico'}\nSituação: ${student.active ? 'Ativo' : 'Inativo'}`;
+    const contextInfo = `Série/Ano: ${student.series} \nTurma: ${student.class} \nModalidade: ${student.modality === 'integral' ? 'Ensino Integral' : 'Ensino Técnico'}\nSituação: ${student.active ? 'Ativo' : 'Inativo'}\n${student.blood_type ? 'Tipo Sanguíneo: ' + student.blood_type : ''}`;
+
+    // Student Photo if exists
+    if (student.photo_url) {
+        try {
+            doc.addImage(student.photo_url, 'JPEG', marginX, 45, 20, 20, undefined, 'FAST');
+        } catch (e) {
+            console.log("Error adding photo to PDF", e);
+        }
+    }
 
     // Justify text block
     const splitText = doc.splitTextToSize(contentText, pageWidth - (marginX * 2));
@@ -120,6 +129,20 @@ export const generateMassBadgesPDF = async (students: any[], className: string) 
         doc.setTextColor(250, 204, 21); // Yellow 400
         doc.text("IDENTIDADE ESTUDANTIL 2026", currentX + 5, currentY + 11);
 
+        // Student Photo on badge
+        if (student.photo_url) {
+            try {
+                // Background for photo to make it look like a frame
+                doc.setFillColor(240, 240, 240);
+                doc.roundedRect(currentX + badgeWidth - 25, currentY + 18, 20, 22, 1, 1, "F");
+                doc.addImage(student.photo_url, 'JPEG', currentX + badgeWidth - 25, currentY + 18, 20, 22, undefined, 'FAST');
+            } catch (e) {
+                doc.setFontSize(5);
+                doc.setTextColor(150, 150, 150);
+                doc.text("SEM FOTO", currentX + badgeWidth - 15, currentY + 28, { align: "center" });
+            }
+        }
+
         // Student Content
         doc.setTextColor(30, 41, 59);
         doc.setFontSize(10);
@@ -135,15 +158,12 @@ export const generateMassBadgesPDF = async (students: any[], className: string) 
         doc.setFont("helvetica", "normal");
         doc.text(`MATRÍCULA: ${student.enrollment || '---'}`, currentX + 5, currentY + 40);
 
-        // QR Code (using API)
+        // QR Code (using API) - Bottom left on badge
         try {
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.qr_code)}`;
-            // We use a trick here: jsPDF can handle images if they are preloaded or as base64.
-            // For simplicity in a bulk export, we'll try to use the image add functionality.
-            // Note: In some environments image loading might be async.
-            doc.addImage(qrUrl, 'PNG', currentX + badgeWidth - 25, currentY + 20, 20, 20);
+            doc.addImage(qrUrl, 'PNG', currentX + badgeWidth - 25, currentY + 41, 10, 10);
         } catch (e) {
-            doc.text("[QR CODE]", currentX + badgeWidth - 20, currentY + 30);
+            doc.text("[QR]", currentX + badgeWidth - 20, currentY + 45);
         }
 
         // Footer of badge

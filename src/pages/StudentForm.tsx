@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, User, AlertCircle, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,7 +14,9 @@ export default function StudentForm() {
     name: "", series: "", class: "", enrollment: "", exitLimit: "",
     guardianName: "", guardianPhone: "", guardianRelation: "",
     whatsappEnabled: false, active: true, modality: "technical",
+    photoUrl: "", bloodType: "", allergies: "", medicalNotes: "",
   });
+  const [uploading, setUploading] = useState(false);
 
   // Load student data if editing
   const { data: student } = useQuery({
@@ -40,11 +42,14 @@ export default function StudentForm() {
 
   useEffect(() => {
     if (student) {
+      const s = student as any;
       setForm(f => ({
         ...f,
-        name: student.name, series: student.series, class: student.class,
-        enrollment: student.enrollment, exitLimit: student.exit_limit ? String(student.exit_limit) : "",
-        active: student.active, modality: student.modality || "technical",
+        name: s.name, series: s.series, class: s.class,
+        enrollment: s.enrollment, exitLimit: s.exit_limit ? String(s.exit_limit) : "",
+        active: s.active, modality: s.modality || "technical",
+        photoUrl: s.photo_url || "", bloodType: s.blood_type || "",
+        allergies: s.allergies || "", medicalNotes: s.medical_notes || "",
       }));
     }
   }, [student]);
@@ -62,6 +67,40 @@ export default function StudentForm() {
   const update = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Foto muito grande. Máximo 2MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `profiles/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(filePath);
+
+      update("photoUrl", publicUrl);
+      toast.success("Foto carregada com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao carregar foto: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (isEditing) {
@@ -70,6 +109,8 @@ export default function StudentForm() {
           name: form.name, series: form.series, class: form.class,
           enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
           active: form.active, modality: form.modality,
+          photo_url: form.photoUrl, blood_type: form.bloodType,
+          allergies: form.allergies, medical_notes: form.medicalNotes,
         }).eq("id", id);
         if (studentErr) throw studentErr;
 
@@ -93,6 +134,8 @@ export default function StudentForm() {
           name: form.name, series: form.series, class: form.class,
           enrollment: form.enrollment, exit_limit: form.exitLimit ? parseInt(form.exitLimit) : null,
           modality: form.modality,
+          photo_url: form.photoUrl, blood_type: form.bloodType,
+          allergies: form.allergies, medical_notes: form.medicalNotes,
         }).select().single();
         if (studentErr) throw studentErr;
 
@@ -130,14 +173,52 @@ export default function StudentForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-card rounded-lg border p-5 space-y-4">
-          <h2 className="font-semibold text-foreground">Dados do Aluno</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium text-foreground mb-1 block">Nome Completo *</label>
-              <input required value={form.name} onChange={(e) => update("name", e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+        <div className="bg-card rounded-lg border p-5 space-y-6">
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            {/* Photo Upload Section */}
+            <div className="relative group self-center sm:self-start">
+              <div className="h-32 w-32 rounded-3xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-all group-hover:border-primary/50 relative">
+                {form.photoUrl ? (
+                  <>
+                    <img src={form.photoUrl} alt="Preview" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => update("photoUrl", "")}
+                      className="absolute top-1 right-1 p-1 bg-destructive/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-center p-4">
+                    <User className="h-10 w-10 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">Adicionar Foto</p>
+                  </div>
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                    <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <label className="absolute inset-0 cursor-pointer">
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+              </label>
             </div>
+
+            <div className="flex-1 space-y-4 w-full">
+              <h2 className="font-semibold text-foreground">Dados Acadêmicos</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-foreground mb-1 block">Nome Completo *</label>
+                  <input required value={form.name} onChange={(e) => update("name", e.target.value)}
+                    className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Série *</label>
               <select required value={form.series} onChange={(e) => update("series", e.target.value)}
@@ -176,14 +257,38 @@ export default function StudentForm() {
               <input type="number" value={form.exitLimit} onChange={(e) => update("exitLimit", e.target.value)}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
-            {isEditing && (
-              <div className="sm:col-span-2 flex items-center gap-3">
-                <input type="checkbox" id="active" checked={form.active as boolean}
-                  onChange={(e) => update("active", e.target.checked)}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
-                <label htmlFor="active" className="text-sm text-foreground">Aluno ativo</label>
-              </div>
-            )}
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg border p-5 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold text-foreground">Ficha Médica</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Tipo Sanguíneo</label>
+              <select value={form.bloodType} onChange={(e) => update("bloodType", e.target.value)}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">Não informado</option>
+                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium text-foreground mb-1 block">Alergias / Restrições</label>
+              <input value={form.allergies} onChange={(e) => update("allergies", e.target.value)}
+                placeholder="Ex: Amendoim, Lactose, Asma"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div className="sm:col-span-3">
+              <label className="text-sm font-medium text-foreground mb-1 block">Observações Médicas Adicionais</label>
+              <textarea value={form.medicalNotes} onChange={(e) => update("medicalNotes", e.target.value)}
+                rows={3}
+                placeholder="Informações relevantes para primeiros socorros..."
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+            </div>
           </div>
         </div>
 
