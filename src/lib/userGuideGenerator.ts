@@ -832,7 +832,7 @@ export async function generateUserGuidePDF() {
     y = bodyText(doc, y, faq.a);
   }
 
-  drawBackCover(doc, p, "Guia do Usuário — Manual Completo");
+  drawBackCover(doc, p, "Guia do Usuário — Manual Completo", logo);
   doc.save(`GUIA_USUARIO_CETINI_${new Date().getFullYear()}.pdf`);
 }
 
