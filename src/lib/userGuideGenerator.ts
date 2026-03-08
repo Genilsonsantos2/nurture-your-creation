@@ -543,12 +543,13 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: s
 // ================================================================
 //  GUIA COMPLETO (ADMINISTRADOR)
 // ================================================================
-export function generateUserGuidePDF() {
+export async function generateUserGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia do Usuário";
 
-  drawCover(doc, "Guia do Usuário", "Sistema de Controle de Entrada e Saída — v2.0", "MANUAL COMPLETO");
+  drawCover(doc, "Guia do Usuário", "Sistema de Controle de Entrada e Saída — v2.0", logo, "MANUAL COMPLETO");
 
   drawTOC(doc, p, T, [
     { group: "Introdução", items: [
