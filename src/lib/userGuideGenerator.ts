@@ -979,12 +979,13 @@ export async function generateGatekeeperGuidePDF() {
 // ================================================================
 //  GUIA DA COORDENAÇÃO
 // ================================================================
-export function generateCoordinationGuidePDF() {
+export async function generateCoordinationGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia da Coordenação";
 
-  drawCover(doc, "Guia da Coordenação", "Manual Pedagógico para Gestão de Presença, Ocorrências e Comunicação com Famílias", "GESTÃO PEDAGÓGICA");
+  drawCover(doc, "Guia da Coordenação", "Manual Pedagógico para Gestão de Presença, Ocorrências e Comunicação com Famílias", logo, "GESTÃO PEDAGÓGICA");
 
   drawTOC(doc, p, T, [
     { group: "Gestão Pedagógica", items: [
