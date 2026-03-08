@@ -973,7 +973,7 @@ export async function generateGatekeeperGuidePDF() {
   }
 
   drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional", logo);
-  doc.save(`GUIA_PORTEIRO_CETINI_${new Date().getFullYear()}.pdf`);
+  doc.save(`GUIA_PORTEIRO_CETI_${new Date().getFullYear()}.pdf`);
 }
 
 // ================================================================
