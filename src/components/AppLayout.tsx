@@ -24,7 +24,11 @@ import {
   FileCheck,
   Power,
   Brain,
-  Bot
+  Bot,
+  Shield,
+  Shuffle,
+  FileText,
+  Flame
 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
