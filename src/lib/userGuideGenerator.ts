@@ -60,7 +60,7 @@ function pageChrome(doc: jsPDF, pageNum: number, title: string) {
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(7);
-  doc.text("CETINI Nova Itarana — Sistema de Controle de Acesso", ML, 11);
+  doc.text("CETI Nova Itarana — Sistema de Controle de Acesso", ML, 11);
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
@@ -75,7 +75,7 @@ function pageChrome(doc: jsPDF, pageNum: number, title: string) {
   setC(doc, C.slateL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
-  doc.text("CETINI — Colégio Estadual de Tempo Integral de Nova Itarana", ML, PH - 4);
+  doc.text("CETI — Colégio Estadual de Tempo Integral de Nova Itarana", ML, PH - 4);
   setC(doc, C.amberL);
   doc.text(String(pageNum), PW / 2, PH - 4, { align: "center" });
   setC(doc, C.slateL);
@@ -127,7 +127,7 @@ function drawCover(doc: jsPDF, title: string, subtitle: string, logo: string | n
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
+  doc.text("CETI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
 
   // Amber divider line
   doc.setDrawColor(...C.amber);
@@ -512,7 +512,7 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: s
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
+  doc.text("CETI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
 
   // Divider
   doc.setDrawColor(...C.amber);
@@ -534,7 +534,7 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: s
 
   setC(doc, C.slateL);
   doc.setFontSize(7);
-  doc.text("Este documento é de uso interno e exclusivo do CETINI Nova Itarana.", PW / 2, PH - 25, { align: "center" });
+  doc.text("Este documento é de uso interno e exclusivo do CETI Nova Itarana.", PW / 2, PH - 25, { align: "center" });
 
   setF(doc, C.amber);
   doc.rect(0, PH - 5, PW, 5, "F");
@@ -583,8 +583,8 @@ export async function generateUserGuidePDF() {
 
   // --- Section 1 ---
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Visão Geral do Sistema", "O que é e para que serve o CETINI Controle de Acesso v2.0");
-  y = bodyText(doc, y, "O Sistema de Controle de Entrada e Saída do CETINI é uma plataforma web desenvolvida especificamente para o Colégio Estadual de Tempo Integral de Nova Itarana. Ele permite registrar, monitorar e notificar automaticamente todas as movimentações de alunos — entradas, saídas e ausências — com integração direta ao WhatsApp dos responsáveis.");
+  y = sectionHeader(doc, y, "1", "Visão Geral do Sistema", "O que é e para que serve o CETI Controle de Acesso v2.0");
+  y = bodyText(doc, y, "O Sistema de Controle de Entrada e Saída do CETI é uma plataforma web desenvolvida especificamente para o Colégio Estadual de Tempo Integral de Nova Itarana. Ele permite registrar, monitorar e notificar automaticamente todas as movimentações de alunos — entradas, saídas e ausências — com integração direta ao WhatsApp dos responsáveis.");
 
   y = featureGrid(doc, y, [
     { title: "Scanner de QR Code", desc: "Cada aluno possui um QR Code único. A portaria escaneia com a câmera do celular ou computador e o sistema registra entrada ou saída automaticamente." },
@@ -833,7 +833,7 @@ export async function generateUserGuidePDF() {
   }
 
   drawBackCover(doc, p, "Guia do Usuário — Manual Completo", logo);
-  doc.save(`GUIA_USUARIO_CETINI_${new Date().getFullYear()}.pdf`);
+  doc.save(`GUIA_USUARIO_CETI_${new Date().getFullYear()}.pdf`);
 }
 
 // ================================================================
@@ -866,7 +866,7 @@ export async function generateGatekeeperGuidePDF() {
 
   // Section 1
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Sua Função no Sistema", "O que o porteiro faz no CETINI Digital");
+  y = sectionHeader(doc, y, "1", "Sua Função no Sistema", "O que o porteiro faz no CETI Digital");
   y = bodyText(doc, y, "Você é responsável por registrar todas as entradas e saídas dos alunos usando o scanner de QR Code. Quando um aluno passa pela portaria, você escaneia a carteirinha dele e o sistema faz o resto: registra a movimentação, avisa os pais por WhatsApp e monitora a presença.");
   y = infoBox(doc, y, "Importante", "Cada scan conta! Se o aluno não escanear ao entrar, ele será marcado como ausente e os pais serão notificados. Garanta que todos os alunos passem pelo scanner.", "warning");
 
@@ -973,7 +973,7 @@ export async function generateGatekeeperGuidePDF() {
   }
 
   drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional", logo);
-  doc.save(`GUIA_PORTEIRO_CETINI_${new Date().getFullYear()}.pdf`);
+  doc.save(`GUIA_PORTEIRO_CETI_${new Date().getFullYear()}.pdf`);
 }
 
 // ================================================================
@@ -1006,7 +1006,7 @@ export async function generateCoordinationGuidePDF() {
 
   // Section 1
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Seu Papel no Sistema", "O que a coordenação faz no CETINI Digital");
+  y = sectionHeader(doc, y, "1", "Seu Papel no Sistema", "O que a coordenação faz no CETI Digital");
   y = bodyText(doc, y, "A coordenação é responsável pelo acompanhamento pedagógico da presença escolar. Você monitora alertas, gerencia ocorrências, analisa relatórios e se comunica com as famílias.");
 
   y = featureGrid(doc, y, [
@@ -1124,5 +1124,5 @@ export async function generateCoordinationGuidePDF() {
   y = infoBox(doc, y, "Nunca delete um aluno", "Sempre desative em vez de deletar. O histórico de movimentações e ocorrências é preservado quando o aluno é desativado, mas perdido se for deletado.", "danger");
 
   drawBackCover(doc, p, "Guia da Coordenação — Manual Pedagógico", logo);
-  doc.save(`GUIA_COORDENACAO_CETINI_${new Date().getFullYear()}.pdf`);
+  doc.save(`GUIA_COORDENACAO_CETI_${new Date().getFullYear()}.pdf`);
 }
