@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Plus, Trash2, Users, GraduationCap, ChevronRight, School, Users2, Printer } from "lucide-react";
@@ -122,9 +123,12 @@ export default function ClassesPage() {
                         </div>
 
                         <div className="flex flex-col gap-3 relative z-10">
-                            <button className="w-full py-4 rounded-2xl bg-muted/50 text-foreground text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-95">
+                            <Link
+                                to={`/alocacao`}
+                                className="w-full py-4 rounded-2xl bg-muted/50 text-foreground text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-95"
+                            >
                                 Gerenciar <ChevronRight className="h-4 w-4" />
-                            </button>
+                            </Link>
                             <button
                                 onClick={() => handlePrintClassBadges(cls.series, cls.name)}
                                 className="w-full py-4 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm"

@@ -27,6 +27,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import JustificationPortal from "./pages/JustificationPortal";
 import JustificationManagement from "./pages/JustificationManagement";
 import ExitAuthorizations from "./pages/ExitAuthorizations";
+import AllocationPortal from "./pages/AllocationPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ function AppContent() {
       <Route path="/justificar/:token" element={<JustificationPortal />} />
       <Route path="/usuarios" element={<ProtectedRoute><AdminRoute><UserManagement /></AdminRoute></ProtectedRoute>} />
       <Route path="/turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassesPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/alocacao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AllocationPortal /></RoleRoute></ProtectedRoute>} />
       <Route path="/calendario" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><CalendarPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
