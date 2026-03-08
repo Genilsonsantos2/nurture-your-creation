@@ -839,12 +839,13 @@ export async function generateUserGuidePDF() {
 // ================================================================
 //  GUIA DO PORTEIRO
 // ================================================================
-export function generateGatekeeperGuidePDF() {
+export async function generateGatekeeperGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia do Porteiro";
 
-  drawCover(doc, "Guia do Porteiro", "Manual Operacional para Controle de Acesso na Portaria", "OPERAÇÕES");
+  drawCover(doc, "Guia do Porteiro", "Manual Operacional para Controle de Acesso na Portaria", logo, "OPERAÇÕES");
 
   drawTOC(doc, p, T, [
     { group: "Operação Diária", items: [
