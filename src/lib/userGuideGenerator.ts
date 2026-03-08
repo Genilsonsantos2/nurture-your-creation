@@ -1,6 +1,20 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Helper to load logo as base64 for jsPDF
+async function loadLogoBase64(): Promise<string | null> {
+  try {
+    const res = await fetch("/logo-cetini.jpeg");
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
 // ==================== DESIGN TOKENS ====================
 const C = {
   navy:      [15, 23, 42]   as [number, number, number],   // #0f172a
@@ -80,7 +94,7 @@ function checkSpace(doc: jsPDF, y: number, need: number, p: { n: number }, t: st
 }
 
 // ==================== COVER PAGE ====================
-function drawCover(doc: jsPDF, title: string, subtitle: string, accentLabel?: string) {
+function drawCover(doc: jsPDF, title: string, subtitle: string, logo: string | null, accentLabel?: string) {
   // Full dark background
   setF(doc, C.navy);
   doc.rect(0, 0, PW, PH, "F");
@@ -96,46 +110,52 @@ function drawCover(doc: jsPDF, title: string, subtitle: string, accentLabel?: st
   doc.circle(30, PH - 60, 60, "F");
   doc.setGState(doc.GState({ opacity: 1 }));
 
+  // Logo
+  if (logo) {
+    try { doc.addImage(logo, "JPEG", PW / 2 - 18, 22, 36, 36); } catch {}
+  }
+
   // School name block
+  const nameY = logo ? 72 : 80;
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(22);
-  doc.text("Colégio Estadual de Tempo", PW / 2, 80, { align: "center" });
-  doc.text("Integral de Nova Itarana", PW / 2, 92, { align: "center" });
+  doc.text("Colégio Estadual de Tempo", PW / 2, nameY, { align: "center" });
+  doc.text("Integral de Nova Itarana", PW / 2, nameY + 12, { align: "center" });
 
   // Amber subtitle
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, 106, { align: "center" });
+  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
 
   // Amber divider line
   doc.setDrawColor(...C.amber);
   doc.setLineWidth(0.8);
-  doc.line(PW / 2 - 30, 114, PW / 2 + 30, 114);
+  doc.line(PW / 2 - 30, nameY + 34, PW / 2 + 30, nameY + 34);
 
   // Main title
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(28);
-  doc.text(title, PW / 2, 140, { align: "center" });
+  doc.text(title, PW / 2, nameY + 58, { align: "center" });
 
   // Subtitle
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(12);
   const sl = doc.splitTextToSize(subtitle, CW - 20);
-  doc.text(sl, PW / 2, 156, { align: "center" });
+  doc.text(sl, PW / 2, nameY + 74, { align: "center" });
 
   // Accent label badge
   if (accentLabel) {
     const bw = 60, bh = 10;
     setF(doc, C.amber);
-    doc.roundedRect(PW / 2 - bw / 2, 172, bw, bh, 3, 3, "F");
+    doc.roundedRect(PW / 2 - bw / 2, nameY + 88, bw, bh, 3, 3, "F");
     setC(doc, C.navy);
     doc.setFont(FONT, "bold");
     doc.setFontSize(7);
-    doc.text(accentLabel, PW / 2, 178.5, { align: "center" });
+    doc.text(accentLabel, PW / 2, nameY + 94.5, { align: "center" });
   }
 
   // Version footer
@@ -463,7 +483,7 @@ function screenshot(doc: jsPDF, y: number, caption: string): number {
 }
 
 // ==================== BACK COVER ====================
-function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string) {
+function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: string | null) {
   doc.addPage();
   p.n++;
 
@@ -478,33 +498,39 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string) {
   doc.circle(PW - 40, 70, 90, "F");
   doc.setGState(doc.GState({ opacity: 1 }));
 
+  // Logo
+  if (logo) {
+    try { doc.addImage(logo, "JPEG", PW / 2 - 15, 80, 30, 30); } catch {}
+  }
+
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(20);
-  doc.text("Colégio Estadual de Tempo Integral", PW / 2, 110, { align: "center" });
-  doc.text("de Nova Itarana", PW / 2, 122, { align: "center" });
+  doc.text("Colégio Estadual de Tempo Integral", PW / 2, logo ? 125 : 110, { align: "center" });
+  doc.text("de Nova Itarana", PW / 2, logo ? 137 : 122, { align: "center" });
 
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, 136, { align: "center" });
+  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
 
   // Divider
   doc.setDrawColor(...C.amber);
   doc.setLineWidth(0.6);
-  doc.line(PW / 2 - 20, 143, PW / 2 + 20, 143);
+  const divY = logo ? 158 : 143;
+  doc.line(PW / 2 - 20, divY, PW / 2 + 20, divY);
 
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(14);
-  doc.text("Sistema de Controle de Acesso v2.0", PW / 2, 158, { align: "center" });
+  doc.text("Sistema de Controle de Acesso v2.0", PW / 2, divY + 15, { align: "center" });
   doc.setFontSize(10);
   doc.setFont(FONT, "normal");
-  doc.text(guideLabel, PW / 2, 168, { align: "center" });
+  doc.text(guideLabel, PW / 2, divY + 25, { align: "center" });
 
   setC(doc, C.slateL);
   doc.setFontSize(9);
-  doc.text("Março de 2026", PW / 2, 180, { align: "center" });
+  doc.text("Março de 2026", PW / 2, divY + 37, { align: "center" });
 
   setC(doc, C.slateL);
   doc.setFontSize(7);
@@ -517,12 +543,13 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string) {
 // ================================================================
 //  GUIA COMPLETO (ADMINISTRADOR)
 // ================================================================
-export function generateUserGuidePDF() {
+export async function generateUserGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia do Usuário";
 
-  drawCover(doc, "Guia do Usuário", "Sistema de Controle de Entrada e Saída — v2.0", "MANUAL COMPLETO");
+  drawCover(doc, "Guia do Usuário", "Sistema de Controle de Entrada e Saída — v2.0", logo, "MANUAL COMPLETO");
 
   drawTOC(doc, p, T, [
     { group: "Introdução", items: [
@@ -805,19 +832,20 @@ export function generateUserGuidePDF() {
     y = bodyText(doc, y, faq.a);
   }
 
-  drawBackCover(doc, p, "Guia do Usuário — Manual Completo");
+  drawBackCover(doc, p, "Guia do Usuário — Manual Completo", logo);
   doc.save(`GUIA_USUARIO_CETINI_${new Date().getFullYear()}.pdf`);
 }
 
 // ================================================================
 //  GUIA DO PORTEIRO
 // ================================================================
-export function generateGatekeeperGuidePDF() {
+export async function generateGatekeeperGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia do Porteiro";
 
-  drawCover(doc, "Guia do Porteiro", "Manual Operacional para Controle de Acesso na Portaria", "OPERAÇÕES");
+  drawCover(doc, "Guia do Porteiro", "Manual Operacional para Controle de Acesso na Portaria", logo, "OPERAÇÕES");
 
   drawTOC(doc, p, T, [
     { group: "Operação Diária", items: [
@@ -944,19 +972,20 @@ export function generateGatekeeperGuidePDF() {
     y = bodyText(doc, y, pb.a);
   }
 
-  drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional");
+  drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional", logo);
   doc.save(`GUIA_PORTEIRO_CETINI_${new Date().getFullYear()}.pdf`);
 }
 
 // ================================================================
 //  GUIA DA COORDENAÇÃO
 // ================================================================
-export function generateCoordinationGuidePDF() {
+export async function generateCoordinationGuidePDF() {
+  const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const p = { n: 1 };
   const T = "Guia da Coordenação";
 
-  drawCover(doc, "Guia da Coordenação", "Manual Pedagógico para Gestão de Presença, Ocorrências e Comunicação com Famílias", "GESTÃO PEDAGÓGICA");
+  drawCover(doc, "Guia da Coordenação", "Manual Pedagógico para Gestão de Presença, Ocorrências e Comunicação com Famílias", logo, "GESTÃO PEDAGÓGICA");
 
   drawTOC(doc, p, T, [
     { group: "Gestão Pedagógica", items: [
@@ -1094,6 +1123,6 @@ export function generateCoordinationGuidePDF() {
 
   y = infoBox(doc, y, "Nunca delete um aluno", "Sempre desative em vez de deletar. O histórico de movimentações e ocorrências é preservado quando o aluno é desativado, mas perdido se for deletado.", "danger");
 
-  drawBackCover(doc, p, "Guia da Coordenação — Manual Pedagógico");
+  drawBackCover(doc, p, "Guia da Coordenação — Manual Pedagógico", logo);
   doc.save(`GUIA_COORDENACAO_CETINI_${new Date().getFullYear()}.pdf`);
 }
