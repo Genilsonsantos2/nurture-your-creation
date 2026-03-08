@@ -583,8 +583,8 @@ export async function generateUserGuidePDF() {
 
   // --- Section 1 ---
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Visão Geral do Sistema", "O que é e para que serve o CETINI Controle de Acesso v2.0");
-  y = bodyText(doc, y, "O Sistema de Controle de Entrada e Saída do CETINI é uma plataforma web desenvolvida especificamente para o Colégio Estadual de Tempo Integral de Nova Itarana. Ele permite registrar, monitorar e notificar automaticamente todas as movimentações de alunos — entradas, saídas e ausências — com integração direta ao WhatsApp dos responsáveis.");
+  y = sectionHeader(doc, y, "1", "Visão Geral do Sistema", "O que é e para que serve o CETI Controle de Acesso v2.0");
+  y = bodyText(doc, y, "O Sistema de Controle de Entrada e Saída do CETI é uma plataforma web desenvolvida especificamente para o Colégio Estadual de Tempo Integral de Nova Itarana. Ele permite registrar, monitorar e notificar automaticamente todas as movimentações de alunos — entradas, saídas e ausências — com integração direta ao WhatsApp dos responsáveis.");
 
   y = featureGrid(doc, y, [
     { title: "Scanner de QR Code", desc: "Cada aluno possui um QR Code único. A portaria escaneia com a câmera do celular ou computador e o sistema registra entrada ou saída automaticamente." },
