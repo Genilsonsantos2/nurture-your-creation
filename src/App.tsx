@@ -28,6 +28,7 @@ import JustificationPortal from "./pages/JustificationPortal";
 import JustificationManagement from "./pages/JustificationManagement";
 import ExitAuthorizations from "./pages/ExitAuthorizations";
 import AllocationPortal from "./pages/AllocationPortal";
+import DropoutPredictionPage from "./pages/DropoutPredictionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
