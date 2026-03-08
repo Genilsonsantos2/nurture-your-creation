@@ -483,7 +483,7 @@ function screenshot(doc: jsPDF, y: number, caption: string): number {
 }
 
 // ==================== BACK COVER ====================
-function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string) {
+function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: string | null) {
   doc.addPage();
   p.n++;
 
@@ -498,33 +498,39 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string) {
   doc.circle(PW - 40, 70, 90, "F");
   doc.setGState(doc.GState({ opacity: 1 }));
 
+  // Logo
+  if (logo) {
+    try { doc.addImage(logo, "JPEG", PW / 2 - 15, 80, 30, 30); } catch {}
+  }
+
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(20);
-  doc.text("Colégio Estadual de Tempo Integral", PW / 2, 110, { align: "center" });
-  doc.text("de Nova Itarana", PW / 2, 122, { align: "center" });
+  doc.text("Colégio Estadual de Tempo Integral", PW / 2, logo ? 125 : 110, { align: "center" });
+  doc.text("de Nova Itarana", PW / 2, logo ? 137 : 122, { align: "center" });
 
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, 136, { align: "center" });
+  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
 
   // Divider
   doc.setDrawColor(...C.amber);
   doc.setLineWidth(0.6);
-  doc.line(PW / 2 - 20, 143, PW / 2 + 20, 143);
+  const divY = logo ? 158 : 143;
+  doc.line(PW / 2 - 20, divY, PW / 2 + 20, divY);
 
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(14);
-  doc.text("Sistema de Controle de Acesso v2.0", PW / 2, 158, { align: "center" });
+  doc.text("Sistema de Controle de Acesso v2.0", PW / 2, divY + 15, { align: "center" });
   doc.setFontSize(10);
   doc.setFont(FONT, "normal");
-  doc.text(guideLabel, PW / 2, 168, { align: "center" });
+  doc.text(guideLabel, PW / 2, divY + 25, { align: "center" });
 
   setC(doc, C.slateL);
   doc.setFontSize(9);
-  doc.text("Março de 2026", PW / 2, 180, { align: "center" });
+  doc.text("Março de 2026", PW / 2, divY + 37, { align: "center" });
 
   setC(doc, C.slateL);
   doc.setFontSize(7);
