@@ -1124,5 +1124,5 @@ export async function generateCoordinationGuidePDF() {
   y = infoBox(doc, y, "Nunca delete um aluno", "Sempre desative em vez de deletar. O histórico de movimentações e ocorrências é preservado quando o aluno é desativado, mas perdido se for deletado.", "danger");
 
   drawBackCover(doc, p, "Guia da Coordenação — Manual Pedagógico", logo);
-  doc.save(`GUIA_COORDENACAO_CETINI_${new Date().getFullYear()}.pdf`);
+  doc.save(`GUIA_COORDENACAO_CETI_${new Date().getFullYear()}.pdf`);
 }
