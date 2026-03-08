@@ -512,7 +512,7 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: s
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
+  doc.text("CETI — Nova Itarana, Bahia", PW / 2, logo ? 151 : 136, { align: "center" });
 
   // Divider
   doc.setDrawColor(...C.amber);
