@@ -106,6 +106,33 @@ export default function JustificationManagement() {
                 </div>
             </div>
 
+            {showDocReader && (
+                <DocumentReader
+                    onClose={() => setShowDocReader(false)}
+                    onDataExtracted={async (data) => {
+                        if (data.matched_student_id && data.reason) {
+                            try {
+                                const { error } = await (supabase as any)
+                                    .from("absence_justifications")
+                                    .insert({
+                                        student_id: data.matched_student_id,
+                                        reason: `[Atestado Médico] ${data.reason}${data.doctor_name ? ` - Dr(a). ${data.doctor_name}` : ""}${data.crm ? ` (CRM: ${data.crm})` : ""}${data.period_start ? ` | Período: ${data.period_start} a ${data.period_end || data.period_start}` : ""}`,
+                                        justification_date: data.date || new Date().toISOString().split("T")[0],
+                                        status: "pending",
+                                    });
+                                if (error) throw error;
+                                queryClient.invalidateQueries({ queryKey: ["justifications"] });
+                                toast.success(`Justificativa criada para ${data.matched_student_name}!`);
+                            } catch {
+                                toast.error("Erro ao criar justificativa.");
+                            }
+                        } else {
+                            toast.warning("Não foi possível criar automaticamente. Aluno não identificado ou motivo ausente.");
+                        }
+                    }}
+                />
+            )}
+
             {showTokenGenerator && (
                 <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-in slide-in-from-top-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">Link Gerado (já copiado):</p>
