@@ -75,7 +75,7 @@ function pageChrome(doc: jsPDF, pageNum: number, title: string) {
   setC(doc, C.slateL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
-  doc.text("CETINI — Colégio Estadual de Tempo Integral de Nova Itarana", ML, PH - 4);
+  doc.text("CETI — Colégio Estadual de Tempo Integral de Nova Itarana", ML, PH - 4);
   setC(doc, C.amberL);
   doc.text(String(pageNum), PW / 2, PH - 4, { align: "center" });
   setC(doc, C.slateL);
