@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, BellRing, UserX } from "lucide-react";
+import { AlertCircle, BellRing, UserX, FileSpreadsheet, FileText, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { getLastNSchoolDays } from "@/lib/calendar";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ReportsPage() {
   const queryClient = useQueryClient();
