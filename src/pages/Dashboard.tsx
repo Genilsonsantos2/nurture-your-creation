@@ -98,10 +98,18 @@ export default function Dashboard() {
 
       toast.dismiss(loadingToast);
 
-      // WhatsApp Link
-      const encodedMsg = encodeURIComponent(message);
-      window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+      const { whatsappService } = await import("@/services/whatsappService");
+      const settings = await whatsappService.getSettings();
+      const schoolPhone = settings?.school_phone || "5571999999999";
 
+      const res = await whatsappService.sendMessage(schoolPhone, message);
+
+      if (res.success) {
+        toast.success("Resumo enviado automaticamente para a coordenação!");
+      } else if (res.manualLink) {
+        window.open(res.manualLink, "_blank");
+        toast.info("Bot offline. Abrindo link manual...");
+      }
     } catch (error: any) {
       toast.error("Erro ao gerar resumo: " + error.message);
     }

@@ -61,14 +61,33 @@ export function useAbsenceChecker() {
                     const studentsNeedsAlert = absentStudents.filter(s => !studentsWithAlert.has(s.id));
 
                     if (studentsNeedsAlert.length > 0) {
-                        const newAlerts = studentsNeedsAlert.map(s => ({
-                            student_id: s.id,
-                            type: "absent" as "absent" | "not_returned" | "irregular_time" | "excessive_exits",
-                            message: "Aluno não registra entrada há 3 dias (ou mais). Contate o responsável.",
-                            status: "pending" as "pending" | "resolved"
-                        }));
+                        const { whatsappService } = await import("@/services/whatsappService");
 
-                        await supabase.from("alerts").insert(newAlerts);
+                        for (const s of studentsNeedsAlert) {
+                            try {
+                                // 1. Create database alert
+                                await supabase.from("alerts").insert([{
+                                    student_id: s.id,
+                                    type: "absent" as any,
+                                    message: "Aluno não registra entrada há 3 dias (ou mais). Contate o responsável.",
+                                    status: "pending" as any
+                                }]);
+
+                                // 2. Fetch student details for phone number
+                                const { data: fullStudent } = await (supabase as any)
+                                    .from("students")
+                                    .select("responsible_phone, name")
+                                    .eq("id", s.id)
+                                    .single();
+
+                                if (fullStudent && (fullStudent as any).responsible_phone) {
+                                    const msg = `*📢 ALERTA DE AUSÊNCIA - CETI DIGITAL*\n\nOlá, notamos que o aluno(a) *${(fullStudent as any).name}* não registra entrada no colégio há 3 dias. Por favor, entre em contato com a coordenação para justificar a ausência. 🛡️`;
+                                    await whatsappService.sendMessage((fullStudent as any).responsible_phone, msg);
+                                }
+                            } catch (alertErr) {
+                                console.error("Error processing alert for student:", s.id, alertErr);
+                            }
+                        }
                     }
                 }
 
