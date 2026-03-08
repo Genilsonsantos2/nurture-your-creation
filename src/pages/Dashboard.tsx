@@ -1,10 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, QrCode, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, QrCode, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, ClipboardCheck, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { isSchoolDay } from "@/lib/calendar";
 import { useAbsenceChecker } from "@/hooks/useAbsenceChecker";
 import { AnnouncementsManager } from "@/components/AnnouncementsManager";
@@ -28,6 +30,82 @@ export default function Dashboard() {
   });
 
   const today = new Date().toISOString().split("T")[0];
+
+  const handleGenerateDailySummary = async () => {
+    try {
+      const loadingToast = toast.loading("Gerando resumo informativo...");
+
+      // 1. Fetch Movements of Today
+      const { data: movements } = await supabase
+        .from("movements")
+        .select("student_id, type, created_at")
+        .gte("created_at", `${today}T00:00:00`)
+        .lte("created_at", `${today}T23:59:59`);
+
+      // 2. Fetch Active Students with medical info
+      const { data: allStudents } = await supabase
+        .from("students")
+        .select("id, name, series, class, allergies, blood_type")
+        .eq("active", true);
+
+      if (!allStudents) throw new Error("Não foi possível carregar alunos.");
+
+      const studentsData = allStudents as any[];
+      const entries = (movements as any[])?.filter(m => m.type === 'entry') || [];
+      const presentIds = new Set(entries.map(m => m.student_id));
+      const absentStudents = studentsData.filter(s => !presentIds.has(s.id));
+
+      const studentsWithMedicalAlerts = studentsData.filter(s =>
+        presentIds.has(s.id) && (s.allergies || s.blood_type)
+      );
+
+      const totalPresent = presentIds.size;
+      const totalStudents = studentsData.length;
+      const presenceRate = ((totalPresent / totalStudents) * 100).toFixed(1);
+
+      // Group absents by series
+      const seriesAbsents: Record<string, number> = {};
+      absentStudents.forEach(s => {
+        seriesAbsents[s.series] = (seriesAbsents[s.series] || 0) + 1;
+      });
+
+      // Build WhatsApp Message
+      const dateStr = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
+      let message = `*📊 RESUMO DIÁRIO - CETI DIGITAL*\n`;
+      message += `*📅 Data:* ${dateStr}\n\n`;
+
+      message += `*📈 FREQUÊNCIA GERAL*\n`;
+      message += `✅ Presentes: ${totalPresent}\n`;
+      message += `❌ Ausentes: ${absentStudents.length}\n`;
+      message += `🎯 Índice: ${presenceRate}%\n\n`;
+
+      message += `*🚩 AUSÊNCIAS POR SÉRIE*\n`;
+      Object.entries(seriesAbsents).sort().forEach(([series, count]) => {
+        message += `• ${series}: ${count} faltas\n`;
+      });
+      message += `\n`;
+
+      if (studentsWithMedicalAlerts.length > 0) {
+        message += `*⚠️ ALERTAS MÉDICOS (PRESENTES HOJE)*\n`;
+        studentsWithMedicalAlerts.slice(0, 10).forEach(s => {
+          message += `• ${s.name}: ${s.allergies || 'Dados Sanguíneos'}\n`;
+        });
+        if (studentsWithMedicalAlerts.length > 10) message += `...e mais ${studentsWithMedicalAlerts.length - 10}\n`;
+        message += `\n`;
+      }
+
+      message += `*Coordenação, favor validar casos críticos no painel.* 🛡️`;
+
+      toast.dismiss(loadingToast);
+
+      // WhatsApp Link
+      const encodedMsg = encodeURIComponent(message);
+      window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+
+    } catch (error: any) {
+      toast.error("Erro ao gerar resumo: " + error.message);
+    }
+  };
 
   const { data: todayMovements } = useQuery({
     queryKey: ["movements-today", today],
@@ -144,6 +222,46 @@ export default function Dashboard() {
           <div className="absolute -right-20 -top-20 h-64 w-64 bg-primary/5 blur-[80px] rounded-full" />
         </div>
       )}
+
+      {/* Strategic Management Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="group relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-8 border border-white/10 shadow-2xl transition-all hover:border-primary/40">
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="h-16 w-16 rounded-[1.5rem] bg-success/20 text-success flex items-center justify-center border border-success/30 shadow-lg shadow-success/10 group-hover:scale-110 transition-transform duration-500">
+              <Smartphone className="h-8 w-8" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-black text-white tracking-tight">Gestão Estratégica</h3>
+              <p className="text-sm text-gray-400 font-medium leading-relaxed">Envie o resumo de frequência e alertas médicos direto para a coordenação.</p>
+            </div>
+            <button
+              onClick={handleGenerateDailySummary}
+              className="flex items-center gap-3 bg-success hover:bg-success/90 text-white font-black px-6 py-4 rounded-2xl shadow-xl shadow-success/20 transition-all active:scale-95 group/btn"
+            >
+              <Share2 className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+              <span className="uppercase tracking-widest text-xs">Resumo via WhatsApp</span>
+            </button>
+          </div>
+          <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
+            <ClipboardCheck className="w-32 h-32 text-success" />
+          </div>
+        </div>
+
+        <div className="group relative overflow-hidden rounded-[2.5rem] bg-card border border-border/40 p-8 shadow-xl transition-all hover:shadow-2xl">
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="h-16 w-16 rounded-[1.5rem] bg-primary/10 text-primary flex items-center justify-center border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-500">
+              <FileText className="h-8 w-8" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-black tracking-tight">Relatórios Rápidos</h3>
+              <p className="text-sm text-muted-foreground font-medium">Acesse a análise detalhada de turmas e tendências semanais.</p>
+            </div>
+            <Link to="/analise" className="p-4 rounded-2xl bg-muted/50 hover:bg-muted text-foreground transition-all">
+              <ArrowUpRight className="h-6 w-6" />
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Bento Grid Stats and Risk Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
