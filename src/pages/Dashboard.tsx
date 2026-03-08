@@ -431,6 +431,12 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {isManagement && (
+        <div className="mt-8">
+          <DailySummary />
+        </div>
+      )}
+
       <div className="mt-8">
         <AnnouncementsManager />
       </div>
