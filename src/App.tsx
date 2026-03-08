@@ -98,7 +98,7 @@ function AppContent() {
       <Route path="/predicao-evasao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><DropoutPredictionPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/assistente" element={<ProtectedRoute><ChatAssistantPage /></ProtectedRoute>} />
       <Route path="/anomalias" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnomalyDetectionPage /></RoleRoute></ProtectedRoute>} />
-      <Route path="/sugestao-turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassSuggestionPage /></RoleRoute></ProtectedRoute>} />
+      
       <Route path="/comunicados" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnnouncementGeneratorPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/mapa-calor" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AttendanceHeatmapPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
