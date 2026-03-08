@@ -23,7 +23,8 @@ import {
   TrendingUp,
   FileCheck,
   Power,
-  Brain
+  Brain,
+  Bot
 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,7 @@ const navItems = [
   { label: "Usuários", icon: UserCog, path: "/usuarios", roles: ["admin"] },
   { label: "Calendário", icon: CalendarDays, path: "/calendario", roles: ["admin", "coordinator"] },
   { label: "Configurações", icon: Settings, path: "/configuracoes", roles: ["admin"] },
+  { label: "Assistente IA", icon: Bot, path: "/assistente", roles: ["admin", "coordinator", "gatekeeper"] },
 ];
 
 const SystemStatusOverlay = () => (
