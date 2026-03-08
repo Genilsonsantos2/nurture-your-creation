@@ -11,6 +11,7 @@ import { isSchoolDay } from "@/lib/calendar";
 import { useAbsenceChecker } from "@/hooks/useAbsenceChecker";
 import { AnnouncementsManager } from "@/components/AnnouncementsManager";
 import RiskThermometer from "@/components/RiskThermometer";
+import LaunchCeremony from "@/components/LaunchCeremony";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
