@@ -127,7 +127,7 @@ function drawCover(doc: jsPDF, title: string, subtitle: string, logo: string | n
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
+  doc.text("CETI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
 
   // Amber divider line
   doc.setDrawColor(...C.amber);
