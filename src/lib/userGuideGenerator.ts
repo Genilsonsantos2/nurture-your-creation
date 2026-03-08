@@ -94,7 +94,7 @@ function checkSpace(doc: jsPDF, y: number, need: number, p: { n: number }, t: st
 }
 
 // ==================== COVER PAGE ====================
-function drawCover(doc: jsPDF, title: string, subtitle: string, accentLabel?: string) {
+function drawCover(doc: jsPDF, title: string, subtitle: string, logo: string | null, accentLabel?: string) {
   // Full dark background
   setF(doc, C.navy);
   doc.rect(0, 0, PW, PH, "F");
@@ -110,46 +110,52 @@ function drawCover(doc: jsPDF, title: string, subtitle: string, accentLabel?: st
   doc.circle(30, PH - 60, 60, "F");
   doc.setGState(doc.GState({ opacity: 1 }));
 
+  // Logo
+  if (logo) {
+    try { doc.addImage(logo, "JPEG", PW / 2 - 18, 22, 36, 36); } catch {}
+  }
+
   // School name block
+  const nameY = logo ? 72 : 80;
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(22);
-  doc.text("Colégio Estadual de Tempo", PW / 2, 80, { align: "center" });
-  doc.text("Integral de Nova Itarana", PW / 2, 92, { align: "center" });
+  doc.text("Colégio Estadual de Tempo", PW / 2, nameY, { align: "center" });
+  doc.text("Integral de Nova Itarana", PW / 2, nameY + 12, { align: "center" });
 
   // Amber subtitle
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(11);
-  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, 106, { align: "center" });
+  doc.text("CETINI — Nova Itarana, Bahia", PW / 2, nameY + 26, { align: "center" });
 
   // Amber divider line
   doc.setDrawColor(...C.amber);
   doc.setLineWidth(0.8);
-  doc.line(PW / 2 - 30, 114, PW / 2 + 30, 114);
+  doc.line(PW / 2 - 30, nameY + 34, PW / 2 + 30, nameY + 34);
 
   // Main title
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(28);
-  doc.text(title, PW / 2, 140, { align: "center" });
+  doc.text(title, PW / 2, nameY + 58, { align: "center" });
 
   // Subtitle
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(12);
   const sl = doc.splitTextToSize(subtitle, CW - 20);
-  doc.text(sl, PW / 2, 156, { align: "center" });
+  doc.text(sl, PW / 2, nameY + 74, { align: "center" });
 
   // Accent label badge
   if (accentLabel) {
     const bw = 60, bh = 10;
     setF(doc, C.amber);
-    doc.roundedRect(PW / 2 - bw / 2, 172, bw, bh, 3, 3, "F");
+    doc.roundedRect(PW / 2 - bw / 2, nameY + 88, bw, bh, 3, 3, "F");
     setC(doc, C.navy);
     doc.setFont(FONT, "bold");
     doc.setFontSize(7);
-    doc.text(accentLabel, PW / 2, 178.5, { align: "center" });
+    doc.text(accentLabel, PW / 2, nameY + 94.5, { align: "center" });
   }
 
   // Version footer
