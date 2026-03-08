@@ -6,7 +6,7 @@ import {
   Bell, Clock, FileWarning, BarChart3, UserCog, School, PowerOff,
   ShieldAlert, Settings, Menu, X, LogOut, CalendarDays, TrendingUp,
   FileCheck, Power, Brain, Bot, Shield, FileText, Flame,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Cpu, Zap
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,15 +18,15 @@ type NavSection = {
 
 const navSections: NavSection[] = [
   {
-    title: "Principal",
+    title: "Central",
     items: [
-      { label: "Painel Geral", icon: LayoutDashboard, path: "/", roles: ["admin", "coordinator"] },
-      { label: "Análise", icon: TrendingUp, path: "/analise", roles: ["admin", "coordinator"] },
+      { label: "Dashboard", icon: LayoutDashboard, path: "/", roles: ["admin", "coordinator"] },
+      { label: "Analytics", icon: TrendingUp, path: "/analise", roles: ["admin", "coordinator"] },
       { label: "Calendário", icon: CalendarDays, path: "/calendario", roles: ["admin", "coordinator"] },
     ],
   },
   {
-    title: "Gestão Escolar",
+    title: "Gestão",
     items: [
       { label: "Alunos", icon: Users, path: "/alunos", roles: ["admin", "coordinator"] },
       { label: "Turmas", icon: School, path: "/turmas", roles: ["admin", "coordinator"] },
@@ -35,15 +35,15 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: "Controle de Acesso",
+    title: "Acesso",
     items: [
       { label: "Portaria", icon: ScanLine, path: "/portaria", roles: ["admin", "gatekeeper"] },
-      { label: "Movimentações", icon: ArrowLeftRight, path: "/movimentacoes", roles: ["admin", "gatekeeper", "coordinator"] },
+      { label: "Movimentos", icon: ArrowLeftRight, path: "/movimentacoes", roles: ["admin", "gatekeeper", "coordinator"] },
       { label: "Autorizações", icon: ShieldAlert, path: "/autorizacoes-saida", roles: ["admin", "coordinator"] },
     ],
   },
   {
-    title: "Ocorrências",
+    title: "Monitoramento",
     items: [
       { label: "Alertas", icon: Bell, path: "/alertas", roles: ["admin", "coordinator"] },
       { label: "Ocorrências", icon: FileWarning, path: "/ocorrencias", roles: ["admin", "coordinator"] },
@@ -65,23 +65,23 @@ const navSections: NavSection[] = [
     items: [
       { label: "Relatórios", icon: BarChart3, path: "/relatorios", roles: ["admin", "coordinator"] },
       { label: "Usuários", icon: UserCog, path: "/usuarios", roles: ["admin"] },
-      { label: "Configurações", icon: Settings, path: "/configuracoes", roles: ["admin"] },
+      { label: "Config", icon: Settings, path: "/configuracoes", roles: ["admin"] },
     ],
   },
 ];
 
 const SystemStatusOverlay = () => (
-  <div className="fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
-    <div className="h-20 w-20 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mb-6 animate-pulse">
-      <PowerOff className="h-10 w-10" />
+  <div className="fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center tech-grid">
+    <div className="h-24 w-24 rounded-2xl bg-destructive/20 text-destructive flex items-center justify-center mb-6 animate-pulse glow-sm border border-destructive/30">
+      <PowerOff className="h-12 w-12" />
     </div>
-    <h1 className="text-3xl font-bold text-foreground mb-3 font-display">Sistema Suspenso</h1>
+    <h1 className="text-3xl font-bold text-foreground mb-3">Sistema Suspenso</h1>
     <p className="text-muted-foreground max-w-sm leading-relaxed">
-      O administrador suspendeu temporariamente as operações do sistema para manutenção.
+      Manutenção em andamento. Aguarde o reestabelecimento.
     </p>
-    <div className="mt-8 flex items-center gap-2.5 px-4 py-2 rounded-xl bg-destructive/10 border border-destructive/20">
+    <div className="mt-8 flex items-center gap-2.5 px-4 py-2 rounded-lg bg-destructive/10 border border-destructive/30">
       <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-      <span className="text-xs font-semibold text-destructive uppercase tracking-wider">Offline</span>
+      <span className="text-xs font-mono font-semibold text-destructive uppercase tracking-wider">OFFLINE</span>
     </div>
   </div>
 );
@@ -155,10 +155,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const { error: updateErr } = await supabase.from("settings").update({ system_active: newStatus } as any).eq("id", currentSettings.id);
       if (updateErr) throw new Error("Could not update settings");
       setIsSystemActive(newStatus);
-      toast.success(newStatus ? "Sistema Ativado!" : "Sistema Suspenso.");
+      toast.success(newStatus ? "Sistema Ativo!" : "Sistema Suspenso.");
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao alterar o status.");
+      toast.error("Erro ao alterar status.");
     }
   };
 
@@ -173,48 +173,45 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     : user?.email?.slice(0, 2).toUpperCase() || "U";
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden font-sans">
+    <div className="flex min-h-screen bg-background relative overflow-hidden font-sans tech-grid">
       {!isSystemActive && !isAdmin && <SystemStatusOverlay />}
 
-      {/* Subtle bg accents */}
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-info/[0.02] blur-[120px] pointer-events-none" />
+      {/* Ambient glow */}
+      <div className="fixed top-[-200px] left-[-200px] w-[600px] h-[600px] rounded-full bg-primary/[0.05] blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-[-200px] right-[-200px] w-[500px] h-[500px] rounded-full bg-accent/[0.03] blur-[120px] pointer-events-none" />
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-out lg:static lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${collapsed ? "w-[72px]" : "w-[260px]"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-out lg:static lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${collapsed ? "w-[68px]" : "w-[250px]"}`}>
         {/* Logo */}
-        <div className={`flex items-center h-16 border-b border-sidebar-border px-4 ${collapsed ? "justify-center" : "gap-3"}`}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 overflow-hidden">
-            <img src="/logo.png" alt="Logo" className="h-6 w-6 object-contain" />
+        <div className={`flex items-center h-14 border-b border-sidebar-border px-3 ${collapsed ? "justify-center" : "gap-3"}`}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent glow-sm overflow-hidden">
+            <Cpu className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h1 className="text-xs font-bold text-sidebar-foreground tracking-wide truncate font-display">CETI NOVA ITARANA</h1>
-              <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-success" />
-                <p className="text-[10px] text-muted-foreground font-medium">Online</p>
-              </div>
+              <h1 className="text-xs font-bold text-foreground tracking-wider truncate">CETI NOVA ITARANA</h1>
+              <p className="text-[9px] text-primary font-mono font-semibold tracking-widest">100% TECNOLOGIA</p>
             </div>
           )}
-          <button className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-secondary" onClick={() => setMobileOpen(false)}>
+          <button className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:bg-secondary" onClick={() => setMobileOpen(false)}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar space-y-5">
+        <nav className="flex-1 overflow-y-auto py-3 px-2 custom-scrollbar space-y-4">
           {navSections.map((section) => {
             const items = filterItems(section.items);
             if (items.length === 0) return null;
             return (
               <div key={section.title}>
                 {!collapsed && (
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-3 mb-2">{section.title}</p>
+                  <p className="text-[9px] font-semibold text-primary/60 uppercase tracking-[0.2em] px-3 mb-1.5 font-mono">{section.title}</p>
                 )}
                 <div className="space-y-0.5">
                   {items.map((item) => {
@@ -225,15 +222,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         className={`sidebar-link ${active ? "sidebar-link-active" : ""} ${collapsed ? "justify-center px-0" : ""}`}
                         title={collapsed ? item.label : undefined}
                       >
-                        <item.icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : ""}`} />
+                        <item.icon className={`h-[17px] w-[17px] shrink-0 ${active ? "text-primary" : ""}`} />
                         {!collapsed && <span className="truncate">{item.label}</span>}
                         {!collapsed && badgeCount > 0 && (
-                          <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1.5">
+                          <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded bg-destructive text-[10px] font-mono font-bold text-destructive-foreground px-1">
                             {badgeCount}
                           </span>
                         )}
                         {collapsed && badgeCount > 0 && (
-                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                          <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-destructive" />
                         )}
                       </Link>
                     );
@@ -244,18 +241,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Collapse toggle (desktop) */}
+        {/* Collapse toggle */}
         <div className="hidden lg:flex items-center justify-center py-2 border-t border-sidebar-border">
-          <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+          <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-primary transition-colors">
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
         </div>
 
         {/* Signout */}
-        <div className={`p-3 border-t border-sidebar-border ${collapsed ? "flex justify-center" : ""}`}>
+        <div className={`p-2 border-t border-sidebar-border ${collapsed ? "flex justify-center" : ""}`}>
           <button onClick={signOut}
-            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-destructive/80 hover:bg-destructive/10 hover:text-destructive transition-colors w-full ${collapsed ? "justify-center" : ""}`}>
-            <LogOut className="h-[18px] w-[18px] shrink-0" />
+            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors w-full ${collapsed ? "justify-center" : ""}`}>
+            <LogOut className="h-[17px] w-[17px] shrink-0" />
             {!collapsed && <span>Sair</span>}
           </button>
         </div>
@@ -263,44 +260,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex flex-1 flex-col min-w-0 relative z-10">
-        <header className="glass-header h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <header className="glass-header h-14 flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <button className="lg:hidden text-muted-foreground p-2 rounded-xl hover:bg-secondary transition-colors" onClick={() => setMobileOpen(true)}>
+            <button className="lg:hidden text-muted-foreground p-2 rounded-lg hover:bg-secondary transition-colors" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
-            <div className="hidden md:block">
-              <h2 className="text-base font-bold text-foreground font-display tracking-tight">
-                {navSections.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || "Painel"}
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary hidden md:block" />
+              <h2 className="text-sm font-bold text-foreground tracking-wide">
+                {navSections.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || "Sistema"}
               </h2>
-            </div>
-            <div className="md:hidden">
-              <h2 className="text-sm font-bold text-foreground font-display">CETI Digital</h2>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {isAdmin && (
               <button onClick={toggleSystemStatus}
-                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${isSystemActive
-                  ? "bg-success/10 text-success hover:bg-success/20 border border-success/20"
-                  : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 animate-pulse"
+                className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold transition-colors ${isSystemActive
+                  ? "bg-success/10 text-success hover:bg-success/20 border border-success/30"
+                  : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 animate-pulse"
                 }`}
               >
-                {isSystemActive ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
-                {isSystemActive ? "Ativo" : "Suspenso"}
+                {isSystemActive ? <Power className="h-3 w-3" /> : <PowerOff className="h-3 w-3" />}
+                {isSystemActive ? "ONLINE" : "OFFLINE"}
               </button>
             )}
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-semibold text-foreground">{user?.user_metadata?.full_name || "Usuário"}</span>
-              <span className="text-[11px] text-muted-foreground capitalize">{role || "Membro"}</span>
+              <span className="text-xs font-semibold text-foreground">{user?.user_metadata?.full_name || "Usuário"}</span>
+              <span className="text-[10px] text-primary font-mono capitalize">{role || "user"}</span>
             </div>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-info flex items-center justify-center text-primary-foreground text-xs font-bold shadow-lg shadow-primary/20 ring-2 ring-background">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold glow-sm ring-2 ring-background">
               {initials}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>
