@@ -30,6 +30,10 @@ import ExitAuthorizations from "./pages/ExitAuthorizations";
 import AllocationPortal from "./pages/AllocationPortal";
 import DropoutPredictionPage from "./pages/DropoutPredictionPage";
 import ChatAssistantPage from "./pages/ChatAssistantPage";
+import AnomalyDetectionPage from "./pages/AnomalyDetectionPage";
+import ClassSuggestionPage from "./pages/ClassSuggestionPage";
+import AnnouncementGeneratorPage from "./pages/AnnouncementGeneratorPage";
+import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -93,6 +97,10 @@ function AppContent() {
       <Route path="/calendario" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><CalendarPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/predicao-evasao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><DropoutPredictionPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/assistente" element={<ProtectedRoute><ChatAssistantPage /></ProtectedRoute>} />
+      <Route path="/anomalias" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnomalyDetectionPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/sugestao-turmas" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><ClassSuggestionPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/comunicados" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnnouncementGeneratorPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/mapa-calor" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AttendanceHeatmapPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
