@@ -23,7 +23,8 @@ import {
   TrendingUp,
   FileCheck,
   Power,
-  Brain
+  Brain,
+  Bot
 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
