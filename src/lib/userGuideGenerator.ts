@@ -60,7 +60,7 @@ function pageChrome(doc: jsPDF, pageNum: number, title: string) {
   setC(doc, C.white);
   doc.setFont(FONT, "bold");
   doc.setFontSize(7);
-  doc.text("CETINI Nova Itarana — Sistema de Controle de Acesso", ML, 11);
+  doc.text("CETI Nova Itarana — Sistema de Controle de Acesso", ML, 11);
   setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
