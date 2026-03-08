@@ -131,12 +131,16 @@ export default function StudentsPage() {
                   <tr key={student.id} className="group hover:bg-primary/[0.02] transition-colors relative">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-primary/20 to-info/20 flex items-center justify-center text-primary font-black text-lg border border-primary/10 group-hover:scale-110 transition-transform">
-                          {student.name.charAt(0).toUpperCase()}
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-primary/20 to-info/20 flex items-center justify-center text-primary font-black text-lg border border-primary/10 group-hover:scale-110 transition-transform overflow-hidden shrink-0">
+                          {(student as any).photo_url ? (
+                            <img src={(student as any).photo_url} alt={student.name} className="h-full w-full object-cover" />
+                          ) : (
+                            student.name.charAt(0).toUpperCase()
+                          )}
                         </div>
                         <div>
                           <p className="font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{student.name}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Nível de Acesso Padrão</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{student.series} • {student.class}</p>
                         </div>
                       </div>
                     </td>
