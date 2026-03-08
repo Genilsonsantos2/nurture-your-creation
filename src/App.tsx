@@ -30,6 +30,10 @@ import ExitAuthorizations from "./pages/ExitAuthorizations";
 import AllocationPortal from "./pages/AllocationPortal";
 import DropoutPredictionPage from "./pages/DropoutPredictionPage";
 import ChatAssistantPage from "./pages/ChatAssistantPage";
+import AnomalyDetectionPage from "./pages/AnomalyDetectionPage";
+import ClassSuggestionPage from "./pages/ClassSuggestionPage";
+import AnnouncementGeneratorPage from "./pages/AnnouncementGeneratorPage";
+import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
