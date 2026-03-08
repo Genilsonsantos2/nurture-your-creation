@@ -534,7 +534,7 @@ function drawBackCover(doc: jsPDF, p: { n: number }, guideLabel: string, logo: s
 
   setC(doc, C.slateL);
   doc.setFontSize(7);
-  doc.text("Este documento é de uso interno e exclusivo do CETINI Nova Itarana.", PW / 2, PH - 25, { align: "center" });
+  doc.text("Este documento é de uso interno e exclusivo do CETI Nova Itarana.", PW / 2, PH - 25, { align: "center" });
 
   setF(doc, C.amber);
   doc.rect(0, PH - 5, PW, 5, "F");
