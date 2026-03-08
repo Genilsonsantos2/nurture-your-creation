@@ -1,6 +1,20 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Helper to load logo as base64 for jsPDF
+async function loadLogoBase64(): Promise<string | null> {
+  try {
+    const res = await fetch("/logo-cetini.jpeg");
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
 // ==================== DESIGN TOKENS ====================
 const C = {
   navy:      [15, 23, 42]   as [number, number, number],   // #0f172a
