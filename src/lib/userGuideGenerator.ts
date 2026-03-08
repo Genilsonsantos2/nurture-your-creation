@@ -29,28 +29,54 @@ const FONT = "helvetica";
 function setC(doc: jsPDF, c: [number, number, number]) { doc.setTextColor(...c); }
 function setF(doc: jsPDF, c: [number, number, number]) { doc.setFillColor(...c); }
 
-function footer(doc: jsPDF, pageNum: number, title: string) {
-  doc.setDrawColor(...C.border);
-  doc.setLineWidth(0.3);
-  doc.line(ML, PH - 16, PW - MR, PH - 16);
+function pageChrome(doc: jsPDF, pageNum: number, title: string) {
+  // Subtle off-white page background
+  setF(doc, C.offWhite);
+  doc.rect(0, 0, PW, PH, "F");
+
+  // Navy header bar
+  setF(doc, C.navy);
+  doc.rect(0, 0, PW, 18, "F");
+
+  // Amber accent line under header
+  setF(doc, C.amber);
+  doc.rect(0, 18, PW, 1.2, "F");
+
+  // Header text — school name left, guide title right
+  setC(doc, C.white);
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(7);
+  doc.text("CETINI Nova Itarana — Sistema de Controle de Acesso", ML, 11);
+  setC(doc, C.amberL);
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
+  doc.text(`${title} v2.0`, PW - MR, 11, { align: "right" });
+
+  // Footer
+  setF(doc, C.navy);
+  doc.rect(0, PH - 12, PW, 12, "F");
+  setF(doc, C.amber);
+  doc.rect(0, PH - 12, PW, 1, "F");
+
   setC(doc, C.slateL);
-  doc.text("CETINI Nova Itarana — Sistema de Controle de Acesso", ML, PH - 10);
-  doc.text(`${title} v2.0`, PW - MR, PH - 10, { align: "right" });
-  setC(doc, C.border);
-  doc.text(String(pageNum), PW / 2, PH - 10, { align: "center" });
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7);
+  doc.text("CETINI — Colégio Estadual de Tempo Integral de Nova Itarana", ML, PH - 4);
+  setC(doc, C.amberL);
+  doc.text(String(pageNum), PW / 2, PH - 4, { align: "center" });
+  setC(doc, C.slateL);
+  doc.text("Nova Itarana, Bahia", PW - MR, PH - 4, { align: "right" });
 }
 
 function newPage(doc: jsPDF, p: { n: number }, title: string): number {
   doc.addPage();
   p.n++;
-  footer(doc, p.n, title);
+  pageChrome(doc, p.n, title);
   return 28;
 }
 
 function checkSpace(doc: jsPDF, y: number, need: number, p: { n: number }, t: string): number {
-  return (y + need > PH - 24) ? newPage(doc, p, t) : y;
+  return (y + need > PH - 20) ? newPage(doc, p, t) : y;
 }
 
 // ==================== COVER PAGE ====================
