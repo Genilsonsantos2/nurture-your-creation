@@ -1006,7 +1006,7 @@ export async function generateCoordinationGuidePDF() {
 
   // Section 1
   let y = newPage(doc, p, T);
-  y = sectionHeader(doc, y, "1", "Seu Papel no Sistema", "O que a coordenação faz no CETINI Digital");
+  y = sectionHeader(doc, y, "1", "Seu Papel no Sistema", "O que a coordenação faz no CETI Digital");
   y = bodyText(doc, y, "A coordenação é responsável pelo acompanhamento pedagógico da presença escolar. Você monitora alertas, gerencia ocorrências, analisa relatórios e se comunica com as famílias.");
 
   y = featureGrid(doc, y, [
