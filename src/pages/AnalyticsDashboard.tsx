@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { RiskThermometer } from "@/components/RiskThermometer";
+import RiskThermometer from "@/components/RiskThermometer";
 
 export default function AnalyticsDashboard() {
     const [timeRange, setTimeRange] = useState<7 | 30>(7);

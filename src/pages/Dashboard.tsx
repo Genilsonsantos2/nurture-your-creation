@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { isSchoolDay } from "@/lib/calendar";
 import { useAbsenceChecker } from "@/hooks/useAbsenceChecker";
 import { AnnouncementsManager } from "@/components/AnnouncementsManager";
+import RiskThermometer from "@/components/RiskThermometer";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
@@ -144,21 +145,31 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Bento Grid Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-        {stats.map((stat, i) => (
-          <div key={stat.label} className="stat-card p-4 md:p-8" style={{ animationDelay: `${i * 100}ms` }}>
-            <div className="flex justify-between items-start mb-4 md:mb-6">
-              <div className={`h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl ${stat.bgColor}`}>
-                <stat.icon className={`h-5 w-5 md:h-7 md:w-7 ${stat.color}`} />
+      {/* Bento Grid Stats and Risk Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Column: Traditional Stats */}
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {stats.map((stat, i) => (
+            <div key={stat.label} className="stat-card p-4 md:p-8" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="flex justify-between items-start mb-4 md:mb-6">
+                <div className={`h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 md:h-7 md:w-7 ${stat.color}`} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xl md:text-4xl font-black tracking-tight text-foreground mb-1 drop-shadow-sm">{stat.value}</p>
+                <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
               </div>
             </div>
-            <div>
-              <p className="text-xl md:text-4xl font-black tracking-tight text-foreground mb-1 drop-shadow-sm">{stat.value}</p>
-              <p className="text-[8px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-            </div>
+          ))}
+        </div>
+
+        {/* Right Column: Risk Panel */}
+        <div className="lg:col-span-1">
+          <div className="glass-panel p-6 h-full flex flex-col justify-between border-primary/20 bg-gradient-to-br from-background via-background to-primary/5">
+            <RiskThermometer />
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Featured Insight & Upcoming Event */}

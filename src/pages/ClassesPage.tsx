@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Plus, Trash2, Users, GraduationCap, ChevronRight, School, Users2 } from "lucide-react";
+import { BookOpen, Plus, Trash2, Users, GraduationCap, ChevronRight, School, Users2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { generateMassBadgesPDF } from "@/lib/documentGenerator";
 
 export default function ClassesPage() {
     const queryClient = useQueryClient();
@@ -33,6 +34,32 @@ export default function ClassesPage() {
             toast.info("Para criar novas turmas, adicione alunos vinculados a elas no menu Alunos.");
         }
     });
+
+    const handlePrintClassBadges = async (series: string, className: string) => {
+        const loadingToast = toast.loading(`Gerando carteirinhas da Turma ${className}...`);
+        try {
+            const { data: classStudents, error } = await supabase
+                .from("students")
+                .select("*")
+                .eq("series", series)
+                .eq("class", className)
+                .eq("active", true);
+
+            if (error) throw error;
+            if (!classStudents || classStudents.length === 0) {
+                toast.error("Nenhum aluno ativo encontrado nesta turma.");
+                return;
+            }
+
+            await generateMassBadgesPDF(classStudents, className);
+            toast.success(`PDF gerado com sucesso para ${classStudents.length} alunos!`);
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao gerar carteirinhas.");
+        } finally {
+            toast.dismiss(loadingToast);
+        }
+    };
 
     return (
         <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
@@ -94,9 +121,17 @@ export default function ClassesPage() {
                             </div>
                         </div>
 
-                        <button className="w-full py-5 rounded-2xl bg-muted/50 text-foreground text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-lg group-hover:shadow-primary/30 transition-all relative z-10 active:scale-95">
-                            Gerenciar Enturmação <ChevronRight className="h-4 w-4" />
-                        </button>
+                        <div className="flex flex-col gap-3 relative z-10">
+                            <button className="w-full py-4 rounded-2xl bg-muted/50 text-foreground text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-95">
+                                Gerenciar <ChevronRight className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => handlePrintClassBadges(cls.series, cls.name)}
+                                className="w-full py-4 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm"
+                            >
+                                <Printer className="h-4 w-4" /> Gerar Carteirinhas
+                            </button>
+                        </div>
                     </div>
                 ))}
 

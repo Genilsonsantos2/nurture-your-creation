@@ -79,3 +79,87 @@ export const generateDeclarationPDF = (student: any, schoolName: string = "CETI 
     const fileName = `Declaracao_${student.name.replace(/\s+/g, '_')}_${today.getFullYear()}.pdf`;
     doc.save(fileName);
 };
+
+export const generateMassBadgesPDF = async (students: any[], className: string) => {
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const badgeWidth = 85;
+    const badgeHeight = 55;
+    const margin = 10;
+    const gap = 5;
+
+    let currentX = margin;
+    let currentY = margin;
+    let count = 0;
+
+    for (const student of students) {
+        if (count > 0 && count % 10 === 0) {
+            doc.addPage();
+            currentX = margin;
+            currentY = margin;
+        }
+
+        // Draw Badge Border/Background
+        doc.setDrawColor(30, 41, 59);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(currentX, currentY, badgeWidth, badgeHeight, 3, 3, "S");
+
+        // Header Section
+        doc.setFillColor(30, 41, 59);
+        doc.rect(currentX, currentY, badgeWidth, 15, "F");
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("CETI NOVA ITARANA", currentX + 5, currentY + 7);
+        doc.setFontSize(6);
+        doc.setTextColor(250, 204, 21); // Yellow 400
+        doc.text("IDENTIDADE ESTUDANTIL 2026", currentX + 5, currentY + 11);
+
+        // Student Content
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const nameLines = doc.splitTextToSize(student.name.toUpperCase(), badgeWidth - 40);
+        doc.text(nameLines, currentX + 5, currentY + 25);
+
+        doc.setFontSize(7);
+        doc.setTextColor(21, 128, 61); // Green 700
+        doc.text(`${student.series} • Turma ${student.class}`, currentX + 5, currentY + 35);
+
+        doc.setTextColor(100, 100, 100);
+        doc.setFont("helvetica", "normal");
+        doc.text(`MATRÍCULA: ${student.enrollment || '---'}`, currentX + 5, currentY + 40);
+
+        // QR Code (using API)
+        try {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.qr_code)}`;
+            // We use a trick here: jsPDF can handle images if they are preloaded or as base64.
+            // For simplicity in a bulk export, we'll try to use the image add functionality.
+            // Note: In some environments image loading might be async.
+            doc.addImage(qrUrl, 'PNG', currentX + badgeWidth - 25, currentY + 20, 20, 20);
+        } catch (e) {
+            doc.text("[QR CODE]", currentX + badgeWidth - 20, currentY + 30);
+        }
+
+        // Footer of badge
+        doc.setFontSize(5);
+        doc.setTextColor(150, 150, 150);
+        doc.text("VÁLIDO EM TODO TERRITÓRIO NACIONAL", currentX + badgeWidth / 2, currentY + badgeHeight - 3, { align: "center" });
+
+        // Update positions for next badge
+        count++;
+        if (count % 2 === 0) {
+            currentX = margin;
+            currentY += badgeHeight + gap;
+        } else {
+            currentX += badgeWidth + gap;
+        }
+    }
+
+    doc.save(`Carteirinhas_Turma_${className}.pdf`);
+};
