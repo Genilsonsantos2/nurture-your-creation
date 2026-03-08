@@ -53,7 +53,7 @@ const navItems = [
   { label: "Calendário", icon: CalendarDays, path: "/calendario", roles: ["admin", "coordinator"] },
   { label: "Configurações", icon: Settings, path: "/configuracoes", roles: ["admin"] },
   { label: "Anomalias IA", icon: Shield, path: "/anomalias", roles: ["admin", "coordinator"] },
-  { label: "Sugestão Turmas", icon: Shuffle, path: "/sugestao-turmas", roles: ["admin", "coordinator"] },
+  
   { label: "Comunicados IA", icon: FileText, path: "/comunicados", roles: ["admin", "coordinator"] },
   { label: "Mapa de Calor", icon: Flame, path: "/mapa-calor", roles: ["admin", "coordinator"] },
   { label: "Assistente IA", icon: Bot, path: "/assistente", roles: ["admin", "coordinator", "gatekeeper"] },
