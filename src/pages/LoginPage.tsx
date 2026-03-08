@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, Cpu, Zap, Shield, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 
@@ -14,8 +14,10 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+    <div className="flex min-h-screen items-center justify-center bg-background tech-grid">
+      <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center animate-pulse glow-md">
+        <Cpu className="h-5 w-5 text-primary" />
+      </div>
     </div>
   );
 
@@ -27,144 +29,148 @@ export default function LoginPage() {
 
     if (isSignUp) {
       const { error } = await signUp(email, password, fullName);
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Cadastro realizado! Verifique seu e-mail para confirmar.");
-        setIsSignUp(false);
-      }
+      if (error) toast.error(error.message);
+      else { toast.success("Cadastro realizado! Verifique seu e-mail."); setIsSignUp(false); }
     } else {
       const { error } = await signIn(email, password);
-      if (error) {
-        toast.error("E-mail ou senha incorretos.");
-      }
+      if (error) toast.error("Credenciais inválidas.");
     }
-
     setSubmitting(false);
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-info/10 blur-3xl pointer-events-none" />
+    <div className="flex min-h-screen bg-background relative overflow-hidden tech-grid">
+      {/* Ambient glows */}
+      <div className="absolute top-[-150px] left-[-150px] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
 
-      {/* Left side: Branding / Hero */}
-      <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-primary/95 to-primary p-12 text-primary-foreground">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      {/* Left: Branding */}
+      <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-card via-background to-card border-r border-border p-12">
+        {/* Grid overlay */}
+        <div className="absolute inset-0 tech-grid opacity-50" />
+        
+        {/* Floating elements */}
+        <div className="absolute top-20 left-20 h-16 w-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-pulse">
+          <Shield className="h-8 w-8 text-primary/50" />
+        </div>
+        <div className="absolute bottom-32 right-20 h-12 w-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center animate-pulse" style={{ animationDelay: "0.5s" }}>
+          <Activity className="h-6 w-6 text-accent/50" />
+        </div>
+        <div className="absolute top-1/3 right-32 h-10 w-10 rounded-lg bg-success/10 border border-success/20 flex items-center justify-center animate-pulse" style={{ animationDelay: "1s" }}>
+          <Zap className="h-5 w-5 text-success/50" />
+        </div>
 
-        <div className="z-10 w-full max-w-lg space-y-8 animate-fade-in text-center">
-          <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-white/10 backdrop-blur-md p-4 shadow-2xl ring-1 ring-white/20">
-            <div className="h-full w-full rounded-full bg-primary-foreground/20 flex items-center justify-center overflow-hidden border border-white/30 shadow-inner">
-              <img src="/logo.png" alt="Logo" className="h-[90%] w-[90%] object-contain scale-110" />
+        <div className="z-10 w-full max-w-md space-y-8 text-center">
+          {/* Logo */}
+          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent glow-lg p-1">
+            <div className="h-full w-full rounded-xl bg-background/90 flex items-center justify-center">
+              <Cpu className="h-12 w-12 text-primary" />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl drop-shadow-md">
-              CETI NOVA ITARANA
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
+              CETI <span className="gradient-text">NOVA ITARANA</span>
             </h1>
-            <p className="text-lg text-primary-foreground/80 leading-relaxed font-medium">
-              Sistema Inteligente de Controle de Acesso Escolar
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/30">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-mono font-semibold text-primary tracking-wider">100% TECNOLOGIA</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed max-w-sm mx-auto">
+              Sistema Inteligente de Controle de Acesso Escolar com Inteligência Artificial
             </p>
           </div>
 
-          <div className="pt-8 border-t border-white/20 flex justify-center gap-8 text-sm font-medium text-white/70">
+          <div className="pt-6 flex justify-center gap-6 text-xs font-mono text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              Monitoramento em tempo real
+              <span>Sistema Online</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span>IA Ativa</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right side: Form */}
+      {/* Right: Form */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative z-10">
-        <div className="w-full max-w-[400px] space-y-8 animate-fade-in">
-
-          {/* Mobile Branding (hidden on desktop) */}
-          <div className="lg:hidden text-center space-y-4 mb-8">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-card shadow-md border border-border/50 overflow-hidden">
-              <img src="/logo.png" alt="Logo" className="h-[80%] w-[80%] object-contain" />
+        <div className="w-full max-w-[380px] space-y-8 animate-fade-up">
+          {/* Mobile branding */}
+          <div className="lg:hidden text-center space-y-3 mb-6">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent glow-sm">
+              <Cpu className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">CETI NOVA ITARANA</h1>
-              <p className="text-sm text-muted-foreground">Controle de Acesso Escolar</p>
+              <h1 className="text-xl font-bold text-foreground">CETI NOVA ITARANA</h1>
+              <p className="text-xs font-mono text-primary">100% TECNOLOGIA</p>
             </div>
           </div>
 
           <div className="space-y-2 text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              {isSignUp ? "Criar Conta" : "Bem-vindo de volta"}
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {isSignUp ? "Criar Conta" : "Bem-vindo"}
             </h2>
-            <p className="text-muted-foreground text-sm">
-              {isSignUp ? "Preencha os dados abaixo para se registrar" : "Insira suas credenciais para continuar"}
+            <p className="text-sm text-muted-foreground">
+              {isSignUp ? "Preencha os dados para se registrar" : "Entre com suas credenciais"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="space-y-1.5 focus-within:text-primary transition-colors">
-                <label className="text-sm font-semibold">Nome Completo</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nome Completo</label>
                 <input required value={fullName} onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary shadow-sm"
-                  placeholder="Seu nome completo" />
+                  className="premium-input" placeholder="Seu nome completo" />
               </div>
             )}
 
-            <div className="space-y-1.5 focus-within:text-primary transition-colors">
-              <label className="text-sm font-semibold">E-mail</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">E-mail</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary shadow-sm"
-                placeholder="nome@escola.com" />
+                className="premium-input" placeholder="nome@escola.com" />
             </div>
 
-            <div className="space-y-1.5 focus-within:text-primary transition-colors">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold">Senha</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Senha</label>
                 {!isSignUp && (
-                  <button type="button" className="text-xs font-medium text-primary hover:underline">
-                    Esqueceu a senha?
-                  </button>
+                  <button type="button" className="text-[10px] font-medium text-primary hover:underline">Esqueceu?</button>
                 )}
               </div>
               <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary shadow-sm"
-                placeholder="••••••••" />
+                className="premium-input" placeholder="••••••••" />
             </div>
 
             <button type="submit" disabled={submitting}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:translate-y-[-2px] hover:shadow-xl hover:shadow-primary/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none">
+              className="w-full premium-button py-3 text-sm">
               {submitting ? (
                 <div className="animate-spin h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" />
               ) : isSignUp ? (
-                <><UserPlus className="h-5 w-5" /> Criar Conta</>
+                <><UserPlus className="h-4 w-4" /> Criar Conta</>
               ) : (
-                <><LogIn className="h-5 w-5" /> Entrar no sistema</>
+                <><LogIn className="h-4 w-4" /> Entrar</>
               )}
             </button>
 
-            <div className="relative my-2">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">ou</span>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-3 text-[10px] text-muted-foreground font-mono uppercase tracking-wider">ou</span>
               </div>
             </div>
 
-            <button
-              type="button"
+            <button type="button"
               onClick={async () => {
-                const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
+                const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
                 if (error) toast.error("Erro ao entrar com Google.");
               }}
-              className="w-full inline-flex items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-all hover:bg-accent hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full flex items-center justify-center gap-3 rounded-lg border border-border bg-card/50 px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-secondary hover:border-primary/30"
             >
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -174,16 +180,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground pt-4">
-            {isSignUp ? "Já tem uma conta?" : "Não tem acesso?"}{" "}
+          <p className="text-center text-sm text-muted-foreground pt-2">
+            {isSignUp ? "Já tem conta?" : "Não tem acesso?"}{" "}
             <button type="button" onClick={() => setIsSignUp(!isSignUp)}
               className="text-primary font-semibold hover:underline">
               {isSignUp ? "Faça login" : "Solicite acesso"}
             </button>
-          </p>
-
-          <p className="text-center text-xs text-muted-foreground/60 lg:hidden pt-8">
-            CETI NOVA ITARANA — Bahia
           </p>
         </div>
       </div>
