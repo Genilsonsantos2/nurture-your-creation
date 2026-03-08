@@ -39,6 +39,7 @@ const navItems = [
   { label: "Alertas", icon: Bell, path: "/alertas", roles: ["admin", "coordinator"] },
   { label: "Horários", icon: Clock, path: "/horarios", roles: ["admin"] },
   { label: "Análise", icon: TrendingUp, path: "/analise", roles: ["admin", "coordinator"] },
+  { label: "Predição IA", icon: Brain, path: "/predicao-evasao", roles: ["admin", "coordinator"] },
   { label: "Ocorrências", icon: FileWarning, path: "/ocorrencias", roles: ["admin", "coordinator"] },
   { label: "Justificativas", icon: FileCheck, path: "/justificativas", roles: ["admin", "coordinator"] },
   { label: "Autorizações", icon: ShieldAlert, path: "/autorizacoes-saida", roles: ["admin", "coordinator"] },
