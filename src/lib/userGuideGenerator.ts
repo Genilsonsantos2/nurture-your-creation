@@ -972,7 +972,7 @@ export async function generateGatekeeperGuidePDF() {
     y = bodyText(doc, y, pb.a);
   }
 
-  drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional");
+  drawBackCover(doc, p, "Guia do Porteiro — Manual Operacional", logo);
   doc.save(`GUIA_PORTEIRO_CETINI_${new Date().getFullYear()}.pdf`);
 }
 
