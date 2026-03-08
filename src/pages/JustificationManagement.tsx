@@ -90,12 +90,20 @@ export default function JustificationManagement() {
                         </p>
                     </div>
                 </div>
-                <button
-                    onClick={generateTestLink}
-                    className="relative z-10 px-8 py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                >
-                    <Info className="h-4 w-4" /> Gerar Link de Teste
-                </button>
+                <div className="relative z-10 flex flex-wrap gap-3">
+                    <button
+                        onClick={() => setShowDocReader(true)}
+                        className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Brain className="h-4 w-4" /> Ler Atestado com IA
+                    </button>
+                    <button
+                        onClick={generateTestLink}
+                        className="px-8 py-4 bg-white text-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                        <Info className="h-4 w-4" /> Gerar Link de Teste
+                    </button>
+                </div>
             </div>
 
             {showTokenGenerator && (
