@@ -22,7 +22,8 @@ import {
   CalendarDays,
   TrendingUp,
   FileCheck,
-  Power
+  Power,
+  Brain
 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
