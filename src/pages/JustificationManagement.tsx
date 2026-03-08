@@ -14,6 +14,7 @@ export default function JustificationManagement() {
     const queryClient = useQueryClient();
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
     const [showTokenGenerator, setShowTokenGenerator] = useState(false);
+    const [showDocReader, setShowDocReader] = useState(false);
     const [testLink, setTestLink] = useState("");
 
     const { data: justifications = [], isLoading } = useQuery({
