@@ -76,7 +76,7 @@ function newPage(doc: jsPDF, p: { n: number }, title: string): number {
 }
 
 function checkSpace(doc: jsPDF, y: number, need: number, p: { n: number }, t: string): number {
-  return (y + need > PH - 24) ? newPage(doc, p, t) : y;
+  return (y + need > PH - 20) ? newPage(doc, p, t) : y;
 }
 
 // ==================== COVER PAGE ====================
