@@ -12,6 +12,7 @@ import { useAbsenceChecker } from "@/hooks/useAbsenceChecker";
 import { AnnouncementsManager } from "@/components/AnnouncementsManager";
 import RiskThermometer from "@/components/RiskThermometer";
 import LaunchCeremony from "@/components/LaunchCeremony";
+import DailySummary from "@/components/DailySummary";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
