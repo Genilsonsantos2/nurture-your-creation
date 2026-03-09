@@ -6,10 +6,11 @@ import {
   Bell, Clock, FileWarning, BarChart3, UserCog, School, PowerOff,
   ShieldAlert, Settings, Menu, X, LogOut, CalendarDays, TrendingUp,
   FileCheck, Power, Brain, Bot, Shield, FileText, Flame,
-  ChevronLeft, ChevronRight, Cpu, Zap
+  ChevronLeft, ChevronRight, Cpu, Zap, History, WifiOff
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useSyncQueueCount } from "@/hooks/useSyncQueueCount";
 
 type NavSection = {
   title: string;
@@ -64,6 +65,7 @@ const navSections: NavSection[] = [
     title: "Sistema",
     items: [
       { label: "Relatórios", icon: BarChart3, path: "/relatorios", roles: ["admin", "coordinator"] },
+      { label: "Auditoria", icon: History, path: "/auditoria", roles: ["admin"] },
       { label: "Usuários", icon: UserCog, path: "/usuarios", roles: ["admin"] },
       { label: "Config", icon: Settings, path: "/configuracoes", roles: ["admin"] },
     ],
@@ -94,6 +96,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
   const [pendingJustificationsCount, setPendingJustificationsCount] = useState(0);
+
+  const { count: syncQueueCount, isOnline } = useSyncQueueCount();
 
   const filterItems = (items: NavSection["items"]) =>
     items.filter(item => isAdmin || item.roles.includes(role || ""));
@@ -135,6 +139,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
 
+    const movementsChannel = supabase.channel('realtime-movements')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'movements' }, (payload) => {
+        // A delay or debouncer might be needed in high-traffic, but for now we play on each insert
+        playNotificationSound();
+        const typeLabel = (payload.new as any).type === 'entry' ? 'Entrada' : 'Saída';
+        toast.success(`Portão: ${typeLabel} registrada!`);
+      })
+      .subscribe();
+
     const checkStatus = async () => {
       try {
         const { data } = await supabase.from("settings").select("*").limit(1).maybeSingle();
@@ -159,6 +172,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => {
       supabase.removeChannel(alertsChannel);
       supabase.removeChannel(justificationsChannel);
+      supabase.removeChannel(movementsChannel);
       supabase.removeChannel(statusChannel);
     };
   }, []);
@@ -291,6 +305,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
+            {!isOnline && (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-warning/10 text-warning border border-warning/20">
+                <WifiOff className="h-4 w-4 animate-pulse" />
+                <span className="text-[11px] font-mono font-bold tracking-tight">OFFLINE</span>
+                {syncQueueCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-warning text-warning-foreground text-[10px] font-bold">
+                    {syncQueueCount} {syncQueueCount === 1 ? 'pendente' : 'pendentes'}
+                  </span>
+                )}
+              </div>
+            )}
+
             {isAdmin && (
               <button onClick={toggleSystemStatus}
                 className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold transition-colors ${isSystemActive

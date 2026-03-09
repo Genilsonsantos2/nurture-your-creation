@@ -125,6 +125,35 @@ export default function ReportsPage() {
   const totalExits = movements.filter((m) => m.type === "exit").length;
   const maxVal = Math.max(...dailyStats.map((d) => d.entries + d.exits), 1);
 
+  // Class Attendance Stats
+  const uniqueSchoolDays = new Set(movements.map(m => m.registered_at.split("T")[0])).size || 1;
+  const classStats: Record<string, { totalStudents: number; totalEntries: number }> = {};
+
+  // Aggregate students by class
+  students.forEach(s => {
+    const className = `${s.series || "?"} ${s.class || "?"}`.trim();
+    if (!classStats[className]) classStats[className] = { totalStudents: 0, totalEntries: 0 };
+    classStats[className].totalStudents++;
+  });
+
+  // Aggregate entries by class
+  movements.filter(m => m.type === "entry").forEach((m: any) => {
+    const className = `${m.students?.series || "?"} ${m.students?.class || "?"}`.trim();
+    if (classStats[className]) {
+      classStats[className].totalEntries++;
+    }
+  });
+
+  const classAttendance = Object.entries(classStats)
+    .map(([className, stats]) => {
+      const expectedEntries = stats.totalStudents * uniqueSchoolDays;
+      const unoptimizedRate = expectedEntries > 0 ? (stats.totalEntries / expectedEntries) * 100 : 0;
+      // Cap at 100% in case of multiple entries per student per day
+      const rate = Math.min(unoptimizedRate, 100);
+      return { className, rate, ...stats };
+    })
+    .sort((a, b) => b.rate - a.rate);
+
   const getExportRows = () => movements.map((m: any) => ({
     aluno: m.students?.name || "",
     serie: `${m.students?.series || ""} ${m.students?.class || ""}`,
@@ -298,6 +327,44 @@ export default function ReportsPage() {
                     <p className="text-xs text-muted-foreground">{student.series}</p>
                   </div>
                   <span className="text-sm font-bold text-foreground">{student.exits}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Class Attendance */}
+        <div className="bg-card rounded-lg border p-5 space-y-4 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground">Frequência por Turma</h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
+              Baseado em {uniqueSchoolDays} dias letivos
+            </span>
+          </div>
+          {classAttendance.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {classAttendance.map((c, i) => (
+                <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-border/40 bg-background/50">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-sm font-bold text-foreground">{c.className}</span>
+                    <span className={`text-xs font-black
+                      ${c.rate >= 80 ? "text-success" : c.rate >= 50 ? "text-warning" : "text-destructive"}`}
+                    >
+                      {c.rate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${c.rate >= 80 ? "bg-success" : c.rate >= 50 ? "bg-warning" : "bg-destructive"}`}
+                      style={{ width: `${c.rate}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between px-1 text-[10px] text-muted-foreground font-medium">
+                    <span>{c.totalStudents} Alunos Matriculados</span>
+                    <span>{c.totalEntries} Registros de Entrada</span>
+                  </div>
                 </div>
               ))}
             </div>

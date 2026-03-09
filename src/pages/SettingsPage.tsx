@@ -1,5 +1,6 @@
-import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones, BookOpen, DoorOpen, GraduationCap, Link2, Ghost, RefreshCw, Smartphone as MobileIcon } from "lucide-react";
+import { Save, Send, Power, PowerOff, ShieldAlert, Settings2, Bell, Smartphone, School, Headphones, BookOpen, DoorOpen, GraduationCap, Link2, Ghost, RefreshCw, Smartphone as MobileIcon, Database, DownloadCloud } from "lucide-react";
 import { generateUserGuidePDF, generateGatekeeperGuidePDF, generateCoordinationGuidePDF } from "@/lib/userGuideGenerator";
+import { exportSystemBackup } from "@/lib/exportData";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -406,6 +408,52 @@ export default function SettingsPage() {
               <GraduationCap className="h-6 w-6" />
               Guia da Coordenação
               <span className="text-[8px] font-medium opacity-70 normal-case tracking-normal">Gestão pedagógica</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Data Management Section */}
+        <div className="glass-panel p-10 border-primary/10 lg:col-span-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+            <Database className="w-40 h-40 text-primary" />
+          </div>
+          <div className="flex items-center gap-4 mb-8 relative z-10">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Database className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-foreground tracking-tight">Gestão de Dados</h2>
+              <p className="text-xs text-muted-foreground font-medium">Exportação e segurança das informações</p>
+            </div>
+          </div>
+          <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+            <div className="max-w-md">
+              <h4 className="text-sm font-black text-foreground tracking-tight">Backup do Sistema Completo</h4>
+              <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                Baixe uma cópia integral de toda a base de dados (Alunos, Portaria, Ocorrências, etc) em formato Excel.
+                Recomendado fazer este backup preventivo semanalmente.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                setIsExporting(true);
+                toast.loading("Gerando arquivo de backup...", { id: "backup-toast" });
+                const success = await exportSystemBackup();
+                if (success) {
+                  toast.success("Backup do sistema concluído e baixado!", { id: "backup-toast" });
+                } else {
+                  toast.error("Falha ao gerar o backup da base de dados.", { id: "backup-toast" });
+                }
+                setIsExporting(false);
+              }}
+              disabled={isExporting}
+              className={`py-4 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-3 transition-all shadow-lg active:scale-95 ${isExporting
+                  ? "bg-primary/50 text-white cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
+                }`}
+            >
+              {isExporting ? <RefreshCw className="h-5 w-5 animate-spin" /> : <DownloadCloud className="h-5 w-5" />}
+              {isExporting ? "Empacotando..." : "Baixar Backup (.xlsx)"}
             </button>
           </div>
         </div>

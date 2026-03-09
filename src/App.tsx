@@ -35,6 +35,7 @@ import ClassSuggestionPage from "./pages/ClassSuggestionPage";
 import AnnouncementGeneratorPage from "./pages/AnnouncementGeneratorPage";
 import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
 import NotFound from "./pages/NotFound";
+import AuditLogsPage from "./pages/AuditLogsPage";
 
 const queryClient = new QueryClient();
 
@@ -98,10 +99,11 @@ function AppContent() {
       <Route path="/predicao-evasao" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><DropoutPredictionPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/assistente" element={<ProtectedRoute><ChatAssistantPage /></ProtectedRoute>} />
       <Route path="/anomalias" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnomalyDetectionPage /></RoleRoute></ProtectedRoute>} />
-      
+
       <Route path="/comunicados" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AnnouncementGeneratorPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/mapa-calor" element={<ProtectedRoute><RoleRoute roles={["coordinator"]}><AttendanceHeatmapPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><AdminRoute><SettingsPage /></AdminRoute></ProtectedRoute>} />
+      <Route path="/auditoria" element={<ProtectedRoute><AdminRoute><AuditLogsPage /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
