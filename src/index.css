@@ -6,58 +6,59 @@
 
 @layer base {
   :root {
-    /* 100% TECNOLOGIA — Electric Dark Theme */
-    --background: 222 47% 5%;
-    --foreground: 200 20% 95%;
+    /* CETI Nova Itarana — Azul Institucional + Verde */
+    --background: 220 45% 6%;
+    --foreground: 210 20% 95%;
 
-    --card: 222 40% 8%;
-    --card-foreground: 200 20% 95%;
+    --card: 220 38% 10%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 222 40% 8%;
-    --popover-foreground: 200 20% 95%;
+    --popover: 220 38% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    /* Primary: Electric Cyan-Blue */
-    --primary: 190 95% 50%;
-    --primary-foreground: 222 47% 5%;
+    /* Primary: Azul Institucional */
+    --primary: 214 80% 52%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 12%;
-    --secondary-foreground: 200 20% 90%;
+    --secondary: 220 28% 15%;
+    --secondary-foreground: 210 20% 88%;
 
-    --muted: 222 25% 14%;
-    --muted-foreground: 200 15% 50%;
+    --muted: 220 22% 16%;
+    --muted-foreground: 210 12% 52%;
 
-    --accent: 280 85% 60%;
+    /* Accent: Verde Institucional */
+    --accent: 145 60% 42%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 20% 15%;
-    --input: 222 20% 15%;
-    --ring: 190 95% 50%;
+    --border: 220 18% 18%;
+    --input: 220 18% 18%;
+    --ring: 214 80% 52%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 50% 4%;
-    --sidebar-foreground: 200 15% 75%;
-    --sidebar-primary: 190 95% 50%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 200 20% 90%;
-    --sidebar-border: 222 25% 12%;
-    --sidebar-ring: 190 95% 50%;
+    --sidebar-background: 220 48% 5%;
+    --sidebar-foreground: 210 14% 72%;
+    --sidebar-primary: 214 80% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 28% 14%;
+    --sidebar-accent-foreground: 210 20% 88%;
+    --sidebar-border: 220 22% 13%;
+    --sidebar-ring: 214 80% 52%;
 
-    --warning: 38 95% 55%;
-    --warning-foreground: 38 95% 10%;
-    --success: 160 85% 45%;
+    --warning: 38 90% 52%;
+    --warning-foreground: 38 90% 10%;
+    --success: 145 60% 42%;
     --success-foreground: 0 0% 100%;
-    --info: 200 95% 55%;
+    --info: 214 80% 62%;
     --info-foreground: 0 0% 100%;
 
-    /* Tech accents */
-    --neon: 190 100% 55%;
-    --electric: 200 100% 60%;
-    --cyber: 280 100% 65%;
+    /* Institutional accents */
+    --neon: 214 85% 58%;
+    --electric: 145 65% 48%;
+    --cyber: 214 80% 40%;
   }
 
   * {
@@ -78,29 +79,29 @@
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* Tech scrollbar */
+  /* Scrollbar institucional */
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(222 50% 4%);
+    background: hsl(220 48% 5%);
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(190 95% 50% / 0.3);
+    background: hsl(214 80% 52% / 0.35);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(190 95% 50% / 0.5);
+    background: hsl(214 80% 52% / 0.55);
   }
 }
 
 @layer utilities {
-  /* Tech grid background */
+  /* Grid institucional de fundo */
   .tech-grid {
     background-image: 
-      linear-gradient(hsl(190 95% 50% / 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(190 95% 50% / 0.03) 1px, transparent 1px);
+      linear-gradient(hsl(214 80% 52% / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(214 80% 52% / 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
