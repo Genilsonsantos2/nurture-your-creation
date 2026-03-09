@@ -110,12 +110,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     fetchCounts();
 
+    const playNotificationSound = () => {
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(e => console.error("Error playing sound:", e));
+    };
+
     const alertsChannel = supabase.channel('realtime-alerts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => fetchCounts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, (payload) => {
+        fetchCounts();
+        if (payload.eventType === 'INSERT') {
+          playNotificationSound();
+          toast.info("Novo Alerta recebido!");
+        }
+      })
       .subscribe();
 
     const justificationsChannel = supabase.channel('realtime-justifications')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'absence_justifications' }, () => fetchCounts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'absence_justifications' }, (payload) => {
+        fetchCounts();
+        if (payload.eventType === 'INSERT') {
+          playNotificationSound();
+          toast.info("Nova Justificativa de Falta!");
+        }
+      })
       .subscribe();
 
     const checkStatus = async () => {
