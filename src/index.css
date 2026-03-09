@@ -97,11 +97,11 @@
 }
 
 @layer utilities {
-  /* Tech grid background */
+  /* Grid institucional de fundo */
   .tech-grid {
     background-image: 
-      linear-gradient(hsl(190 95% 50% / 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(190 95% 50% / 0.03) 1px, transparent 1px);
+      linear-gradient(hsl(214 80% 52% / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(214 80% 52% / 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
