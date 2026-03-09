@@ -190,7 +190,7 @@ export default function GatePage() {
     try {
       const { data: student, error } = await supabase
         .from("students")
-        .select("id, name, series, class, modality, photo_url, allergies, blood_type")
+        .select("id, name, series, class, modality, photo_url")
         .or(`id.eq.${decodedText},qr_code.eq.${decodedText},enrollment.eq.${decodedText}`)
         .maybeSingle();
 
