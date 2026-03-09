@@ -399,13 +399,6 @@ export default function GatePage() {
             {/* Detection Card (Primary Action) */}
             {detectedStudent ? (
               <div className="bg-[#1e293b] rounded-[3rem] border-4 border-blue-500 p-8 shadow-2xl animate-in zoom-in duration-300 relative overflow-hidden">
-                {/* Medical Alert Badge */}
-                {detectedStudent.allergies && (
-                  <div className="absolute top-6 right-6 bg-red-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 animate-bounce shadow-lg shadow-red-900/40 z-20">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span className="text-xs font-black uppercase tracking-widest">ALERTA MÉDICO</span>
-                  </div>
-                )}
 
                 <div className="flex flex-col items-center text-center space-y-6">
                   <div className="relative">
