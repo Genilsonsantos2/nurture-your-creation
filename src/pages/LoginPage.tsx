@@ -108,7 +108,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">E-mail</label>
+              <label className="text-sm font-semibold text-foreground">E-mail</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                 className="premium-input" placeholder="nome@escola.com" />
             </div>
