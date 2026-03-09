@@ -48,7 +48,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-card via-background to-card border-r border-border p-12">
         {/* Grid overlay */}
         <div className="absolute inset-0 tech-grid opacity-50" />
-        
+
         {/* Floating elements */}
         <div className="absolute top-20 left-20 h-16 w-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-pulse">
           <Shield className="h-8 w-8 text-primary/50" />
@@ -60,12 +60,9 @@ export default function LoginPage() {
           <Zap className="h-5 w-5 text-success/50" />
         </div>
 
-        <div className="z-10 w-full max-w-md space-y-8 text-center">
-          {/* Logo */}
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent glow-lg p-1">
-            <div className="h-full w-full rounded-xl bg-background/90 flex items-center justify-center">
-              <Cpu className="h-12 w-12 text-primary" />
-            </div>
+        <div className="z-10 w-full max-w-lg space-y-8 animate-fade-in text-center">
+          <div className="mx-auto flex h-32 w-32 items-center justify-center p-2">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-xl" />
           </div>
 
           <div className="space-y-4">
@@ -96,11 +93,12 @@ export default function LoginPage() {
 
       {/* Right: Form */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative z-10">
-        <div className="w-full max-w-[380px] space-y-8 animate-fade-up">
-          {/* Mobile branding */}
-          <div className="lg:hidden text-center space-y-3 mb-6">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent glow-sm">
-              <Cpu className="h-8 w-8 text-primary-foreground" />
+        <div className="w-full max-w-[400px] space-y-8 animate-fade-in">
+
+          {/* Mobile Branding (hidden on desktop) */}
+          <div className="lg:hidden text-center space-y-4 mb-8">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center p-1">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">CETI NOVA ITARANA</h1>

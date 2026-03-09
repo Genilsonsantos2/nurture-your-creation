@@ -189,8 +189,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-out lg:static lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${collapsed ? "w-[68px]" : "w-[250px]"}`}>
         {/* Logo */}
         <div className={`flex items-center h-14 border-b border-sidebar-border px-3 ${collapsed ? "justify-center" : "gap-3"}`}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent glow-sm overflow-hidden">
-            <Cpu className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center p-1">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
@@ -279,7 +279,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold transition-colors ${isSystemActive
                   ? "bg-success/10 text-success hover:bg-success/20 border border-success/30"
                   : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 animate-pulse"
-                }`}
+                  }`}
               >
                 {isSystemActive ? <Power className="h-3 w-3" /> : <PowerOff className="h-3 w-3" />}
                 {isSystemActive ? "ONLINE" : "OFFLINE"}
