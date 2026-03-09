@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { LogIn, UserPlus, Cpu, Zap, Shield, Activity } from "lucide-react";
+import { LogIn, UserPlus, Cpu } from "lucide-react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 
