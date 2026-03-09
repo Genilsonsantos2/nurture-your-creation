@@ -131,7 +131,7 @@ export default function LoginPage() {
               ) : isSignUp ? (
                 <><UserPlus className="h-4 w-4" /> Criar Conta</>
               ) : (
-                <><LogIn className="h-4 w-4" /> Entrar</>
+                <><LogIn className="h-4 w-4" /> Entrar no sistema</>
               )}
             </button>
 
