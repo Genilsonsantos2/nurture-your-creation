@@ -115,9 +115,9 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Senha</label>
+                <label className="text-sm font-semibold text-foreground">Senha</label>
                 {!isSignUp && (
-                  <button type="button" className="text-[10px] font-medium text-primary hover:underline">Esqueceu?</button>
+                  <button type="button" className="text-xs font-medium text-primary hover:underline">Esqueceu a senha?</button>
                 )}
               </div>
               <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
