@@ -41,6 +41,8 @@ export default function GatePage() {
   const [showOccurrenceModal, setShowOccurrenceModal] = useState(false);
   const [occurrenceType, setOccurrenceType] = useState<any>("other");
   const [occurrenceDescription, setOccurrenceDescription] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanTimesRef = useRef<Record<string, number>>({});
   const isProcessingRef = useRef(false);
@@ -179,28 +181,54 @@ export default function GatePage() {
     // Check refs to avoid re-detection during processing
     if (isProcessingRef.current || detectedStudentRef.current) return;
 
+    const queryText = decodedText.trim();
+    if (!queryText) return;
+
     // Cooldown logic
     const nowTime = Date.now();
-    const lastTime = lastScanTimesRef.current[decodedText] || 0;
+    const lastTime = lastScanTimesRef.current[queryText] || 0;
     if (nowTime - lastTime < 3000) return;
 
     isProcessingRef.current = true;
     setIsProcessing(true);
 
     try {
-      const { data: student, error } = await supabase
+      let query = supabase
         .from("students")
-        .select("id, name, series, class, modality, photo_url")
-        .or(`id.eq.${decodedText},qr_code.eq.${decodedText},enrollment.eq.${decodedText}`)
-        .maybeSingle();
+        .select("id, name, series, class, modality, photo_url, qr_code, enrollment");
 
-      if (error || !student) throw new Error("Estudante não encontrado");
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(queryText);
 
-      detectedStudentRef.current = student;
-      setDetectedStudent(student);
-      lastScanTimesRef.current[decodedText] = nowTime;
+      if (isUuid) {
+        query = query.or(`id.eq.${queryText},qr_code.eq.${queryText},enrollment.eq.${queryText}`);
+      } else {
+        query = query.or(`qr_code.eq.${queryText},enrollment.eq.${queryText},name.ilike.%${queryText}%`);
+      }
 
-      playSound('detection');
+      const { data: matches, error } = await query.limit(10);
+
+      if (error) throw new Error("Erro na busca: " + error.message);
+
+      const exactMatch = matches?.find(m => m.qr_code === queryText || m.enrollment === queryText || m.id === queryText);
+
+      if (exactMatch) {
+        detectedStudentRef.current = exactMatch;
+        setDetectedStudent(exactMatch);
+        lastScanTimesRef.current[queryText] = nowTime;
+        playSound('detection');
+        setManualInput("");
+      } else if (matches && matches.length === 1) {
+        detectedStudentRef.current = matches[0];
+        setDetectedStudent(matches[0]);
+        lastScanTimesRef.current[queryText] = nowTime;
+        playSound('detection');
+        setManualInput("");
+      } else if (matches && matches.length > 1) {
+        setSearchResults(matches);
+        setShowSearchResults(true);
+      } else {
+        throw new Error("Estudante não encontrado");
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -494,7 +522,7 @@ export default function GatePage() {
               <div className="flex-1">
                 <input
                   type="text"
-                  placeholder="Matrícula ou Código Manual..."
+                  placeholder="Nome, Matrícula ou Código..."
                   className="w-full bg-black/40 border-2 border-white/5 focus:border-blue-500/50 rounded-xl px-6 py-4 text-lg font-bold placeholder:text-gray-600 outline-none transition-all"
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
@@ -642,6 +670,53 @@ export default function GatePage() {
                   {registerOccurrence.isPending ? "Salvando..." : "Salvar Ocorrência"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search Results Modal */}
+      {showSearchResults && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-[#1e293b] w-full max-w-2xl rounded-[2.5rem] border border-blue-500/30 p-8 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6 shrink-0">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Múltiplos Alunos Encontrados</h2>
+              <button
+                onClick={() => { setShowSearchResults(false); setSearchResults([]); }}
+                className="p-2 hover:bg-white/5 rounded-full transition-all"
+              >
+                <X className="h-6 w-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-3 pr-2 custom-scrollbar flex-1">
+              {searchResults.map((student) => (
+                <button
+                  key={student.id}
+                  onClick={() => {
+                    setShowSearchResults(false);
+                    setSearchResults([]);
+                    detectedStudentRef.current = student;
+                    setDetectedStudent(student);
+                    playSound('detection');
+                    setManualInput("");
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group"
+                >
+                  <div className="h-12 w-12 rounded-xl bg-blue-600/20 flex items-center justify-center border border-blue-500/30 overflow-hidden shrink-0">
+                    {student.photo_url ? (
+                      <img src={student.photo_url} alt="Aluno" className="h-full w-full object-cover" />
+                    ) : (
+                      <LogIn className="h-6 w-6 text-blue-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate uppercase">{student.name}</p>
+                    <p className="text-xs text-blue-400 font-medium truncate">{student.series} • Turma {student.class}</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                </button>
+              ))}
             </div>
           </div>
         </div>
