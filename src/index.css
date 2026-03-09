@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    /* CETI Nova Itarana — Azul Institucional + Verde */
-    --background: 220 45% 6%;
-    --foreground: 210 20% 95%;
+    /* CETI Nova Itarana — Tema Claro Azul */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 13%;
 
-    --card: 220 38% 10%;
-    --card-foreground: 210 20% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
 
-    --popover: 220 38% 10%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
 
     /* Primary: Institutional Blue */
     --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 28% 15%;
-    --secondary-foreground: 210 20% 88%;
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 220 13% 13%;
 
-    --muted: 220 22% 16%;
-    --muted-foreground: 210 12% 52%;
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 13% 45%;
 
     /* Accent: System Green */
     --accent: 160 85% 45%;
@@ -33,20 +33,20 @@
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 20% 15%;
-    --input: 222 20% 15%;
-    --ring: 160 85% 45%;
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 50% 4%;
-    --sidebar-foreground: 200 15% 75%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 13% 45%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 200 20% 90%;
-    --sidebar-border: 222 25% 12%;
-    --sidebar-ring: 160 85% 45%;
+    --sidebar-accent: 220 13% 95%;
+    --sidebar-accent-foreground: 220 13% 13%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 221 83% 53%;
 
     --warning: 38 90% 52%;
     --warning-foreground: 38 90% 10%;
