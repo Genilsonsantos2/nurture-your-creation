@@ -110,7 +110,7 @@ export default function CalendarPage() {
     return (
         <TooltipProvider>
             <div className="space-y-8 pb-12 animate-in fade-in duration-700">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-primary/10 via-success/5 to-transparent p-10 rounded-[3rem] border border-primary/20 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
                         <CalendarDays className="w-64 h-64 text-primary" />
                     </div>
@@ -181,13 +181,14 @@ export default function CalendarPage() {
                                         if (events.length > 0) {
                                             const type = events[0].type;
                                             if (type === "holiday") {
-                                                bgColor = "bg-red-500/10 hover:bg-red-500/20";
-                                                textColor = "text-red-600 font-bold";
-                                                indicator = <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]" />;
+                                                bgColor = "bg-primary hover:bg-primary/90";
+                                                textColor = "text-primary-foreground font-bold";
+                                                indicator = <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_5px_white]" />;
                                             } else if (type === "recess") {
-                                                bgColor = "bg-blue-500/10 hover:bg-blue-500/20";
-                                                textColor = "text-blue-600 font-bold";
-                                                indicator = <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]" />;
+                                                bgColor = "bg-transparent hover:bg-primary/5";
+                                                borderClass = "border-2 border-primary/30 border-dashed";
+                                                textColor = "text-primary/70 font-bold";
+                                                indicator = <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary/50" />;
                                             } else if (type === "school_saturday") {
                                                 bgColor = "bg-success/10 hover:bg-success/20";
                                                 textColor = "text-success font-bold";
@@ -252,32 +253,32 @@ export default function CalendarPage() {
                     })}
                 </div>
 
-                <div className="glass-panel p-8 md:p-10">
+                <div className="glass-panel p-8 md:p-10 border-t-4 border-t-primary">
                     <h2 className="text-xl font-black mb-6 tracking-tight uppercase text-xs tracking-[0.2em] text-muted-foreground">Legenda do Calendário</h2>
                     <div className="flex flex-wrap gap-4 md:gap-8">
-                        <div className="flex items-center gap-3 bg-red-500/5 px-4 py-2.5 rounded-2xl border border-red-500/10">
-                            <div className="h-5 w-5 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-                                <div className="h-1.5 w-1.5 rounded-full bg-red-500 glow-sm" />
+                        <div className="flex items-center gap-3 bg-primary px-4 py-2.5 rounded-2xl shadow-md shadow-primary/20">
+                            <div className="h-5 w-5 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
+                                <div className="h-1.5 w-1.5 rounded-full bg-white glow-sm" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Feriado</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary-foreground">Feriado Nacional</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-2.5 rounded-2xl border border-blue-500/10">
-                            <div className="h-5 w-5 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500 glow-sm" />
+                        <div className="flex items-center gap-3 bg-transparent px-4 py-2.5 rounded-2xl border-2 border-primary/30 border-dashed">
+                            <div className="h-5 w-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                <div className="h-1.5 w-1.5 rounded-full bg-primary/50" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Recesso</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Recesso Escolar</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-success/5 px-4 py-2.5 rounded-2xl border border-success/10">
+                        <div className="flex items-center gap-3 bg-success/10 px-4 py-2.5 rounded-2xl border border-success/20">
                             <div className="h-5 w-5 rounded-lg bg-success/20 border border-success/30 flex items-center justify-center">
                                 <div className="h-1.5 w-1.5 rounded-full bg-success glow-sm" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-success">Sábado Letivo</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-primary/5 px-4 py-2.5 rounded-2xl border border-primary/10">
+                        <div className="flex items-center gap-3 bg-primary/10 px-4 py-2.5 rounded-2xl border border-primary/20">
                             <div className="h-5 w-5 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
                                 <div className="h-1.5 w-1.5 rounded-full bg-primary glow-sm" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Atividade</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Atividade Extra</span>
                         </div>
                     </div>
                 </div>
