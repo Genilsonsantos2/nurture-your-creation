@@ -99,6 +99,45 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: unknown
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       exit_authorizations: {
         Row: {
           authorized_at: string
@@ -475,6 +514,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_user_action: {
+        Args: {
+          action_type: string
+          new_values?: Json
+          old_values?: Json
+          record_id?: string
+          table_name?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
