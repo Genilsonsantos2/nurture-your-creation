@@ -190,7 +190,7 @@ export default function GatePage() {
     try {
       const { data: student, error } = await supabase
         .from("students")
-        .select("id, name, series, class, modality, photo_url, allergies, blood_type")
+        .select("id, name, series, class, modality, photo_url")
         .or(`id.eq.${decodedText},qr_code.eq.${decodedText},enrollment.eq.${decodedText}`)
         .maybeSingle();
 
@@ -399,13 +399,6 @@ export default function GatePage() {
             {/* Detection Card (Primary Action) */}
             {detectedStudent ? (
               <div className="bg-[#1e293b] rounded-[3rem] border-4 border-blue-500 p-8 shadow-2xl animate-in zoom-in duration-300 relative overflow-hidden">
-                {/* Medical Alert Badge */}
-                {detectedStudent.allergies && (
-                  <div className="absolute top-6 right-6 bg-red-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 animate-bounce shadow-lg shadow-red-900/40 z-20">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span className="text-xs font-black uppercase tracking-widest">ALERTA MÉDICO</span>
-                  </div>
-                )}
 
                 <div className="flex flex-col items-center text-center space-y-6">
                   <div className="relative">
@@ -416,11 +409,6 @@ export default function GatePage() {
                         <LogIn className="h-20 w-20 text-blue-400" />
                       )}
                     </div>
-                    {detectedStudent.blood_type && (
-                      <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white h-12 w-12 rounded-2xl flex items-center justify-center border-4 border-[#1e293b] font-black text-sm">
-                        {detectedStudent.blood_type}
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -428,12 +416,6 @@ export default function GatePage() {
                     <h2 className="text-4xl font-black tracking-tight uppercase leading-tight">{detectedStudent.name}</h2>
                     <p className="text-xl font-bold opacity-60">{detectedStudent.series} • Turma {detectedStudent.class}</p>
 
-                    {detectedStudent.allergies && (
-                      <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl">
-                        <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">RESTRIÇÕES / ALERGIAS</p>
-                        <p className="text-sm font-bold text-red-200">{detectedStudent.allergies}</p>
-                      </div>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 w-full pt-4">
