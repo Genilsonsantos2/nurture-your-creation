@@ -39,10 +39,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden tech-grid">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 relative overflow-hidden">
       {/* Ambient glows */}
-      <div className="absolute top-[-150px] left-[-150px] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-150px] left-[-150px] w-[500px] h-[500px] rounded-full bg-white/10 blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
 
       {/* Left: Branding */}
       <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-card via-background to-card border-r border-border p-12">
