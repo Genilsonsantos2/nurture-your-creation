@@ -101,7 +101,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nome Completo</label>
+                <label className="text-sm font-semibold text-foreground">Nome Completo</label>
                 <input required value={fullName} onChange={(e) => setFullName(e.target.value)}
                   className="premium-input" placeholder="Seu nome completo" />
               </div>
