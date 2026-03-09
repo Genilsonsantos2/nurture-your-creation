@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import RiskThermometer from "@/components/RiskThermometer";
 import LaunchCeremony from "@/components/LaunchCeremony";
 import DailySummary from "@/components/DailySummary";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
+import LiveActivityFeed from "@/components/LiveActivityFeed";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
@@ -106,7 +107,6 @@ export default function Dashboard() {
   ];
 
   const hasPendingActions = (pendingAlerts?.length || 0) > 0 || (pendingJustifications?.length || 0) > 0;
-  const recentMovements = (todayMovements || []).slice(0, 5);
   const initials = (name: string) => name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
@@ -151,9 +151,10 @@ export default function Dashboard() {
 
       {/* Pending Actions */}
       {hasPendingActions && (
-        <div className="rounded-xl bg-card border border-border p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20 glow-sm">
-            <ShieldCheck className="h-5 w-5" />
+        <div className="rounded-xl bg-card border border-destructive/50 p-4 flex flex-col sm:flex-row sm:items-center gap-4 relative overflow-hidden animate-pulse-border">
+          <div className="absolute inset-0 bg-destructive/5 pointer-events-none" />
+          <div className="h-10 w-10 rounded-full bg-destructive/20 text-destructive flex items-center justify-center shrink-0 border border-destructive/30 animate-pulse relative z-10">
+            <Bell className="h-5 w-5" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">Ações Pendentes</p>
@@ -225,77 +226,40 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Charts Row */}
+      {/* Main Grid: Weekly Trend & Live Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Weekly Trend */}
-        <div className="lg:col-span-2 glass-panel p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-bold">Tendência Semanal</h3>
-            </div>
-            <Link to="/analise" className="h-7 w-7 rounded-md bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <div className="h-[140px] flex items-end gap-2">
-            {[65, 40, 85, 50, 95, 70, 45].map((val, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group">
-                <div className="w-full rounded bg-primary/10 relative overflow-hidden transition-all group-hover:bg-primary/20" style={{ height: `${val}%` }}>
-                  <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-primary/30 to-transparent rounded" />
-                </div>
-                <span className="text-[9px] font-mono text-muted-foreground/60">{['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][i]}</span>
+        {/* Weekly Trend & Risk */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="glass-panel p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-bold">Tendência Semanal</h3>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Risk */}
-        <div className="glass-panel p-5">
-          <RiskThermometer />
-        </div>
-      </div>
-
-      {/* Recent Movements */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-bold">Movimentações Recentes</h3>
-          </div>
-          <Link to="/movimentacoes" className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1">
-            VER TUDO <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-        <div className="glass-panel">
-          {recentMovements.length === 0 ? (
-            <div className="p-8 text-center flex flex-col items-center gap-2">
-              <ScanLine className="h-8 w-8 text-muted-foreground/30" />
-              <p className="text-xs text-muted-foreground">Nenhuma movimentação hoje</p>
+              <Link to="/analise" className="h-7 w-7 rounded-md bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-          ) : (
-            <div className="divide-y divide-border/50">
-              {recentMovements.map((mov: any) => (
-                <div key={mov.id} className="flex items-center gap-3 p-3 hover:bg-secondary/30 transition-colors">
-                  <div className="h-8 w-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-[10px] font-mono font-bold text-muted-foreground shrink-0">
-                    {initials(mov.students?.name || "?")}
+            <div className="h-[140px] flex items-end gap-2">
+              {[65, 40, 85, 50, 95, 70, 45].map((val, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group">
+                  <div className="w-full rounded bg-primary/10 relative overflow-hidden transition-all group-hover:bg-primary/20" style={{ height: `${val}%` }}>
+                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-primary/30 to-transparent rounded" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{mov.students?.name}</p>
-                    <p className="text-[10px] text-muted-foreground font-mono">{mov.students?.series} • {mov.students?.class}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded ${mov.type === "entry" ? "bg-success/10 text-success border border-success/20" : "bg-warning/10 text-warning border border-warning/20"}`}>
-                      {mov.type === "entry" ? "IN" : "OUT"}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground font-mono">
-                      {new Date(mov.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
+                  <span className="text-[9px] font-mono text-muted-foreground/60">{['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][i]}</span>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
+          <div className="glass-panel p-5">
+            <RiskThermometer />
+          </div>
+        </div>
+
+        {/* Live Activity Feed */}
+        <div className="lg:col-span-1 h-[400px]">
+          <LiveActivityFeed />
         </div>
       </div>
 
