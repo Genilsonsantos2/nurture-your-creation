@@ -11,10 +11,12 @@ import { AnnouncementsManager } from "@/components/AnnouncementsManager";
 import RiskThermometer from "@/components/RiskThermometer";
 import LaunchCeremony from "@/components/LaunchCeremony";
 import DailySummary from "@/components/DailySummary";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
   useAbsenceChecker();
+  useDashboardRealtime();
 
   const isManagement = isAdmin || role === "coordinator";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
@@ -115,7 +117,7 @@ export default function Dashboard() {
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-card via-card to-primary/5 border border-border p-6 md:p-8">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
-        
+
         {/* Decorative icons */}
         <div className="absolute top-4 right-4 opacity-20">
           <Cpu className="h-20 w-20 text-primary" />
