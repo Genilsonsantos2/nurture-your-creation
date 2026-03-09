@@ -91,10 +91,10 @@ export default function LoginPage() {
 
           <div className="space-y-2 text-center lg:text-left">
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              {isSignUp ? "Criar Conta" : "Bem-vindo"}
+              {isSignUp ? "Criar Conta" : "Bem-vindo de volta"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isSignUp ? "Preencha os dados para se registrar" : "Entre com suas credenciais"}
+              {isSignUp ? "Preencha os dados para se registrar" : "Insira suas credenciais para continuar"}
             </p>
           </div>
 
