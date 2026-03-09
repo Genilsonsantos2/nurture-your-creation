@@ -409,11 +409,6 @@ export default function GatePage() {
                         <LogIn className="h-20 w-20 text-blue-400" />
                       )}
                     </div>
-                    {detectedStudent.blood_type && (
-                      <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white h-12 w-12 rounded-2xl flex items-center justify-center border-4 border-[#1e293b] font-black text-sm">
-                        {detectedStudent.blood_type}
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-1">
