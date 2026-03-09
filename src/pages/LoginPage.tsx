@@ -44,55 +44,38 @@ export default function LoginPage() {
       <div className="absolute top-[-150px] left-[-150px] w-[500px] h-[500px] rounded-full bg-white/10 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
 
-      {/* Left: Branding */}
-      <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-card via-background to-card border-r border-border p-12">
+      {/* Left: Branding - Blue gradient */}
+      <div className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12">
         {/* Grid overlay */}
-        <div className="absolute inset-0 tech-grid opacity-50" />
-
-        {/* Floating elements */}
-        <div className="absolute top-20 left-20 h-16 w-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-pulse">
-          <Shield className="h-8 w-8 text-primary/50" />
-        </div>
-        <div className="absolute bottom-32 right-20 h-12 w-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center animate-pulse" style={{ animationDelay: "0.5s" }}>
-          <Activity className="h-6 w-6 text-accent/50" />
-        </div>
-        <div className="absolute top-1/3 right-32 h-10 w-10 rounded-lg bg-success/10 border border-success/20 flex items-center justify-center animate-pulse" style={{ animationDelay: "1s" }}>
-          <Zap className="h-5 w-5 text-success/50" />
-        </div>
+        <div className="absolute inset-0 tech-grid opacity-20" />
 
         <div className="z-10 w-full max-w-lg space-y-8 animate-fade-in text-center">
-          <div className="mx-auto flex h-32 w-32 items-center justify-center p-2">
+          <div className="mx-auto flex h-32 w-32 items-center justify-center p-2 rounded-full bg-white/10 backdrop-blur-sm">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-xl" />
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              CETI <span className="gradient-text">NOVA ITARANA</span>
+            <h1 className="text-4xl font-bold tracking-tight text-white">
+              CETI NOVA ITARANA
             </h1>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/30">
-              <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm font-mono font-semibold text-primary tracking-wider">100% TECNOLOGIA</span>
-            </div>
-            <p className="text-muted-foreground leading-relaxed max-w-sm mx-auto">
-              Sistema Inteligente de Controle de Acesso Escolar com Inteligência Artificial
+            <p className="text-white/80 leading-relaxed max-w-sm mx-auto">
+              Sistema Inteligente de Controle de Acesso Escolar
             </p>
           </div>
 
-          <div className="pt-6 flex justify-center gap-6 text-xs font-mono text-muted-foreground">
+          <div className="border-t border-white/20 pt-6 max-w-xs mx-auto" />
+
+          <div className="flex justify-center gap-6 text-xs font-mono text-white/70">
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <span>Sistema Online</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <span>IA Ativa</span>
+              <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+              <span>Monitoramento em tempo real</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right: Form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative z-10">
+      {/* Right: Form - Light background */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative z-10 bg-gradient-to-b from-slate-50 to-slate-100">
         <div className="w-full max-w-[400px] space-y-8 animate-fade-in">
 
           {/* Mobile Branding (hidden on desktop) */}
