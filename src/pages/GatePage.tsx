@@ -416,12 +416,6 @@ export default function GatePage() {
                     <h2 className="text-4xl font-black tracking-tight uppercase leading-tight">{detectedStudent.name}</h2>
                     <p className="text-xl font-bold opacity-60">{detectedStudent.series} • Turma {detectedStudent.class}</p>
 
-                    {detectedStudent.allergies && (
-                      <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl">
-                        <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">RESTRIÇÕES / ALERGIAS</p>
-                        <p className="text-sm font-bold text-red-200">{detectedStudent.allergies}</p>
-                      </div>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 w-full pt-4">
