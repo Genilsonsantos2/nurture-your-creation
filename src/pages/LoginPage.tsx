@@ -140,7 +140,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-[10px] text-muted-foreground font-mono uppercase tracking-wider">ou</span>
+                <span className="bg-gradient-to-b from-slate-50 to-slate-100 px-3 text-xs text-muted-foreground font-medium uppercase tracking-wider">ou</span>
               </div>
             </div>
 
