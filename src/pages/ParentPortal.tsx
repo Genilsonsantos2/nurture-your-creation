@@ -106,7 +106,7 @@ export default function ParentPortal() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-foreground">
-                                                {mov.type === "entry" ? "Entrada na Escola" : "Saída da Escola"}
+                                                {mov.observation || (mov.type === "entry" ? "Entrada (Atraso)" : "Saída Institucional / Antecipada")}
                                             </p>
                                             <p className="text-xs text-muted-foreground font-medium">
                                                 {new Date(mov.registered_at).toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}

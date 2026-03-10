@@ -124,11 +124,20 @@ export default function GatePage() {
     refetchInterval: 30000 // Poll every 30s to stay up-to-date
   });
 
+  // Fetch Break Schedules
+  const { data: breakSchedules = [] } = useQuery({
+    queryKey: ["break-schedules-gate"],
+    queryFn: async () => {
+      const { data } = await supabase.from("schedules").select("*").eq("type", "break");
+      return data || [];
+    },
+  });
+
   const registerMovement = useMutation({
-    mutationFn: async ({ studentId, type }: { studentId: string; type: "entry" | "exit" }) => {
+    mutationFn: async ({ studentId, type, observation }: { studentId: string; type: "entry" | "exit"; observation?: string }) => {
       const { data, error } = await supabase
         .from("movements")
-        .insert([{ student_id: studentId, type }])
+        .insert([{ student_id: studentId, type, observation }])
         .select("*, students(name, series, class)")
         .single();
 
@@ -239,18 +248,45 @@ export default function GatePage() {
     }
   }, []); // ZERO dependencies means this function is 100% stable!
 
-  const confirmMovement = async (type: "entry" | "exit") => {
+  const confirmMovement = async (type: "entry" | "exit" | "exit_definitive") => {
     if (!detectedStudent || isProcessing) return;
     setIsProcessing(true);
     isProcessingRef.current = true;
 
     try {
       const studentId = detectedStudent.id;
+      const actualType = type === "exit_definitive" ? "exit" : type;
+      let observation = "";
+
+      // Check for breaks
+      if (type !== "exit_definitive" && breakSchedules.length > 0) {
+        const now = new Date();
+        const currentMs = now.getHours() * 60 * 60 * 1000 + now.getMinutes() * 60 * 1000;
+
+        for (const schedule of breakSchedules) {
+          const [startH, startM] = schedule.start_time.split(':').map(Number);
+          const [endH, endM] = schedule.end_time.split(':').map(Number);
+
+          const startMs = startH * 60 * 60 * 1000 + startM * 60 * 1000 - (schedule.tolerance_minutes * 60 * 1000);
+          const endMs = endH * 60 * 60 * 1000 + endM * 60 * 1000 + (schedule.tolerance_minutes * 60 * 1000);
+
+          if (currentMs >= startMs && currentMs <= endMs) {
+            observation = actualType === "entry" ? "Retorno do Intervalo / Almoço" : "Saída no horário de almoço";
+            break;
+          }
+        }
+      }
+
+      if (!observation) {
+        if (actualType === "entry") observation = "Entrada (Atraso)";
+        if (actualType === "exit") observation = "Saída Antecipada";
+        if (type === "exit_definitive") observation = "Saída Definitiva";
+      }
 
       // Handle Exit authorizations if requested
       let isAuthorizedExit = false;
       let authReason = "";
-      if (type === "exit") {
+      if (actualType === "exit") {
         try {
           const { data: exitAuth } = await (supabase as any)
             .from("exit_authorizations")
@@ -277,12 +313,13 @@ export default function GatePage() {
       const isOnline = navigator.onLine;
 
       if (isOnline) {
-        result = await registerMovement.mutateAsync({ studentId, type });
+        result = await registerMovement.mutateAsync({ studentId, type: actualType, observation });
       } else {
         // OFFLINE FALLBACK
         const fallbackData = {
           studentId,
-          type,
+          type: actualType,
+          observation,
           studentName: detectedStudent.name,
           series: detectedStudent.series,
           class: detectedStudent.class
@@ -293,13 +330,14 @@ export default function GatePage() {
         result = {
           id: 'offline-' + Date.now(),
           created_at: new Date().toISOString(),
-          type: type,
+          type: actualType,
+          observation: observation,
           students: { name: detectedStudent.name, series: detectedStudent.series, class: detectedStudent.class }
         };
         toast.warning("Modo Offline: Registro salvo localmente. Sincronização automática pendente.");
       }
 
-      playSound(type);
+      playSound(actualType);
 
       // Only set last scan here if mutation success handler didn't handle it
       // Actually, mutation success handler is redundant now for some properties, 
@@ -452,17 +490,27 @@ export default function GatePage() {
                       disabled={isProcessing}
                       className="group flex flex-col items-center justify-center gap-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:grayscale p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/40 transition-all active:scale-95"
                     >
-                      <LogIn className="h-12 w-12" />
-                      <span className="text-2xl font-black uppercase tracking-tighter">ENTRADA</span>
+                      <LogIn className="h-10 w-10 sm:h-12 sm:w-12" />
+                      <span className="text-xl sm:text-2xl font-black uppercase tracking-tighter">ENTRADA</span>
                     </button>
-                    <button
-                      onClick={() => confirmMovement("exit")}
-                      disabled={isProcessing}
-                      className="group flex flex-col items-center justify-center gap-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:grayscale p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/40 transition-all active:scale-95"
-                    >
-                      <LogOut className="h-12 w-12" />
-                      <span className="text-2xl font-black uppercase tracking-tighter">SAÍDA</span>
-                    </button>
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => confirmMovement("exit")}
+                        disabled={isProcessing}
+                        className="group flex flex-col items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:grayscale p-4 rounded-3xl shadow-xl shadow-blue-900/40 transition-all active:scale-95 flex-1"
+                      >
+                        <LogOut className="h-6 w-6 sm:h-8 sm:w-8" />
+                        <span className="text-sm sm:text-lg font-black uppercase tracking-tighter">SAÍDA</span>
+                      </button>
+                      <button
+                        onClick={() => confirmMovement("exit_definitive")}
+                        disabled={isProcessing}
+                        className="group flex flex-col items-center justify-center gap-1 bg-red-600/80 hover:bg-red-500 disabled:opacity-50 disabled:grayscale p-3 rounded-2xl border border-red-400/30 transition-all active:scale-95 h-16"
+                        title="Usar quando o aluno for para casa fora do horário normal e não for retornar."
+                      >
+                        <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/90">SAÍDA DEFINITIVA</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="w-full grid grid-cols-2 gap-4 items-center pt-4">

@@ -35,27 +35,59 @@ export default function Dashboard() {
   const handleGenerateDailySummary = async () => {
     try {
       const loadingToast = toast.loading("Gerando resumo...");
-      const { data: movements } = await supabase.from("movements").select("student_id, type, created_at").gte("created_at", `${today}T00:00:00`).lte("created_at", `${today}T23:59:59`);
-      const { data: allStudents } = await supabase.from("students").select("id, name, series, class, allergies, blood_type").eq("active", true);
-      if (!allStudents) throw new Error("Erro ao carregar alunos.");
-      const studentsData = allStudents as any[];
-      const entries = (movements as any[])?.filter(m => m.type === 'entry') || [];
-      const presentIds = new Set(entries.map(m => m.student_id));
-      const absentStudents = studentsData.filter(s => !presentIds.has(s.id));
-      const studentsWithMedicalAlerts = studentsData.filter(s => presentIds.has(s.id) && (s.allergies || s.blood_type));
-      const totalPresent = presentIds.size;
-      const totalStudents = studentsData.length;
-      const presenceRate = ((totalPresent / totalStudents) * 100).toFixed(1);
-      const seriesAbsents: Record<string, number> = {};
-      absentStudents.forEach(s => { seriesAbsents[s.series] = (seriesAbsents[s.series] || 0) + 1; });
+
+      const { data: movements } = await supabase
+        .from("movements")
+        .select("student_id, type, created_at, students(name, series, class, allergies, blood_type)")
+        .gte("created_at", `${today}T00:00:00`)
+        .lte("created_at", `${today}T23:59:59`)
+        .order("created_at", { ascending: true });
+
+      const allMovements = (movements || []) as any[];
+
+      // Calculate Atrasos (Entries)
+      const entries = allMovements.filter(m => m.type === 'entry');
+      const uniqueEntries = new Set(entries.map(m => m.student_id)).size;
+
+      // Calculate Aguardando Retorno
+      // An exit without a subsequent entry makes the student "Aguardando Retorno"
+      const statusMap = new Map<string, { status: 'in' | 'out', student: any }>();
+
+      allMovements.forEach(m => {
+        statusMap.set(m.student_id, {
+          status: m.type === 'entry' ? 'in' : 'out',
+          student: m.students
+        });
+      });
+
+      const waitingReturnStudents = Array.from(statusMap.values())
+        .filter(s => s.status === 'out')
+        .map(s => s.student);
+
+      // Find medical alerts among those who had EXCEPTIONS today (entries or exits)
+      const studentsWithMedicalAlerts = Array.from(statusMap.values())
+        .map(s => s.student)
+        .filter(s => s && (s.allergies || s.blood_type));
+
       const dateStr = format(new Date(), "dd/MM/yyyy", { locale: ptBR });
-      let message = `*📊 RESUMO DIÁRIO - CETI DIGITAL*\n*📅 Data:* ${dateStr}\n\n*📈 FREQUÊNCIA*\n✅ Presentes: ${totalPresent}\n❌ Ausentes: ${absentStudents.length}\n🎯 Índice: ${presenceRate}%\n\n*🚩 AUSÊNCIAS POR SÉRIE*\n`;
-      Object.entries(seriesAbsents).sort().forEach(([series, count]) => { message += `• ${series}: ${count}\n`; });
+
+      let message = `*📊 RESUMO DIÁRIO - CETI DIGITAL*\n*📅 Data:* ${dateStr}\n\n*📈 EXCEÇÕES REGISTRADAS*\n⏰ Atrasos Registrados: ${uniqueEntries}\n🚪 Saídas Definitivas/Aguardando Retorno: ${waitingReturnStudents.length}\n`;
+
+      if (waitingReturnStudents.length > 0) {
+        message += `\n*🚩 ALUNOS FORA DA ESCOLA (Saíram Hoje)*\n`;
+        const seriesAbsents: Record<string, number> = {};
+        waitingReturnStudents.forEach(s => {
+          if (s && s.series) seriesAbsents[s.series] = (seriesAbsents[s.series] || 0) + 1;
+        });
+        Object.entries(seriesAbsents).sort().forEach(([series, count]) => { message += `• ${series}: ${count}\n`; });
+      }
+
       if (studentsWithMedicalAlerts.length > 0) {
         message += `\n*⚠️ ALERTAS MÉDICOS*\n`;
         studentsWithMedicalAlerts.slice(0, 5).forEach(s => { message += `• ${s.name}\n`; });
       }
       message += `\n*Coordenação, validar no painel.* 🛡️`;
+
       toast.dismiss(loadingToast);
       const { whatsappService } = await import("@/services/whatsappService");
       const settings = await whatsappService.getSettings();
@@ -92,11 +124,21 @@ export default function Dashboard() {
   const entriesCount = todayMovements?.filter((m) => m.type === "entry").length || 0;
   const exitsCount = todayMovements?.filter((m) => m.type === "exit").length || 0;
 
+  const statusMap = new Map<string, 'in' | 'out'>();
+  todayMovements?.forEach(m => {
+    // Only set if not already set (since it's ordered by most recent first)
+    if (!statusMap.has(m.student_id)) {
+      statusMap.set(m.student_id, m.type === 'entry' ? 'in' : 'out');
+    }
+  });
+
+  const waitingReturnCount = Array.from(statusMap.values()).filter(s => s === 'out').length;
+
   const stats = [
-    { label: "Total Alunos", value: String(students || 0), icon: Users, color: "from-primary/20 to-primary/5 border-primary/30 text-primary" },
-    { label: "Entradas", value: String(entriesCount), icon: LogIn, color: "from-success/20 to-success/5 border-success/30 text-success" },
-    { label: "Saídas", value: String(exitsCount), icon: LogOut, color: "from-warning/20 to-warning/5 border-warning/30 text-warning" },
-    { label: "Alertas", value: String(pendingAlerts?.length || 0), icon: AlertTriangle, color: "from-destructive/20 to-destructive/5 border-destructive/30 text-destructive" },
+    { label: "Atrasos / Entradas", value: String(entriesCount), icon: LogIn, color: "from-success/20 to-success/5 border-success/30 text-success" },
+    { label: "Saídas Registradas", value: String(exitsCount), icon: LogOut, color: "from-warning/20 to-warning/5 border-warning/30 text-warning" },
+    { label: "Aguardando Retorno", value: String(waitingReturnCount), icon: UserX, color: "from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-500" },
+    { label: "Ocorrências", value: String(pendingAlerts?.length || 0), icon: AlertTriangle, color: "from-destructive/20 to-destructive/5 border-destructive/30 text-destructive" },
   ];
 
   const quickActions = [

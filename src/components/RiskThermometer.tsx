@@ -41,29 +41,28 @@ export default function RiskThermometer() {
 
             students.forEach(student => {
                 const studentMovements = (movements || []).filter(m => m.student_id === student.id);
-                const presenceDays = new Set(studentMovements.map(m => format(new Date(m.registered_at), "yyyy-MM-dd")));
 
-                // Assuming school days are Mon-Fri (simplified for now)
-                // Real implementation would use the calendar, but for the dashboard widget
-                // let's focus on consecutive absences and absolute count.
+                // New logic: 
+                // 1. Critical if currently "Out" (Waiting Return)
+                // 2. Medium if > 3 lates in 30 days
 
-                const lastPresence = studentMovements.length > 0 ? new Date(studentMovements[0].registered_at) : null;
+                const lastMovement = studentMovements[0]; // ordered by desc registered_at
+                const isWaitingReturn = lastMovement?.type === 'exit';
+                const lastPresence = lastMovement ? new Date(lastMovement.registered_at) : null;
+
+                const latesCount = studentMovements.filter(m => m.type === 'entry').length;
+
                 let riskLevel: 'high' | 'medium' | 'low' = 'low';
                 let reason = "";
 
-                const daysSinceLastPresence = lastPresence
-                    ? Math.floor((today.getTime() - lastPresence.getTime()) / (1000 * 60 * 60 * 24))
-                    : 30;
-
-                if (daysSinceLastPresence >= 5) {
+                if (isWaitingReturn) {
                     riskLevel = 'high';
-                    reason = `Sem presença há ${daysSinceLastPresence} dias`;
-                } else if (daysSinceLastPresence >= 3) {
+                    reason = "Saída s/ Retorno (Pendente)";
+                } else if (latesCount >= 5) {
                     riskLevel = 'medium';
-                    reason = `Início de evasão (${daysSinceLastPresence} dias ausente)`;
-                } else if (presenceDays.size < 12 && studentMovements.length > 0) { // arbitrary threshold for 30 days
-                    riskLevel = 'medium';
-                    reason = "Frequência irregular no último mês";
+                    reason = `${latesCount} atrasos no mês`;
+                } else if (latesCount >= 3) {
+                    riskLevel = 'low'; // Or keep as low for now
                 }
 
                 if (riskLevel !== 'low') {
