@@ -134,7 +134,7 @@ export default function JustificationPortal() {
                 <AlertCircle className="h-10 w-10" />
             </div>
             <h1 className="text-2xl font-black text-foreground mb-2">Acesso Expirado ou Inválido</h1>
-            <p className="text-muted-foreground max-w-xs font-medium">O link utilizado para justificar a ausência não é mais válido ou está incorreto.</p>
+            <p className="text-muted-foreground max-w-xs font-medium">O link utilizado para justificar a ocorrência não é mais válido ou está incorreto.</p>
         </div>
     );
 
@@ -162,7 +162,7 @@ export default function JustificationPortal() {
                         <ShieldCheck className="h-8 w-8" />
                     </div>
                     <h1 className="text-4xl font-black tracking-tight leading-none mb-4">Portal do Responsável</h1>
-                    <p className="text-primary-foreground/70 font-medium text-lg max-w-xs">Justificativa escolar para ausências e atrasos.</p>
+                    <p className="text-primary-foreground/70 font-medium text-lg max-w-xs">Justificativa escolar para ocorrências (Atrasos e Saídas).</p>
                 </div>
 
                 <div className="relative z-10 space-y-8 mt-16 lg:mt-0">
@@ -188,7 +188,7 @@ export default function JustificationPortal() {
                 <div className="max-w-xl mx-auto w-full space-y-10">
                     <div className="space-y-2">
                         <h2 className="text-3xl font-black text-foreground tracking-tight">Nova Justificativa</h2>
-                        <p className="text-muted-foreground font-semibold">Preencha os detalhes da ausência abaixo para análise da escola.</p>
+                        <p className="text-muted-foreground font-semibold">Preencha os detalhes da ocorrência (atraso ou saída antecipada) para análise da escola.</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
@@ -211,7 +211,7 @@ export default function JustificationPortal() {
                                 required
                                 value={form.reason}
                                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                                placeholder="Ex: Aluno apresentou febre ou consulta médica agendada..."
+                                placeholder="Ex: Aluno saiu para consulta médica ou chegou atrasado devido transporte..."
                                 rows={4}
                                 className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 focus:bg-background p-6 rounded-3xl font-bold text-foreground transition-all outline-none resize-none"
                             />

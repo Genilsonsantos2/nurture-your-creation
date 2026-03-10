@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const typeLabels: Record<string, string> = {
-  absent: "Ausente",
+  absent: "Saída Pendente",
   not_returned: "Não retornou",
   irregular_time: "Horário Irregular",
   excessive_exits: "Saídas Excessivas",
@@ -87,7 +87,7 @@ export default function AlertsPage() {
                   <button
                     onClick={() => {
                       const phone = alert.students.guardians[0].phone.replace(/\D/g, '');
-                      const msg = encodeURIComponent(`Olá, responsável por ${alert.students.name}. Notamos que o(a) aluno(a) não registra entrada na escola há alguns dias. Está tudo bem?`);
+                      const msg = encodeURIComponent(`Olá, responsável por ${alert.students.name}. Notamos que o(a) aluno(a) possui uma saída registrada sem o respectivo retorno ou justificativa de horário. Está tudo bem?`);
                       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
                     }}
                     className="text-xs font-medium bg-success/10 text-success px-3 py-1.5 rounded-full hover:bg-success/20 transition-all">

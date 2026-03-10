@@ -7,6 +7,11 @@ export function useAbsenceChecker() {
     const isCoordinatorOrAdmin = isAdmin || role === 'coordinator';
 
     useEffect(() => {
+        // FLOW CHANGE: General attendance is no longer tracked at the gate.
+        // Therefore, we cannot automatically flag someone as 'Absent' just because they didn't scan.
+        // This checker is disabled to prevent false alerts to parents.
+        return;
+
         if (!user || !isCoordinatorOrAdmin) return;
 
         const checkAbsences = async () => {
