@@ -179,6 +179,7 @@ export default function ImportStudentsPage() {
         const { data: student, error: err } = await supabase.from("students").insert({
           name: row.name, series: row.series, class: row.class, enrollment: row.enrollment,
           modality: row.modality,
+          qr_code: row.enrollment
         }).select().single();
 
         if (err) {

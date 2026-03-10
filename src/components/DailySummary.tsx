@@ -62,8 +62,8 @@ export default function DailySummary() {
   }
 
   const stats = [
-    { label: "Presentes", value: data.stats.present, icon: LogIn, color: "text-success" },
-    { label: "Ausentes", value: data.stats.absent, icon: LogOut, color: "text-warning" },
+    { label: "Atrasos", value: data.stats.present, icon: LogIn, color: "text-success" },
+    { label: "Saídas Pend.", value: data.stats.absent, icon: LogOut, color: "text-warning" },
     { label: "Alertas", value: data.stats.alerts, icon: AlertTriangle, color: "text-destructive" },
     { label: "Ocorrências", value: data.stats.occurrences, icon: FileWarning, color: "text-primary" },
   ];

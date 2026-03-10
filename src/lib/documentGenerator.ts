@@ -160,7 +160,8 @@ export const generateMassBadgesPDF = async (students: any[], className: string) 
 
         // QR Code (using API) - Bottom left on badge
         try {
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.qr_code)}`;
+            const qrData = student.qr_code || student.enrollment || student.id;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
             doc.addImage(qrUrl, 'PNG', currentX + badgeWidth - 25, currentY + 41, 10, 10);
         } catch (e) {
             doc.text("[QR]", currentX + badgeWidth - 20, currentY + 45);

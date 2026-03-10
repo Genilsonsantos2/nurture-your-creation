@@ -111,6 +111,7 @@ export default function StudentForm() {
           active: form.active, modality: form.modality,
           photo_url: form.photoUrl, blood_type: form.bloodType,
           allergies: form.allergies, medical_notes: form.medicalNotes,
+          qr_code: form.enrollment
         }).eq("id", id);
         if (studentErr) throw studentErr;
 
@@ -136,6 +137,7 @@ export default function StudentForm() {
           modality: form.modality,
           photo_url: form.photoUrl, blood_type: form.bloodType,
           allergies: form.allergies, medical_notes: form.medicalNotes,
+          qr_code: form.enrollment // Default qr_code to enrollment
         }).select().single();
         if (studentErr) throw studentErr;
 

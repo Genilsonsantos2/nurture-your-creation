@@ -93,14 +93,14 @@ export default function RiskThermometer() {
                 <div className="h-14 w-14 rounded-2xl bg-success/20 text-success flex items-center justify-center mb-4">
                     <TrendingDown className="h-8 w-8 rotate-180" />
                 </div>
-                <h3 className="text-lg font-black text-foreground">Frequência Excelente</h3>
+                <h3 className="text-lg font-black text-foreground">Rotina Regular</h3>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest font-bold">Nenhum aluno em risco crítico detectado.</p>
             </div>
         );
     }
 
     const openWhatsApp = (student: RiskStudent) => {
-        const message = `Olá! Sou da coordenação do CETI. Notamos a ausência frequente do aluno ${student.name}. Gostaríamos de entender o motivo e como podemos ajudar a garantir o retorno dele às aulas.`;
+        const message = `Olá! Sou da coordenação do CETI. Notamos ocorrências frequentes (atrasos ou saídas pendentes) relacionadas ao aluno ${student.name}. Gostaríamos de conversar para entender como podemos ajudar.`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
