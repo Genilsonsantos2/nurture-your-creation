@@ -50,14 +50,43 @@ export default function AlertsPage() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("alerts").delete().eq("status", "pending");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["alerts-pending"] });
+      toast.success("Todos os alertas pendentes foram apagados.");
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao apagar alertas: " + err.message);
+    }
+  });
+
   const pending = alerts.filter((a) => a.status === "pending");
   const resolved = alerts.filter((a) => a.status === "resolved");
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Alertas</h1>
-        <p className="text-sm text-muted-foreground">{pending.length} alertas pendentes</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Alertas</h1>
+          <p className="text-sm text-muted-foreground">{pending.length} alertas pendentes</p>
+        </div>
+        {pending.length > 1 && (
+          <button
+            onClick={() => {
+              if (confirm(`Deseja APAGAR DEFINITIVAMENTE todos os ${pending.length} alertas pendentes? Esta ação não pode ser desfeita.`)) {
+                bulkDeleteMutation.mutate();
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-destructive/10 text-destructive px-4 py-2 text-sm font-medium hover:bg-destructive/20 transition-all"
+          >
+            <AlertTriangle className="h-4 w-4" /> Apagar Tudo
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">

@@ -49,6 +49,24 @@ export default function JustificationManagement() {
         onError: () => toast.error("Erro ao revisar justificativa.")
     });
 
+    const bulkDeleteMutation = useMutation({
+        mutationFn: async () => {
+            const { error } = await (supabase as any)
+                .from("absence_justifications")
+                .delete()
+                .eq("status", "pending");
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["justifications"] });
+            queryClient.invalidateQueries({ queryKey: ["justifications-pending"] });
+            toast.success("Todas as justificativas pendentes foram apagadas.");
+        },
+        onError: (err: any) => {
+            toast.error("Erro ao apagar justificativas: " + err.message);
+        }
+    });
+
     const generateTestLink = async () => {
         const { data } = await supabase.from("guardians").select("parent_access_token").limit(1).maybeSingle();
         if (data) {
@@ -91,6 +109,18 @@ export default function JustificationManagement() {
                     </div>
                 </div>
                 <div className="relative z-10 flex flex-wrap gap-3">
+                    {justifications.filter(j => j.status === 'pending').length > 1 && (
+                        <button
+                            onClick={() => {
+                                if (confirm("Deseja APAGAR DEFINITIVAMENTE todas as justificativas pendentes?")) {
+                                    bulkDeleteMutation.mutate();
+                                }
+                            }}
+                            className="px-8 py-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-destructive/20 transition-all flex items-center gap-2"
+                        >
+                            <FileX className="h-4 w-4" /> Apagar Pendentes
+                        </button>
+                    )}
                     <button
                         onClick={() => setShowDocReader(true)}
                         className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
