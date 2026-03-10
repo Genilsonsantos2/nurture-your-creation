@@ -93,9 +93,9 @@ export default function AttendanceHeatmapPage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
             <Flame className="h-8 w-8 text-primary" />
-            Mapa de Calor de Frequência
+            Mapa de Calor de Movimentação
           </h1>
-          <p className="text-muted-foreground mt-1">Visualize horários e dias com maior movimentação</p>
+          <p className="text-muted-foreground mt-1">Visualize horários de picos de atrasos e saídas</p>
         </div>
         <div className="flex gap-2">
           {([7, 14, 30] as const).map((r) => (
@@ -120,7 +120,7 @@ export default function AttendanceHeatmapPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-xl border bg-card p-4 text-center">
-              <p className="text-xs font-bold text-muted-foreground uppercase">Total Entradas</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase">Atrasos Totais</p>
               <p className="text-3xl font-black text-foreground">{movements.filter((m) => m.type === "entry").length}</p>
             </div>
             <div className="rounded-xl border bg-card p-4 text-center">
@@ -143,7 +143,7 @@ export default function AttendanceHeatmapPage() {
               onClick={() => setView("entries")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view === "entries" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
             >
-              🟢 Entradas
+              🟢 Atrasos
             </button>
             <button
               onClick={() => setView("exits")}
@@ -174,7 +174,7 @@ export default function AttendanceHeatmapPage() {
                     <div
                       key={hourIdx}
                       className={`aspect-square rounded-sm ${getIntensityColor(val, maxVal)} transition-all hover:ring-2 hover:ring-primary cursor-default flex items-center justify-center`}
-                      title={`${dayNames[dayIdx]} ${hourLabels[hourIdx]}: ${val} ${view === "entries" ? "entradas" : "saídas"}`}
+                      title={`${dayNames[dayIdx]} ${hourLabels[hourIdx]}: ${val} ${view === "entries" ? "atrasos" : "saídas"}`}
                     >
                       {val > 0 && <span className="text-[9px] font-bold text-foreground/70">{val}</span>}
                     </div>

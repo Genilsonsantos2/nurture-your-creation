@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -182,9 +182,9 @@ export default function Dashboard() {
                 <Radio className="h-3 w-3 text-success animate-pulse" />
                 {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
               </div>
-              <Link to="/relatorios" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-xs font-mono text-primary transition-colors">
-                <UserX className="h-3 w-3" />
-                CHECAR FALTAS
+              <Link to="/ocorrencias" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-xs font-mono text-primary transition-colors">
+                <AlertTriangle className="h-3 w-3" />
+                VER OCORRÊNCIAS
               </Link>
             </div>
           </div>
@@ -237,10 +237,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Quick Actions + Management Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Quick Actions + Monitoring Header */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
         {/* Quick Actions */}
-        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (
             <Link key={action.path} to={action.path}
               className="group flex flex-col items-center p-4 rounded-xl bg-card border border-border hover:border-primary/40 transition-all text-center">
@@ -254,17 +254,89 @@ export default function Dashboard() {
         </div>
 
         {/* WhatsApp Summary */}
-        <div className="rounded-xl bg-card border border-border p-4 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-lg bg-success/10 text-success flex items-center justify-center border border-success/20 shrink-0">
-            <Smartphone className="h-5 w-5" />
+        <div className="lg:w-80 rounded-xl bg-card border border-border p-4 flex flex-col justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-lg bg-success/10 text-success flex items-center justify-center border border-success/20 shrink-0">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground">Resumo WhatsApp</p>
+              <p className="text-[10px] text-muted-foreground">Enviar para coordenação</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground">Resumo WhatsApp</p>
-            <p className="text-[10px] text-muted-foreground">Enviar para coordenação</p>
-          </div>
-          <button onClick={handleGenerateDailySummary} className="premium-button text-xs py-2 bg-success">
-            <Share2 className="h-3.5 w-3.5" />
+          <button onClick={handleGenerateDailySummary} className="premium-button w-full text-xs py-2 bg-success">
+            <Share2 className="h-3.5 w-3.5 mr-2" /> Gerar/Enviar Resumo
           </button>
+        </div>
+      </div>
+
+      {/* Exception Monitoring (NEW) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-panel p-5 border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <UserX className="h-4 w-4 text-amber-500" />
+              <h3 className="text-sm font-bold text-amber-500">Fora da Escola (Aguardando Retorno)</h3>
+            </div>
+            <span className="text-[10px] font-mono bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full">
+              {waitingReturnCount} ALUNOS
+            </span>
+          </div>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+            {todayMovements && todayMovements.length > 0 ? (
+              Array.from(statusMap.entries())
+                .filter(([_, type]) => type === 'out')
+                .slice(0, 5)
+                .map(([id]) => {
+                  const mov = todayMovements.find(m => m.student_id === id);
+                  return (
+                    <div key={id} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50 text-xs">
+                      <div>
+                        <p className="font-bold text-foreground">{mov?.students?.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{mov?.students?.series} {mov?.students?.class}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-mono text-amber-500">SAIU: {format(new Date(mov?.registered_at || ""), "HH:mm")}</p>
+                        <p className="text-[9px] opacity-70">{(mov as any)?.observation || "Saída Registrada"}</p>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <p className="text-center py-4 text-muted-foreground text-xs">Nenhum aluno aguardando retorno.</p>
+            )}
+            {waitingReturnCount > 5 && (
+              <Link to="/relatorios" className="block text-center text-[10px] font-bold text-amber-500 hover:underline pt-2">
+                VER TODOS OS {waitingReturnCount} ALUNOS
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-panel p-5 border-emerald-500/20 bg-emerald-500/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-emerald-500" />
+              <h3 className="text-sm font-bold text-emerald-500">Últimos Atrasos (Hoje)</h3>
+            </div>
+            <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-500 px-2 py-0.5 rounded-full">
+              {entriesCount} REGISTROS
+            </span>
+          </div>
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+            {todayMovements?.filter(m => m.type === 'entry').slice(0, 5).map((mov) => (
+              <div key={mov.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50 text-xs text-foreground">
+                <div>
+                  <p className="font-bold">{mov.students?.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{mov.students?.series} {mov.students?.class}</p>
+                </div>
+                <div className="text-right font-mono text-emerald-500">
+                  {format(new Date(mov.registered_at), "HH:mm")}
+                </div>
+              </div>
+            ))}
+            {entriesCount === 0 && <p className="text-center py-4 text-muted-foreground text-xs">Nenhum atraso registrado hoje.</p>}
+          </div>
         </div>
       </div>
 

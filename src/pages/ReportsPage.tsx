@@ -176,7 +176,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">Estatísticas e análises de presença</p>
+          <p className="text-sm text-muted-foreground">Estatísticas e análises de movimentação</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <select value={period} onChange={(e) => setPeriod(e.target.value as any)}

@@ -99,7 +99,7 @@ export default function AnalyticsDashboard() {
                         <h1 className="text-3xl font-black text-foreground tracking-tight">Análise Inteligente</h1>
                         <p className="text-sm text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2 mt-1">
                             <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                            Insights e Tendências de Fluxo
+                            Monitoramento de Atrasos e Saídas
                         </p>
                     </div>
                 </div>
@@ -126,7 +126,7 @@ export default function AnalyticsDashboard() {
                         <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Users className="h-6 w-6" />
                         </div>
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Acessos Totais</span>
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Atrasos / Saídas Totais</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-black text-foreground">{movements.length}</span>
@@ -179,11 +179,11 @@ export default function AnalyticsDashboard() {
                 <div className="glass-panel p-10 space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-xl font-black text-foreground tracking-tight">Tendência de Atividade</h3>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Comparativo de fluxo diário</p>
+                            <h3 className="text-xl font-black text-foreground tracking-tight">Tendência de Exceções</h3>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Comparativo de atrasos e saídas antecipadas</p>
                         </div>
                         <div className="flex items-center gap-4 text-[10px] font-bold">
-                            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-primary" /> ENTRADAS</div>
+                            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-primary" /> ATRASOS</div>
                             <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-warning" /> SAÍDAS</div>
                         </div>
                     </div>
