@@ -16,7 +16,8 @@ export default function JustificationPortal() {
 
     const [form, setForm] = useState({
         date: new Date().toISOString().split('T')[0],
-        reason: ""
+        reason: "",
+        category: "Outros"
     });
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export default function JustificationPortal() {
                     student_id: student.id,
                     justification_date: form.date,
                     reason: form.reason,
+                    category: form.category,
                     document_url: documentUrl,
                     status: 'pending'
                 } as any);
@@ -206,6 +208,20 @@ export default function JustificationPortal() {
                         </div>
 
                         <div className="space-y-4">
+                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Tipo de Ocorrência</label>
+                            <select
+                                value={form.category}
+                                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                                className="w-full bg-muted/50 border-2 border-transparent focus:border-primary/20 focus:bg-background h-16 px-6 rounded-2xl font-bold text-foreground transition-all outline-none appearance-none cursor-pointer"
+                            >
+                                <option value="Saúde">Saúde / Médico</option>
+                                <option value="Trânsito">Trânsito / Transporte</option>
+                                <option value="Família">Questões Familiares</option>
+                                <option value="Outros">Outros Motivos</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-4">
                             <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Motivo / Descrição</label>
                             <textarea
                                 required
@@ -276,7 +292,7 @@ export default function JustificationPortal() {
                         O portal é monitorado pelo CETI NOVA ITARANA.
                     </p>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

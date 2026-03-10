@@ -44,6 +44,20 @@ export default function AnalyticsDashboard() {
         }
     });
 
+    // Fetch Justifications
+    const { data: justifications = [] } = useQuery({
+        queryKey: ["analytics-justifications", timeRange],
+        queryFn: async () => {
+            const startDate = subDays(new Date(), timeRange);
+            const { data, error } = await supabase
+                .from("absence_justifications")
+                .select("category")
+                .gte("created_at", startDate.toISOString());
+            if (error) throw error;
+            return data || [];
+        }
+    });
+
     // 1. Process Trend Data (Daily)
     const days = eachDayOfInterval({
         start: subDays(new Date(), timeRange - 1),
@@ -81,6 +95,15 @@ export default function AnalyticsDashboard() {
         const count = movements.filter(m => new Date(m.registered_at).getHours() === hour).length;
         return { hour: `${hour}h`, count };
     }).filter(h => h.count > 0 || (parseInt(h.hour) >= 7 && parseInt(h.hour) <= 18));
+
+    // 4. Justification Categories Stats
+    const categoryStats: Record<string, number> = {};
+    justifications.forEach(j => {
+        const cat = j.category || "Não Informado";
+        categoryStats[cat] = (categoryStats[cat] || 0) + 1;
+    });
+
+    const categoryData = Object.entries(categoryStats).map(([name, value]) => ({ name, value }));
 
     const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -286,6 +309,39 @@ export default function AnalyticsDashboard() {
                                 <Tooltip cursor={{ fill: 'transparent' }} />
                                 <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={30}>
                                     {classRanking.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Justification Categories */}
+                <div className="glass-panel p-10 space-y-8">
+                    <div>
+                        <h3 className="text-xl font-black text-foreground tracking-tight">Motivos de Ausência</h3>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Categorização das justificativas enviadas</p>
+                    </div>
+
+                    <div className="h-[350px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={categoryData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }}
+                                    dy={10}
+                                />
+                                <YAxis hide />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
+                                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', padding: '1rem' }}
+                                />
+                                <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+                                    {categoryData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>

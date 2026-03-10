@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock, FileText } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock, FileText, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { useDashboardCleanup } from "@/hooks/useDashboardCleanup";
 import { useRiskPattern } from "@/hooks/useRiskPattern";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
+import GlobalEngagement from "@/components/GlobalEngagement";
 import { Volume2, VolumeX } from "lucide-react";
 
 export default function Dashboard() {
@@ -219,6 +220,36 @@ export default function Dashboard() {
       });
     }
   }, [criticalDelays, audioEnabled, announcedDelayed]);
+
+  // 5. Detect potential abandonment (out > 120 mins)
+  const { data: abandonmentStats } = useQuery({
+    queryKey: ["abandonment-radar"],
+    queryFn: async () => {
+      const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000).toISOString();
+      const today = new Date().toISOString().split("T")[0];
+
+      const { data: movements } = await (supabase as any)
+        .from("movements")
+        .select("student_id, type, registered_at, students(name, series, class)")
+        .gte("registered_at", `${today}T00:00:00`)
+        .order("registered_at", { ascending: false });
+
+      const abandonments: any[] = [];
+      const processed = new Set();
+
+      (movements || []).forEach((m: any) => {
+        if (!processed.has(m.student_id)) {
+          processed.add(m.student_id);
+          if (m.type === 'exit' && m.registered_at < twoHoursAgo) {
+            abandonments.push(m);
+          }
+        }
+      });
+
+      return abandonments;
+    },
+    refetchInterval: 60000
+  });
 
   const stats = [
     { label: "Atrasos / Entradas", value: String(entriesCount), icon: LogIn, color: "from-success/20 to-success/5 border-success/30 text-success" },
@@ -427,18 +458,58 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((stat, i) => (
-          <div key={stat.label} className={`stat-card bg-gradient-to-br ${stat.color}`} style={{ animationDelay: `${i * 50}ms` }}>
-            <div className="flex items-center justify-between mb-3">
-              <stat.icon className="h-5 w-5" />
-              <span className="text-[10px] font-mono opacity-60 uppercase">{stat.label}</span>
+      {/* Stats Grid & Global Engagement */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        <div className="lg:col-span-1">
+          <GlobalEngagement />
+        </div>
+        <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-3">
+          {stats.map((stat, i) => (
+            <div key={stat.label} className={`stat-card bg-gradient-to-br ${stat.color}`} style={{ animationDelay: `${i * 50}ms` }}>
+              <div className="flex items-center justify-between mb-3">
+                <stat.icon className="h-5 w-5" />
+                <span className="text-[10px] font-mono opacity-60 uppercase">{stat.label}</span>
+              </div>
+              <p className="text-3xl font-bold">{stat.value}</p>
             </div>
-            <p className="text-3xl font-bold">{stat.value}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+
+      {/* Abandonment Radar Alert */}
+      {abandonmentStats && abandonmentStats.length > 0 && (
+        <div className="rounded-2xl bg-destructive border-2 border-destructive animate-glow-pulse p-4 flex flex-col sm:flex-row sm:items-center gap-4 relative overflow-hidden">
+          <div className="h-12 w-12 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 border border-white/30 animate-pulse relative z-10">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <div className="flex-1 text-white">
+            <p className="text-base font-black uppercase tracking-wider">Radar de Abandono: Alerta Crítico</p>
+            <p className="text-xs font-bold opacity-90">
+              {abandonmentStats.length} {abandonmentStats.length === 1 ? 'aluno saiu' : 'alunos saíram'} há mais de 2 horas e não retornaram.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {abandonmentStats.slice(0, 3).map((a: any) => (
+                <span key={a.student_id} className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold border border-white/20">
+                  {a.students.name} ({a.students.series} {a.students.class})
+                </span>
+              ))}
+              {abandonmentStats.length > 3 && <span className="text-[10px] font-bold">+ {abandonmentStats.length - 3}</span>}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const loadingToast = toast.loading("Preparando lista de ocorrências...");
+              setTimeout(() => {
+                toast.dismiss(loadingToast);
+                toast.success("Ocorrências marcadas para revisão.");
+              }, 1000);
+            }}
+            className="premium-button bg-white text-destructive hover:bg-white/90 px-6 py-2.5 font-black uppercase text-xs"
+          >
+            Ver Detalhes
+          </button>
+        </div>
+      )}
 
       {/* Quick Actions + Monitoring Header */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">

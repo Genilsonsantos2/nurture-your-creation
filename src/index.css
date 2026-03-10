@@ -61,6 +61,35 @@
     --cyber: 160 85% 45%;
   }
 
+  .high-contrast {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 0%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    --radius: 0;
+    --success: 0 0% 0%;
+    --warning: 0 0% 0%;
+    --destructive: 0 0% 0%;
+  }
+
+  .high-contrast * {
+    border-width: 2px !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
   * {
     @apply border-border;
   }
@@ -243,6 +272,22 @@
         hsl(var(--primary) / 0.03) 50%,
         transparent 100%);
     background-size: 100% 4px;
+  }
+
+  /* Gauge chart styles */
+  .gauge-container {
+    @apply relative flex items-center justify-center;
+  }
+
+  .gauge-path {
+    @apply fill-none stroke-secondary;
+    stroke-width: 12;
+  }
+
+  .gauge-value {
+    @apply fill-none stroke-primary transition-all duration-1000 ease-out;
+    stroke-width: 12;
+    stroke-linecap: round;
   }
 }
 

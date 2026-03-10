@@ -96,8 +96,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
   const [pendingJustificationsCount, setPendingJustificationsCount] = useState(0);
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("high-contrast") === "true");
 
   const { count: syncQueueCount, isOnline } = useSyncQueueCount();
+
+  useEffect(() => {
+    if (highContrast) {
+      document.body.classList.add("high-contrast");
+    } else {
+      document.body.classList.remove("high-contrast");
+    }
+    localStorage.setItem("high-contrast", highContrast.toString());
+  }, [highContrast]);
 
   const filterItems = (items: NavSection["items"]) =>
     items.filter(item => isAdmin || item.roles.includes(role || ""));
@@ -315,6 +325,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </div>
+            )}
+
+            {isAdmin && (
+              <button
+                onClick={() => setHighContrast(!highContrast)}
+                className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold transition-colors ${highContrast
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:bg-secondary border border-border"
+                  }`}
+                title="Alternar Contraste"
+              >
+                <ScanLine className="h-3 w-3" />
+                {highContrast ? "NORMAL" : "CONTRASTE"}
+              </button>
             )}
 
             {isAdmin && (
