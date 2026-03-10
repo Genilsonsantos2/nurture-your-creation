@@ -144,10 +144,56 @@ export default function GatePage() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setLastScan({ ...data, success: true });
       queryClient.invalidateQueries({ queryKey: ["movements-today"] });
       toast.success(`Movimentação registrada: ${data.students.name}`);
+
+      // Auto-send justification link if it's an exception (not break return)
+      const movement = data as any;
+      const isException = movement.observation?.includes("Atraso") || movement.observation?.includes("Antecipada");
+      if (isException) {
+        try {
+          const { whatsappService } = await import("@/services/whatsappService");
+          const { data: guardian } = await supabase
+            .from("guardians")
+            .select("phone, parent_access_token")
+            .eq("student_id", data.student_id)
+            .maybeSingle();
+
+          if (guardian?.phone && guardian?.parent_access_token) {
+            const baseUrl = window.location.origin;
+            const justifyUrl = `${baseUrl}/justificar/${guardian.parent_access_token}`;
+            const msg = `*📢 CETI DIGITAL - INFORMAÇÃO*\n\nIdentificamos uma movimentação de exceção para o aluno(a) *${data.students.name}*:\n📌 *Tipo:* ${movement.observation}\n⏰ *Horário:* ${new Date(data.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}\n\nCaso necessário, você pode enviar a justificativa pelo link abaixo:\n🔗 ${justifyUrl}\n\n_Sistema de Monitoramento Ceti_ 🛡️`;
+
+            await whatsappService.sendMessage(guardian.phone, msg);
+            toast.info("Link de justificativa enviado ao responsável.");
+          }
+        } catch (err) {
+          console.error("Error auto-sending justification link:", err);
+        }
+      }
+
+      // Peace of Mind Notification (Return from break/lunch)
+      const isReturn = movement.observation?.includes("Retorno");
+      if (isReturn) {
+        try {
+          const { whatsappService } = await import("@/services/whatsappService");
+          const { data: guardian } = await supabase
+            .from("guardians")
+            .select("phone")
+            .eq("student_id", data.student_id)
+            .maybeSingle();
+
+          if (guardian?.phone) {
+            const msg = `*📢 CETI DIGITAL - SEGURANÇA*\n\nOlá! Informamos que o aluno(a) *${data.students.name}* acaba de retornar à escola após o intervalo/almoço.\n✅ *Status:* Retorno confirmado às ${new Date(data.registered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}\n\n_Reforçando a proteção do seu filho(a)._ 🛡️`;
+            await whatsappService.sendMessage(guardian.phone, msg);
+            toast.info("Confirmação de retorno enviada ao responsável.");
+          }
+        } catch (err) {
+          console.error("Error sending return notification:", err);
+        }
+      }
 
       // Auto-clear last scan after 5 seconds
       setTimeout(() => setLastScan(null), 5000);

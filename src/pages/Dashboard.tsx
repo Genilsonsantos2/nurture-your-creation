@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock } from "lucide-react";
@@ -12,13 +13,24 @@ import RiskThermometer from "@/components/RiskThermometer";
 import LaunchCeremony from "@/components/LaunchCeremony";
 import DailySummary from "@/components/DailySummary";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
+import { useDashboardCleanup } from "@/hooks/useDashboardCleanup";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
+import { Volume2, VolumeX } from "lucide-react";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
   const queryClient = useQueryClient();
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [announcedDelayed, setAnnouncedDelayed] = useState<Set<string>>(new Set());
+  const alertAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    alertAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+  }, []);
+
   useAbsenceChecker();
   useDashboardRealtime();
+  useDashboardCleanup();
 
   const isManagement = isAdmin || role === "coordinator";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
@@ -122,23 +134,91 @@ export default function Dashboard() {
     },
   });
 
+  const { data: breakSchedules } = useQuery({
+    queryKey: ["schedules-breaks"],
+    queryFn: async () => {
+      const { data } = await supabase.from("schedules").select("*").eq("type", "break");
+      return data || [];
+    },
+  });
+
   const entriesCount = todayMovements?.filter((m) => m.type === "entry").length || 0;
   const exitsCount = todayMovements?.filter((m) => m.type === "exit").length || 0;
 
-  const statusMap = new Map<string, 'in' | 'out'>();
+  const statusMap = new Map<string, { type: 'in' | 'out', student: any, lastTime: string }>();
   todayMovements?.forEach(m => {
-    // Only set if not already set (since it's ordered by most recent first)
     if (!statusMap.has(m.student_id)) {
-      statusMap.set(m.student_id, m.type === 'entry' ? 'in' : 'out');
+      statusMap.set(m.student_id, {
+        type: m.type === 'entry' ? 'in' : 'out',
+        student: m.students,
+        lastTime: m.registered_at
+      });
     }
   });
 
-  const waitingReturnCount = Array.from(statusMap.values()).filter(s => s === 'out').length;
+  const waitingReturn = Array.from(statusMap.values()).filter(s => s.type === 'out');
+  const waitingReturnCount = waitingReturn.length;
+
+  // Calculate Critical Return Delays
+  const now = new Date();
+  const currentMs = now.getHours() * 60 * 60 * 1000 + now.getMinutes() * 60 * 1000;
+
+  const criticalDelays = waitingReturn.filter(s => {
+    if (!breakSchedules) return false;
+    // Find the break schedule that this exit belongs to
+    const exitDate = new Date(s.lastTime);
+    const exitMs = exitDate.getHours() * 60 * 60 * 1000 + exitDate.getMinutes() * 60 * 1000;
+
+    const relevantSchedule = breakSchedules.find(sch => {
+      const [sh, sm] = sch.start_time.split(':').map(Number);
+      const startMs = sh * 60 * 60 * 1000 + sm * 60 * 1000 - (sch.tolerance_minutes * 60 * 1000);
+      const [eh, em] = sch.end_time.split(':').map(Number);
+      const endMs = eh * 60 * 60 * 1000 + em * 60 * 1000 + (sch.tolerance_minutes * 60 * 1000);
+      return exitMs >= startMs && exitMs <= endMs;
+    });
+
+    if (relevantSchedule) {
+      const [eh, em] = relevantSchedule.end_time.split(':').map(Number);
+      const limitMs = eh * 60 * 60 * 1000 + em * 60 * 1000 + (relevantSchedule.tolerance_minutes * 60 * 1000);
+      return currentMs > limitMs;
+    }
+    return false;
+  });
+
+  // Audio/Voice Alert for Critical Delays
+  useEffect(() => {
+    if (!audioEnabled || criticalDelays.length === 0) return;
+
+    const newDelayed = criticalDelays.filter(s => !announcedDelayed.has(s.student.id));
+
+    if (newDelayed.length > 0) {
+      // Play chime
+      if (alertAudioRef.current) {
+        alertAudioRef.current.play().catch(e => console.error("Audio error:", e));
+      }
+
+      // Voice alert
+      newDelayed.forEach(s => {
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = `Atenção: O aluno ${s.student.name} está atrasado no retorno.`;
+        msg.lang = 'pt-BR';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
+      });
+
+      // Update announced set
+      setAnnouncedDelayed(prev => {
+        const next = new Set(prev);
+        newDelayed.forEach(s => next.add(s.student.id));
+        return next;
+      });
+    }
+  }, [criticalDelays, audioEnabled, announcedDelayed]);
 
   const stats = [
     { label: "Atrasos / Entradas", value: String(entriesCount), icon: LogIn, color: "from-success/20 to-success/5 border-success/30 text-success" },
     { label: "Saídas Registradas", value: String(exitsCount), icon: LogOut, color: "from-warning/20 to-warning/5 border-warning/30 text-warning" },
-    { label: "Aguardando Retorno", value: String(waitingReturnCount), icon: UserX, color: "from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-500" },
+    { label: "Aguardando Retorno", value: String(waitingReturnCount), icon: UserX, color: criticalDelays.length > 0 ? "from-destructive/20 to-destructive/5 border-destructive/30 text-destructive animate-pulse" : "from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-500" },
     { label: "Ocorrências", value: String(pendingAlerts?.length || 0), icon: AlertTriangle, color: "from-destructive/20 to-destructive/5 border-destructive/30 text-destructive" },
   ];
 
@@ -172,18 +252,43 @@ export default function Dashboard() {
               <Zap className="h-5 w-5 text-primary" />
               <span className="text-xs font-mono font-semibold text-primary tracking-wider">100% TECNOLOGIA</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Olá, <span className="gradient-text">{userName}</span> 👋
+            <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight">
+              Olá, <span className="gradient-text">{userName}</span> <span className="inline-block animate-bounce">👋</span>
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-              Sistema operacional. Monitoramento em tempo real ativo.
+              Sistema operando em modo de <span className="text-primary font-bold">monitoramento por exceção</span>. Radar de atrasos ativo.
             </p>
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <div className="flex items-center gap-2 bg-card/80 px-3 py-1.5 rounded-lg border border-border text-xs font-mono text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 pt-4">
+              <button
+                onClick={() => {
+                  setAudioEnabled(!audioEnabled);
+                  if (!audioEnabled) {
+                    toast.success("Radar de voz ativado! O sistema agora anunciará os alunos atrasados.");
+                    if (alertAudioRef.current) {
+                      alertAudioRef.current.play().then(() => {
+                        alertAudioRef.current?.pause();
+                        alertAudioRef.current!.currentTime = 0;
+                      }).catch(() => { });
+                    }
+                  } else {
+                    toast.info("Radar de voz desativado.");
+                  }
+                }}
+                className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl text-xs font-black transition-all border-2 ${audioEnabled
+                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/40 scale-105"
+                  : "bg-background/50 text-muted-foreground border-border hover:border-primary/50 hover:text-primary transition-all"
+                  }`}
+              >
+                <div className={`h-2 w-2 rounded-full ${audioEnabled ? 'bg-white animate-pulse' : 'bg-muted-foreground'}`} />
+                {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                {audioEnabled ? "RADAR DE VOZ LIGADO" : "LIGAR RADAR DE VOZ (ALERTAS)"}
+              </button>
+
+              <div className="flex items-center gap-2 bg-card/80 px-3 py-1.5 rounded-lg border border-border text-[10px] font-mono text-muted-foreground">
                 <Radio className="h-3 w-3 text-success animate-pulse" />
                 {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
               </div>
-              <Link to="/alertas" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-xs font-mono text-primary transition-colors">
+              <Link to="/alertas" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-[10px] font-mono text-primary transition-colors">
                 <AlertTriangle className="h-3 w-3" />
                 VER ALERTAS
               </Link>
@@ -321,7 +426,7 @@ export default function Dashboard() {
           <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
             {todayMovements && todayMovements.length > 0 ? (
               Array.from(statusMap.entries())
-                .filter(([_, type]) => type === 'out')
+                .filter(([_, val]) => val.type === 'out')
                 .slice(0, 5)
                 .map(([id]) => {
                   const mov = todayMovements.find(m => m.student_id === id);
@@ -380,25 +485,42 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Weekly Trend & Risk */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="glass-panel p-5">
+          <div className="glass-panel p-5 overflow-hidden relative">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold">Tendência Semanal</h3>
+                <h3 className="text-sm font-bold">Ranking de Pontualidade (Turmas)</h3>
               </div>
-              <Link to="/analise" className="h-7 w-7 rounded-md bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </Link>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Atrasos p/ Turma</span>
             </div>
-            <div className="h-[140px] flex items-end gap-2">
-              {[65, 40, 85, 50, 95, 70, 45].map((val, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group">
-                  <div className="w-full rounded bg-primary/10 relative overflow-hidden transition-all group-hover:bg-primary/20" style={{ height: `${val}%` }}>
-                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-primary/30 to-transparent rounded" />
+            <div className="space-y-3">
+              {(() => {
+                const classStats: Record<string, number> = {};
+                todayMovements?.filter(m => m.type === 'entry').forEach(m => {
+                  const className = `${m.students?.series} ${m.students?.class}`;
+                  classStats[className] = (classStats[className] || 0) + 1;
+                });
+                const ranking = Object.entries(classStats)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 3);
+
+                if (ranking.length === 0) return <p className="text-[10px] text-muted-foreground text-center py-2 italic">Dados insuficientes para ranking hoje.</p>;
+
+                return ranking.map(([name, count], i) => (
+                  <div key={name} className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-foreground">{name}</span>
+                      <span className="text-primary">{count} {count === 1 ? 'atraso' : 'atrasos'}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-1000"
+                        style={{ width: `${(count / entriesCount) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="text-[9px] font-mono text-muted-foreground/60">{['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][i]}</span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
 
