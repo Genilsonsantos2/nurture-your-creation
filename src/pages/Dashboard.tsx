@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -16,6 +16,7 @@ import LiveActivityFeed from "@/components/LiveActivityFeed";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
+  const queryClient = useQueryClient();
   useAbsenceChecker();
   useDashboardRealtime();
 
@@ -182,9 +183,9 @@ export default function Dashboard() {
                 <Radio className="h-3 w-3 text-success animate-pulse" />
                 {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
               </div>
-              <Link to="/ocorrencias" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-xs font-mono text-primary transition-colors">
+              <Link to="/alertas" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-xs font-mono text-primary transition-colors">
                 <AlertTriangle className="h-3 w-3" />
-                VER OCORRÊNCIAS
+                VER ALERTAS
               </Link>
             </div>
           </div>
@@ -213,9 +214,44 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(pendingAlerts?.length || 0) > 5 && (
+              <button
+                onClick={async () => {
+                  if (confirm(`APAGAR DEFINITIVAMENTE todos os ${pendingAlerts.length} alertas?`)) {
+                    const { error } = await supabase.from("alerts").delete().eq("status", "pending");
+                    if (error) toast.error("Erro: " + error.message);
+                    else {
+                      toast.success("Alertas apagados!");
+                      queryClient.invalidateQueries({ queryKey: ["alerts-pending"] });
+                      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+                    }
+                  }
+                }}
+                className="premium-button text-[10px] py-1 bg-destructive/50 hover:bg-destructive"
+              >
+                Apagar Tudo
+              </button>
+            )}
             {pendingAlerts && pendingAlerts.length > 0 && (
-              <Link to="/ocorrencias" className="premium-button text-xs py-2 bg-destructive">Resolver</Link>
+              <Link to="/alertas" className="premium-button text-xs py-2 bg-destructive">Resolver</Link>
+            )}
+            {(pendingJustifications?.length || 0) > 5 && (
+              <button
+                onClick={async () => {
+                  if (confirm(`APAGAR DEFINITIVAMENTE todas as ${pendingJustifications.length} justificativas?`)) {
+                    const { error } = await (supabase as any).from("absence_justifications").delete().eq("status", "pending");
+                    if (error) toast.error("Erro: " + error.message);
+                    else {
+                      toast.success("Justificativas apagadas!");
+                      queryClient.invalidateQueries({ queryKey: ["justifications-pending"] });
+                    }
+                  }
+                }}
+                className="premium-button text-[10px] py-1 bg-info/50 hover:bg-info"
+              >
+                Limpar Justif.
+              </button>
             )}
             {pendingJustifications && pendingJustifications.length > 0 && (
               <Link to="/justificativas" className="premium-button text-xs py-2 bg-info">Analisar</Link>
