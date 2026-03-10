@@ -1,15 +1,23 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, BellRing, UserX, FileSpreadsheet, FileText, FileDown } from "lucide-react";
+import { AlertCircle, BellRing, UserX, FileSpreadsheet, FileText, FileDown, Smartphone, AlertTriangle, Zap, ShieldCheck, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { getLastNSchoolDays } from "@/lib/calendar";
+import { reportService } from "@/services/reportService";
+import { whatsappService } from "@/services/whatsappService";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { saveAs } from "file-saver";
 
 export default function ReportsPage() {
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState<"week" | "month">("week");
+  const [activeTab, setActiveTab] = useState<"stats" | "monthly">("stats");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const { data: movements = [] } = useQuery({
     queryKey: ["report-movements", period],
@@ -171,12 +179,62 @@ export default function ReportsPage() {
     saveAs(blob, `relatorio-${period}.docx`);
   };
 
+  const handleSendMonthlyReport = async (studentId: string, studentName: string) => {
+    try {
+      const { data: guardian } = await supabase
+        .from("guardians")
+        .select("phone")
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (!guardian?.phone) {
+        toast.error(`Responsável de ${studentName} não possui telefone cadastrado.`);
+        return;
+      }
+
+      const loadingToast = toast.dismiss(); // Clean previous if any
+      toast.loading(`Gerando e enviando relatório para ${studentName}...`);
+
+      const doc = await reportService.generateMonthlyReport(studentId, selectedMonth, selectedYear);
+      const pdfBase64 = doc.output('datauristring');
+
+      const res = await whatsappService.sendFile(
+        guardian.phone,
+        pdfBase64,
+        `relatorio_${studentName.replace(/\s+/g, '_')}.pdf`,
+        `*📢 CETI DIGITAL - RELATÓRIO MENSAL*\nPrezado responsável, segue em anexo o resumo consolidado de entradas e saídas do aluno(a) *${studentName}* referente ao período solicitado. 🛡️`
+      );
+
+      toast.dismiss();
+      if (res.success) toast.success(`Relatório enviado para o responsável de ${studentName}!`);
+      else toast.error(`Erro ao enviar para ${studentName}. Verifique a API.`);
+
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error("Erro: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
           <p className="text-sm text-muted-foreground">Estatísticas e análises de movimentação</p>
+        </div>
+        <div className="flex bg-muted p-1 rounded-xl border border-border">
+          <button
+            onClick={() => setActiveTab("stats")}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            ESTATÍSTICAS
+          </button>
+          <button
+            onClick={() => setActiveTab("monthly")}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'monthly' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            DISPAROS MENSAIS (PDF)
+          </button>
         </div>
         <div className="flex flex-wrap gap-2">
           <select value={period} onChange={(e) => setPeriod(e.target.value as any)}
@@ -219,98 +277,155 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Weekly chart */}
-        <div className="bg-card rounded-lg border p-5 space-y-4">
-          <h2 className="font-semibold text-foreground">Movimentações por Dia</h2>
-          {dailyStats.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
-          ) : (
-            <div className="space-y-3">
-              {dailyStats.map((d) => (
-                <div key={d.day} className="flex items-center gap-3">
-                  <span className="w-8 text-xs font-medium text-muted-foreground">{d.day}</span>
-                  <div className="flex-1 flex gap-1">
-                    <div className="h-6 rounded-l bg-primary/80 flex items-center justify-end pr-2"
-                      style={{ width: `${(d.entries / maxVal) * 100}%`, minWidth: d.entries > 0 ? "2rem" : 0 }}>
-                      {d.entries > 0 && <span className="text-[10px] text-primary-foreground font-medium">{d.entries}</span>}
-                    </div>
-                    <div className="h-6 rounded-r bg-warning/60 flex items-center pl-1"
-                      style={{ width: `${(d.exits / maxVal) * 100}%`, minWidth: d.exits > 0 ? "2rem" : 0 }}>
-                      {d.exits > 0 && <span className="text-[10px] text-foreground font-medium">{d.exits}</span>}
+      {activeTab === 'stats' ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Weekly chart */}
+          <div className="bg-card rounded-lg border p-5 space-y-4">
+            <h2 className="font-semibold text-foreground">Movimentações por Dia</h2>
+            {dailyStats.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
+            ) : (
+              <div className="space-y-3">
+                {dailyStats.map((d) => (
+                  <div key={d.day} className="flex items-center gap-3">
+                    <span className="w-8 text-xs font-medium text-muted-foreground">{d.day}</span>
+                    <div className="flex-1 flex gap-1">
+                      <div className="h-6 rounded-l bg-primary/80 flex items-center justify-end pr-2"
+                        style={{ width: `${(d.entries / maxVal) * 100}%`, minWidth: d.entries > 0 ? "2rem" : 0 }}>
+                        {d.entries > 0 && <span className="text-[10px] text-primary-foreground font-medium">{d.entries}</span>}
+                      </div>
+                      <div className="h-6 rounded-r bg-warning/60 flex items-center pl-1"
+                        style={{ width: `${(d.exits / maxVal) * 100}%`, minWidth: d.exits > 0 ? "2rem" : 0 }}>
+                        {d.exits > 0 && <span className="text-[10px] text-foreground font-medium">{d.exits}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+            <div className="flex gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Atrasos/Entradas</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning" /> Saídas</span>
             </div>
-          )}
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Atrasos/Entradas</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning" /> Saídas</span>
           </div>
-        </div>
 
-        {/* Top exits */}
-        <div className="bg-card rounded-lg border p-5 space-y-4">
-          <h2 className="font-semibold text-foreground">Alunos com Mais Saídas</h2>
-          {topExits.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
-          ) : (
-            <div className="space-y-3">
-              {topExits.map((student, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{student.name}</p>
-                    <p className="text-xs text-muted-foreground">{student.series}</p>
-                  </div>
-                  <span className="text-sm font-bold text-foreground">{student.exits}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Class Attendance */}
-        <div className="bg-card rounded-lg border p-5 space-y-4 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Frequência por Turma</h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
-              Baseado em {uniqueSchoolDays} dias letivos
-            </span>
-          </div>
-          {classAttendance.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {classAttendance.map((c, i) => (
-                <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-border/40 bg-background/50">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-sm font-bold text-foreground">{c.className}</span>
-                    <span className={`text-xs font-black
-                      ${c.rate >= 80 ? "text-success" : c.rate >= 50 ? "text-warning" : "text-destructive"}`}
-                    >
-                      {c.rate.toFixed(1)}%
+          {/* Top exits */}
+          <div className="bg-card rounded-lg border p-5 space-y-4">
+            <h2 className="font-semibold text-foreground">Alunos com Mais Saídas</h2>
+            {topExits.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
+            ) : (
+              <div className="space-y-3">
+                {topExits.map((student, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                      {i + 1}
                     </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{student.name}</p>
+                      <p className="text-xs text-muted-foreground">{student.series}</p>
+                    </div>
+                    <span className="text-sm font-bold text-foreground">{student.exits}</span>
                   </div>
-                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-1000 ${c.rate >= 80 ? "bg-success" : c.rate >= 50 ? "bg-warning" : "bg-destructive"}`}
-                      style={{ width: `${c.rate}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between px-1 text-[10px] text-muted-foreground font-medium">
-                    <span>{c.totalStudents} Alunos Matriculados</span>
-                    <span>{c.totalEntries} Ocorrências (Atrasos)</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Class Attendance */}
+          <div className="bg-card rounded-lg border p-5 space-y-4 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-foreground">Frequência por Turma</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border/50">
+                Baseado em {uniqueSchoolDays} dias letivos
+              </span>
             </div>
-          )}
+            {classAttendance.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Sem dados no período</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {classAttendance.map((c, i) => (
+                  <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-border/40 bg-background/50">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-sm font-bold text-foreground">{c.className}</span>
+                      <span className={`text-xs font-black
+                        ${c.rate >= 80 ? "text-success" : c.rate >= 50 ? "text-warning" : "text-destructive"}`}
+                      >
+                        {c.rate.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-1000 ${c.rate >= 80 ? "bg-success" : c.rate >= 50 ? "bg-warning" : "bg-destructive"}`}
+                        style={{ width: `${c.rate}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between px-1 text-[10px] text-muted-foreground font-medium">
+                      <span>{c.totalStudents} Alunos Matriculados</span>
+                      <span>{c.totalEntries} Ocorrências (Atrasos)</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl border border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-lg font-black text-foreground uppercase italic tracking-tighter">Envio Consolidado (WhatsApp)</h2>
+              <p className="text-xs text-muted-foreground">Selecione o período e dispare o relatório em PDF para os responsáveis.</p>
+            </div>
+            <div className="flex gap-3">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="rounded-lg border bg-background px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <option key={i} value={i}>{format(new Date(2026, i), "MMMM", { locale: ptBR }).toUpperCase()}</option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="rounded-lg border bg-background px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value={2026}>2026</option>
+                <option value={2025}>2025</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {students.map((student) => (
+              <div key={student.id} className="bg-card rounded-xl border border-border p-4 flex items-center justify-between group hover:border-primary/50 transition-all">
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none">{student.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 uppercase">{student.series} {student.class}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => reportService.downloadReport(student.id, selectedMonth, selectedYear)}
+                    className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+                    title="Baixar PDF"
+                  >
+                    <FileDown className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => handleSendMonthlyReport(student.id, student.name)}
+                    className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors border border-success/20"
+                    title="Enviar via WhatsApp"
+                  >
+                    <Smartphone className="h-4 w-4 text-success" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

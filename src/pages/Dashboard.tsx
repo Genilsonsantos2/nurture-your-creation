@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ScanLine, UserPlus, BarChart3, Activity, ArrowRight, UserX, ArrowUpRight, ShieldCheck, TrendingUp, CalendarDays, Shield, FileCheck, Smartphone, Share2, Cpu, Zap, Bot, Radio, Bell, Clock, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import LaunchCeremony from "@/components/LaunchCeremony";
 import DailySummary from "@/components/DailySummary";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { useDashboardCleanup } from "@/hooks/useDashboardCleanup";
+import { useRiskPattern } from "@/hooks/useRiskPattern";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
 import { Volume2, VolumeX } from "lucide-react";
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
   const queryClient = useQueryClient();
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [isExamMode, setIsExamMode] = useState(false);
   const [announcedDelayed, setAnnouncedDelayed] = useState<Set<string>>(new Set());
   const alertAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -31,6 +33,8 @@ export default function Dashboard() {
   useAbsenceChecker();
   useDashboardRealtime();
   useDashboardCleanup();
+
+  const { data: riskStudents } = useRiskPattern();
 
   const isManagement = isAdmin || role === "coordinator";
   const userName = user?.user_metadata?.full_name?.split(" ")[0] || "Usuário";
@@ -179,7 +183,8 @@ export default function Dashboard() {
 
     if (relevantSchedule) {
       const [eh, em] = relevantSchedule.end_time.split(':').map(Number);
-      const limitMs = eh * 60 * 60 * 1000 + em * 60 * 1000 + (relevantSchedule.tolerance_minutes * 60 * 1000);
+      const tolerance = isExamMode ? 5 : (relevantSchedule.tolerance_minutes || 0);
+      const limitMs = eh * 60 * 60 * 1000 + em * 60 * 1000 + (tolerance * 60 * 1000);
       return currentMs > limitMs;
     }
     return false;
@@ -284,6 +289,32 @@ export default function Dashboard() {
                 {audioEnabled ? "RADAR DE VOZ LIGADO" : "LIGAR RADAR DE VOZ (ALERTAS)"}
               </button>
 
+              <button
+                onClick={() => {
+                  const nextMode = !isExamMode;
+                  setIsExamMode(nextMode);
+                  if (nextMode) {
+                    toast.warning("MODO PROVA ATIVADO: Tolerância reduzida para 5 minutos.");
+                    if (audioEnabled) {
+                      const msg = new SpeechSynthesisUtterance();
+                      msg.text = "Modo prova ativado. Tolerância reduzida.";
+                      msg.lang = 'pt-BR';
+                      window.speechSynthesis.speak(msg);
+                    }
+                  } else {
+                    toast.info("Modo prova desativado. Tolerância normal restaurada.");
+                  }
+                }}
+                className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl text-xs font-black transition-all border-2 ${isExamMode
+                  ? "bg-destructive text-destructive-foreground border-destructive shadow-lg shadow-destructive/40 scale-105"
+                  : "bg-background/50 text-muted-foreground border-border hover:border-destructive/50 hover:text-destructive transition-all"
+                  }`}
+              >
+                <div className={`h-2 w-2 rounded-full ${isExamMode ? 'bg-white animate-pulse' : 'bg-muted-foreground'}`} />
+                <FileText className="h-4 w-4" />
+                {isExamMode ? "MODO PROVA ATIVO" : "ATIVAR MODO PROVA"}
+              </button>
+
               <div className="flex items-center gap-2 bg-card/80 px-3 py-1.5 rounded-lg border border-border text-[10px] font-mono text-muted-foreground">
                 <Radio className="h-3 w-3 text-success animate-pulse" />
                 {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
@@ -296,6 +327,37 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Pedagogical Alerts (Risk Patterns) */}
+      {isManagement && riskStudents && riskStudents.length > 0 && (
+        <div className="rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 p-5 flex flex-col md:flex-row items-center gap-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <ShieldCheck className="h-16 w-16 text-amber-500" />
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/30">
+            <Activity className="h-6 w-6 animate-pulse" />
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-sm font-black text-amber-600 uppercase tracking-wider">Alerta Pedagógico: Risco de Hábito</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Identificamos <span className="font-bold text-foreground">{riskStudents.length} {riskStudents.length === 1 ? 'aluno' : 'alunos'}</span> com 3 ou mais atrasos nos últimos 7 dias. Recomendamos contato preventivo.
+            </p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
+              {riskStudents.slice(0, 3).map((s: any) => (
+                <span key={s.student.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/50 border border-amber-500/20 text-[10px] font-bold text-foreground">
+                  {s.student.name.split(' ')[0]} ({s.count}x)
+                </span>
+              ))}
+              {riskStudents.length > 3 && <span className="text-[10px] text-muted-foreground self-center">...e mais {riskStudents.length - 3}</span>}
+            </div>
+          </div>
+          <div className="shrink-0 w-full md:w-auto">
+            <Link to="/relatorios" className="premium-button w-full md:w-auto bg-amber-500 text-xs py-2.5 px-6">
+              Ver Detalhes do Risco
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Pending Actions */}
       {hasPendingActions && (
@@ -507,9 +569,21 @@ export default function Dashboard() {
                 if (ranking.length === 0) return <p className="text-[10px] text-muted-foreground text-center py-2 italic">Dados insuficientes para ranking hoje.</p>;
 
                 return ranking.map(([name, count], i) => (
-                  <div key={name} className="space-y-1">
+                  <div key={name} className="space-y-1 relative">
+                    {i === 0 && (
+                      <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 animate-bounce">
+                        <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
+                      </div>
+                    )}
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-foreground">{name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-4 h-4 rounded flex items-center justify-center text-[8px] ${i === 0 ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
+                          }`}>
+                          {i + 1}
+                        </span>
+                        <span className="text-foreground">{name}</span>
+                        {i === 0 && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 font-black">TURMA ESTRELA ⭐</span>}
+                      </div>
                       <span className="text-primary">{count} {count === 1 ? 'atraso' : 'atrasos'}</span>
                     </div>
                     <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">

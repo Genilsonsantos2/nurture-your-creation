@@ -89,6 +89,46 @@ class WhatsAppService {
     }
 
     /**
+     * Sends a File/Media via WhatsApp.
+     */
+    async sendFile(phone: string, base64: string, fileName: string, caption?: string): Promise<{ success: boolean }> {
+        const settings = await this.getSettings();
+        const cleanPhone = phone.replace(/\D/g, "");
+
+        if (!settings?.whatsapp_enabled || settings.whatsapp_bot_type !== 'evolution') {
+            return { success: false };
+        }
+
+        try {
+            const url = `${settings.whatsapp_api_url}/message/sendMedia/${settings.whatsapp_instance_name}`;
+            const cleanBase64 = base64.includes(",") ? base64.split(",")[1] : base64;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': settings.whatsapp_api_key!
+                },
+                body: JSON.stringify({
+                    number: cleanPhone,
+                    mediaMessage: {
+                        mediatype: "document",
+                        caption: caption || fileName,
+                        fileName: fileName,
+                        media: cleanBase64
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return { success: true };
+        } catch (error) {
+            console.error("Evolution API Media Error:", error);
+            return { success: false };
+        }
+    }
+
+    /**
      * Checks if the Evolution API instance is online
      */
     async checkInstanceStatus(): Promise<{ success: boolean; status?: string }> {
