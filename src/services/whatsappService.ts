@@ -39,7 +39,12 @@ class WhatsAppService {
      * Sends a WhatsApp message. 
      * Uses Evolution API if configured, otherwise returns a wa.me link for manual sending.
      */
-    async sendMessage(phone: string, text: string): Promise<{ success: boolean; manualLink?: string }> {
+    async sendMessage(
+        phone: string, 
+        text: string, 
+        studentId?: string, 
+        recipientName?: string
+    ): Promise<{ success: boolean; manualLink?: string }> {
         const settings = await this.getSettings();
         const cleanPhone = phone.replace(/\D/g, "");
 
@@ -49,6 +54,9 @@ class WhatsAppService {
 
         // Manual fallback always available
         const manualLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+
+        let status: 'sent' | 'error' = 'sent';
+        let errorMessage: string | null = null;
 
         if (settings.whatsapp_bot_type === 'evolution' && settings.whatsapp_api_url && settings.whatsapp_api_key && settings.whatsapp_instance_name) {
             try {
@@ -77,15 +85,33 @@ class WhatsAppService {
                     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                 }
 
-                return { success: true };
-            } catch (error) {
+                status = 'sent';
+            } catch (error: any) {
                 console.error("Evolution API Error:", error);
+                status = 'error';
+                errorMessage = error.message;
                 toast.error("Erro no envio automático. Use o link manual.");
-                return { success: false, manualLink };
             }
+        } else {
+            // If not evolution, consider it "sent" via manual link (though not tracked in real-time)
+            status = 'sent';
         }
 
-        return { success: false, manualLink };
+        // Log the communication
+        try {
+            await supabase.from("whatsapp_logs" as any).insert({
+                student_id: studentId,
+                recipient_name: recipientName,
+                recipient_phone: cleanPhone,
+                message: text,
+                status: status,
+                error_message: errorMessage,
+            });
+        } catch (logError) {
+            console.error("Error logging WhatsApp message:", logError);
+        }
+
+        return { success: status === 'sent', manualLink };
     }
 
     /**

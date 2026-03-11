@@ -9,8 +9,12 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  role: "admin" | "user" | "coordinator" | "gatekeeper" | null;
+  role: "admin" | "user" | "coordinator" | "gatekeeper" | "secretary" | "director" | null;
   isAdmin: boolean;
+  isCoordinator: boolean;
+  isGatekeeper: boolean;
+  isSecretary: boolean;
+  isDirector: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<"admin" | "user" | "coordinator" | "gatekeeper" | null>(null);
+  const [role, setRole] = useState<"admin" | "user" | "coordinator" | "gatekeeper" | "secretary" | "director" | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
@@ -95,6 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const isAdmin = role === "admin" || user?.email === "genilsonsantos4568@gmail.com";
+  const isDirector = role === "director" || isAdmin;
+  const isCoordinator = role === "coordinator" || isDirector;
+  const isSecretary = role === "secretary" || isCoordinator;
+  const isGatekeeper = role === "gatekeeper" || role === "user" || isSecretary;
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -104,7 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       role,
-      isAdmin: role === "admin" || user?.email === "genilsonsantos4568@gmail.com"
+      isAdmin,
+      isDirector,
+      isCoordinator,
+      isSecretary,
+      isGatekeeper
     }}>
       {children}
     </AuthContext.Provider>

@@ -8,14 +8,33 @@ export default function SchedulesPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", type: "entry" as "entry" | "exit" | "break", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
+  const [form, setForm] = useState({ 
+    name: "", 
+    type: "entry" as "entry" | "exit" | "break", 
+    start_time: "", 
+    end_time: "", 
+    tolerance_minutes: "10", 
+    notify_whatsapp: true,
+    target_classes: [] as string[]
+  });
+
+  const { data: availableClasses = [] } = useQuery({
+    queryKey: ["available-classes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("students").select("series, class").eq("active", true);
+      if (error) throw error;
+      const uniqueClasses = new Set<string>();
+      data.forEach(s => uniqueClasses.add(`${s.series}-${s.class}`));
+      return Array.from(uniqueClasses).sort();
+    },
+  });
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["schedules"],
     queryFn: async () => {
       const { data, error } = await supabase.from("schedules").select("*").order("start_time");
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
@@ -28,6 +47,7 @@ export default function SchedulesPage() {
         end_time: form.end_time,
         tolerance_minutes: parseInt(form.tolerance_minutes) || 5,
         notify_whatsapp: form.notify_whatsapp,
+        target_classes: form.target_classes.length > 0 ? form.target_classes : null,
       });
       if (error) throw error;
     },
@@ -49,6 +69,7 @@ export default function SchedulesPage() {
         end_time: form.end_time,
         tolerance_minutes: parseInt(form.tolerance_minutes) || 5,
         notify_whatsapp: form.notify_whatsapp,
+        target_classes: form.target_classes.length > 0 ? form.target_classes : null,
       }).eq("id", editingId);
       if (error) throw error;
     },
@@ -63,7 +84,7 @@ export default function SchedulesPage() {
   const resetForm = () => {
     setShowForm(false);
     setEditingId(null);
-    setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true });
+    setForm({ name: "", type: "entry", start_time: "", end_time: "", tolerance_minutes: "10", notify_whatsapp: true, target_classes: [] });
   };
 
   const deleteMutation = useMutation({
@@ -131,11 +152,32 @@ export default function SchedulesPage() {
               <input type="time" value={form.end_time} onChange={(e) => setForm(p => ({ ...p, end_time: e.target.value }))}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
+            <div className="sm:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-foreground block">Turmas Alvo (Vazio = Todas)</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-muted/30 rounded-lg border border-border/50 max-h-[150px] overflow-y-auto custom-scrollbar">
+                {availableClasses.map(cls => (
+                  <label key={cls} className="flex items-center gap-2 text-xs font-semibold cursor-pointer hover:text-primary transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={form.target_classes.includes(cls)}
+                      onChange={(e) => {
+                        const newTargets = e.target.checked 
+                          ? [...form.target_classes, cls]
+                          : form.target_classes.filter(t => t !== cls);
+                        setForm(p => ({ ...p, target_classes: newTargets }));
+                      }}
+                      className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-ring"
+                    />
+                    {cls}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="sm:col-span-2 flex items-center gap-3">
               <input type="checkbox" id="notify" checked={form.notify_whatsapp}
                 onChange={(e) => setForm(p => ({ ...p, notify_whatsapp: e.target.checked }))}
                 className="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
-              <label htmlFor="notify" className="text-sm text-foreground">Notificar via WhatsApp</label>
+              <label htmlFor="notify" className="text-sm text-foreground font-semibold">Notificar via WhatsApp</label>
             </div>
           </div>
           <div className="flex justify-end">
@@ -170,6 +212,7 @@ export default function SchedulesPage() {
                         end_time: schedule.end_time,
                         tolerance_minutes: schedule.tolerance_minutes.toString(),
                         notify_whatsapp: schedule.notify_whatsapp || false,
+                        target_classes: schedule.target_classes || [],
                       });
                       setShowForm(true);
                     }}
@@ -189,7 +232,12 @@ export default function SchedulesPage() {
                   </span>
                   {schedule.notify_whatsapp && (
                     <span className="text-xs font-medium px-2 py-1 rounded-full bg-info/15 text-info">
-                      Notifica WhatsApp
+                      Whats
+                    </span>
+                  )}
+                  {schedule.target_classes && schedule.target_classes.length > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-muted text-muted-foreground border border-border/50">
+                      {schedule.target_classes.length} {schedule.target_classes.length === 1 ? 'Turma' : 'Turmas'}
                     </span>
                   )}
                 </div>

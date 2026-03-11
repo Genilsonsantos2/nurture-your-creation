@@ -17,7 +17,8 @@ import { useDashboardCleanup } from "@/hooks/useDashboardCleanup";
 import { useRiskPattern } from "@/hooks/useRiskPattern";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
 import GlobalEngagement from "@/components/GlobalEngagement";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, Medal, Star, Trophy } from "lucide-react";
+import CustomTour from "@/components/CustomTour";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
@@ -270,10 +271,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-8 animate-fade-up">
+      <CustomTour />
       {isAdmin && <LaunchCeremony />}
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-card via-card to-primary/5 border border-border p-6 md:p-8">
+      <div id="hero-section" className="relative overflow-hidden rounded-xl bg-gradient-to-br from-card via-card to-primary/5 border border-border p-6 md:p-8">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
 
@@ -282,19 +284,19 @@ export default function Dashboard() {
           <Cpu className="h-20 w-20 text-primary" />
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />
-              <span className="text-xs font-mono font-semibold text-primary tracking-wider">100% TECNOLOGIA</span>
+              <span className="text-xs font-mono font-semibold text-primary tracking-wider uppercase">100% TECNOLOGIA • NIVEL 1</span>
             </div>
-            <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight">
+            <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight uppercase">
               Olá, <span className="gradient-text">{userName}</span> <span className="inline-block animate-bounce">👋</span>
             </h1>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-              Sistema operando em modo de <span className="text-primary font-bold">monitoramento por exceção</span>. Radar de atrasos ativo.
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-lg font-medium">
+              O sistema detectou <span className="text-primary font-bold">excelente engajamento</span> hoje. Continue monitorando as exceções!
             </p>
-            <div className="flex flex-wrap items-center gap-3 pt-4">
+            <div id="radar-section" className="flex flex-wrap items-center gap-3 pt-4">
               <button
                 onClick={() => {
                   setAudioEnabled(!audioEnabled);
@@ -350,10 +352,30 @@ export default function Dashboard() {
                 <Radio className="h-3 w-3 text-success animate-pulse" />
                 {new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}
               </div>
-              <Link to="/alertas" className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 text-[10px] font-mono text-primary transition-colors">
-                <AlertTriangle className="h-3 w-3" />
-                VER ALERTAS
-              </Link>
+            </div>
+          </div>
+
+          {/* Gamification Card */}
+          <div className="shrink-0 w-full md:w-64 glass-panel p-5 border-primary/30 bg-primary/5 flex flex-col items-center justify-center space-y-4">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary animate-pulse">
+                <Trophy className="h-8 w-8 text-primary" />
+              </div>
+              <div className="absolute -top-2 -right-2 bg-amber-500 text-white p-1 rounded-full shadow-lg">
+                <Star className="h-4 w-4 fill-white" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary">Conquista Diária</h3>
+              <p className="text-[10px] font-bold text-muted-foreground">Monitor Ativo • 85% Concluído</p>
+            </div>
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden border border-border/50">
+              <div className="h-full bg-primary rounded-full" style={{ width: '85%' }} />
+            </div>
+            <div className="flex gap-2">
+              <Medal className="h-4 w-4 text-amber-500" />
+              <Medal className="h-4 w-4 text-slate-400" />
+              <Medal className="h-4 w-4 text-orange-600" />
             </div>
           </div>
         </div>
@@ -459,7 +481,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid & Global Engagement */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div id="stats-section" className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         <div className="lg:col-span-1">
           <GlobalEngagement />
         </div>
@@ -512,7 +534,7 @@ export default function Dashboard() {
       )}
 
       {/* Quick Actions + Monitoring Header */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+      <div id="actions-section" className="flex flex-col lg:flex-row gap-4 items-stretch">
         {/* Quick Actions */}
         <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (

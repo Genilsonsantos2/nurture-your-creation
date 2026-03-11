@@ -124,12 +124,12 @@ export default function GatePage() {
     refetchInterval: 30000 // Poll every 30s to stay up-to-date
   });
 
-  // Fetch Break Schedules
-  const { data: breakSchedules = [] } = useQuery({
-    queryKey: ["break-schedules-gate"],
+  // Fetch All Schedules
+  const { data: allSchedules = [] } = useQuery({
+    queryKey: ["all-schedules-gate"],
     queryFn: async () => {
-      const { data } = await supabase.from("schedules").select("*").eq("type", "break");
-      return data || [];
+      const { data } = await supabase.from("schedules").select("*");
+      return (data || []) as any[];
     },
   });
 
@@ -305,6 +305,15 @@ export default function GatePage() {
       let observation = "";
 
       // Check for breaks
+      const studentClassKey = `${detectedStudent.series}-${detectedStudent.class}`;
+      const relevantSchedules = allSchedules.filter(s => 
+        !s.target_classes || s.target_classes.length === 0 || s.target_classes.includes(studentClassKey)
+      );
+
+      const breakSchedules = relevantSchedules.filter(s => s.type === "break");
+      const entrySchedules = relevantSchedules.filter(s => s.type === "entry");
+      const exitSchedules = relevantSchedules.filter(s => s.type === "exit");
+
       if (type !== "exit_definitive" && breakSchedules.length > 0) {
         const now = new Date();
         const currentMs = now.getHours() * 60 * 60 * 1000 + now.getMinutes() * 60 * 1000;
@@ -324,9 +333,28 @@ export default function GatePage() {
       }
 
       if (!observation) {
-        if (actualType === "entry") observation = "Entrada (Atraso)";
-        if (actualType === "exit") observation = "Saída Antecipada";
-        if (type === "exit_definitive") observation = "Saída Definitiva";
+        const now = new Date();
+        const currentMs = now.getHours() * 60 * 60 * 1000 + now.getMinutes() * 60 * 1000;
+        
+        if (actualType === "entry") {
+          const inWindow = entrySchedules.some(schedule => {
+            const [startH, startM] = schedule.start_time.split(':').map(Number);
+            const [endH, endM] = schedule.end_time.split(':').map(Number);
+            const startMs = startH * 60 * 60 * 1000 + startM * 60 * 1000 - (schedule.tolerance_minutes * 60 * 1000);
+            const endMs = endH * 60 * 60 * 1000 + endM * 60 * 1000 + (schedule.tolerance_minutes * 60 * 1000);
+            return currentMs >= startMs && currentMs <= endMs;
+          });
+          observation = inWindow ? "Entrada Normal" : "Entrada (Atraso)";
+        } else if (actualType === "exit") {
+          const inWindow = exitSchedules.some(schedule => {
+            const [startH, startM] = schedule.start_time.split(':').map(Number);
+            const [endH, endM] = schedule.end_time.split(':').map(Number);
+            const startMs = startH * 60 * 60 * 1000 + startM * 60 * 1000 - (schedule.tolerance_minutes * 60 * 1000);
+            const endMs = endH * 60 * 60 * 1000 + endM * 60 * 1000 + (schedule.tolerance_minutes * 60 * 1000);
+            return currentMs >= startMs && currentMs <= endMs;
+          });
+          observation = type === "exit_definitive" ? "Saída Definitiva" : (inWindow ? "Saída Normal" : "Saída Antecipada");
+        }
       }
 
       // Handle Exit authorizations if requested

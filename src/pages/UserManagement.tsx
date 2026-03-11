@@ -107,12 +107,18 @@ export default function UserManagement() {
                                     <User className="h-8 w-8" />
                                 </div>
                                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${profile.role_label === "admin" ? "bg-primary text-white border-primary/20" :
+                                    profile.role_label === "director" ? "bg-indigo-600 text-white border-indigo-500/20" :
+                                    profile.role_label === "secretary" ? "bg-amber-500 text-white border-amber-400/20" :
                                     profile.role_label === "coordinator" ? "bg-info text-white border-info/20" :
                                         profile.role_label === "gatekeeper" ? "bg-success text-white border-success/20" :
                                             "bg-muted text-muted-foreground border-border/50"
                                     }`}>
                                     <Shield className="h-3 w-3" />
-                                    {profile.role_label || "Usuário"}
+                                    {profile.role_label === "admin" ? "Administrador" :
+                                     profile.role_label === "director" ? "Direção" :
+                                     profile.role_label === "secretary" ? "Secretaria" :
+                                     profile.role_label === "coordinator" ? "Coordenação" :
+                                     profile.role_label === "gatekeeper" ? "Porteiro" : "Usuário"}
                                 </div>
                             </div>
 
@@ -231,7 +237,9 @@ export default function UserManagement() {
                                     >
                                         <option value="user">Usuário Comum</option>
                                         <option value="gatekeeper">Porteiro (Controle de Acesso)</option>
-                                        <option value="coordinator">Coordenação (Gestão de Alunos)</option>
+                                        <option value="secretary">Secretaria (Gestão de Alunos/Ocorrências)</option>
+                                        <option value="coordinator">Coordenação (Nível Tático)</option>
+                                        <option value="director">Direção (Estratégico)</option>
                                         <option value="admin">Administrador (Total)</option>
                                     </select>
                                     <Shield className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
