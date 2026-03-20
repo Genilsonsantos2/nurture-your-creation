@@ -37,6 +37,7 @@ import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
 import NotFound from "./pages/NotFound";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import MealManagementPage from "./pages/MealManagementPage";
+import VideoMonitorPage from "./pages/VideoMonitorPage";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ function AppContent() {
       <Route path="/logs-whatsapp" element={<ProtectedRoute><RoleRoute roles={["coordinator", "secretary", "director"]}><WhatsAppLogsPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/saude-sistema" element={<ProtectedRoute><RoleRoute roles={["director"]}><SystemHealthPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/merenda" element={<ProtectedRoute><RoleRoute roles={["gatekeeper", "coordinator", "secretary", "director"]}><MealManagementPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/video-ia" element={<ProtectedRoute><RoleRoute roles={["admin", "director", "coordinator", "gatekeeper"]}><VideoMonitorPage /></RoleRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
