@@ -36,6 +36,7 @@ import AnnouncementGeneratorPage from "./pages/AnnouncementGeneratorPage";
 import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
 import NotFound from "./pages/NotFound";
 import AuditLogsPage from "./pages/AuditLogsPage";
+import MealManagementPage from "./pages/MealManagementPage";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ function AppContent() {
       <Route path="/auditoria" element={<ProtectedRoute><RoleRoute roles={["director"]}><AuditLogsPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/logs-whatsapp" element={<ProtectedRoute><RoleRoute roles={["coordinator", "secretary", "director"]}><WhatsAppLogsPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/saude-sistema" element={<ProtectedRoute><RoleRoute roles={["director"]}><SystemHealthPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/merenda" element={<ProtectedRoute><RoleRoute roles={["gatekeeper", "coordinator", "secretary", "director"]}><MealManagementPage /></RoleRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

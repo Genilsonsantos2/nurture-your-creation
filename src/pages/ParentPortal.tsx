@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, LogIn, LogOut, User, BookOpen, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, LogIn, LogOut, User, BookOpen, AlertTriangle, ShieldCheck, Soup, Award, Star } from "lucide-react";
 import { isSchoolDay } from "@/lib/calendar";
 
 export default function ParentPortal() {
@@ -22,6 +22,19 @@ export default function ParentPortal() {
             return data;
         },
         enabled: !!token,
+    });
+    
+    const { data: achievements } = useQuery({
+        queryKey: ["parent-achievements", token],
+        queryFn: async () => {
+            const { data, error } = await (supabase
+                .from("student_achievements")
+                .select("*")
+                .eq("student_id", student?.id) as any);
+            if (error) return [];
+            return data;
+        },
+        enabled: !!student?.id,
     });
 
     if (loadingStudent) {
@@ -161,6 +174,52 @@ export default function ParentPortal() {
                             }`}>
                             {isSchoolDay(new Date()) ? "Hoje é Dia Letivo" : "Hoje Não é Dia Letivo"}
                         </div>
+                    </div>
+
+                    {/* Achievements Section */}
+                    <div className="space-y-4 pt-4">
+                      <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                          <Award className="h-5 w-5 text-amber-500" /> Conquistas
+                      </h2>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(achievements && achievements.length > 0) ? achievements.map((ach: any) => (
+                           <div key={ach.id} className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-3 text-center">
+                             <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-2">
+                               <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                             </div>
+                             <p className="text-[10px] font-black text-amber-500 uppercase leading-tight">{ach.title}</p>
+                           </div>
+                        )) : (
+                          <div className="col-span-2 bg-card border border-dashed rounded-2xl p-6 text-center opacity-50">
+                            <p className="text-[10px] font-bold text-muted-foreground italic">Nenhuma conquista ainda</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Meal Summary */}
+                    <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/20">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Soup className="h-5 w-5 text-primary" />
+                        <h3 className="text-sm font-bold text-foreground">Registro de Merenda</h3>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-muted-foreground uppercase">Hoje</span>
+                          <span className="text-success uppercase">Confirmado • Almoço</span>
+                        </div>
+                        <div className="w-full h-1 bg-muted rounded-full">
+                          <div className="h-full bg-success w-full rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Digital Sign-off Placeholder */}
+                    <div className="pt-4">
+                      <button className="w-full bg-foreground text-background py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl">
+                        <ShieldCheck className="h-4 w-4" /> Validar Justificativas
+                      </button>
+                      <p className="text-[10px] text-center text-muted-foreground mt-2 font-medium">Assinatura digital requerida para validação mensal.</p>
                     </div>
                 </div>
             </div>

@@ -19,7 +19,9 @@ import {
   Shield,
   Calendar,
   AlertCircle,
-  FileText
+  FileText,
+  Mic,
+  Radio
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -204,6 +206,67 @@ export default function GatePage() {
     },
   });
 
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'pt-BR';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log("Comando de voz:", transcript);
+        
+        if (transcript.includes("entrada")) {
+          confirmMovement("entry");
+        } else if (transcript.includes("saída")) {
+          confirmMovement("exit");
+        } else if (transcript.includes("cancelar")) {
+          setDetectedStudent(null);
+          detectedStudentRef.current = null;
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Erro no reconhecimento de voz:", event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        if (voiceEnabled) {
+          recognitionRef.current.start();
+        } else {
+          setIsListening(false);
+        }
+      };
+    }
+  }, [voiceEnabled]);
+
+  const toggleVoice = () => {
+    if (!recognitionRef.current) {
+      toast.error("Reconhecimento de voz não suportado neste navegador.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setVoiceEnabled(false);
+      setIsListening(false);
+      toast.info("Comandos de voz desativados.");
+    } else {
+      recognitionRef.current.start();
+      setVoiceEnabled(true);
+      setIsListening(true);
+      toast.success("Comandos de voz ativados! Tente 'Entrada', 'Saída' ou 'Cancelar'.");
+    }
+  };
+
   const registerOccurrence = useMutation({
     mutationFn: async ({ studentId, type, description }: { studentId: string; type: "other" | "behavior" | "unauthorized_exit" | "guardian_pickup" | "student_sick" | "late"; description: string }) => {
       const { data, error } = await supabase
@@ -248,9 +311,9 @@ export default function GatePage() {
     setIsProcessing(true);
 
     try {
-      let query = supabase
+      let query = (supabase
         .from("students")
-        .select("id, name, series, class, modality, photo_url, qr_code, enrollment");
+        .select("id, name, series, class, modality, photo_url, qr_code, enrollment, medical_critical_info, allergies, blood_type") as any);
 
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(queryText);
 
@@ -525,6 +588,13 @@ export default function GatePage() {
             >
               {cameraPaused ? <PlayIcon className="h-6 w-6" /> : <Pause className="h-6 w-6" />}
             </button>
+            <button
+              onClick={toggleVoice}
+              className={`p-4 rounded-xl transition-all ${isListening ? "bg-amber-600/20 text-amber-400 border border-amber-500/40 animate-pulse" : "bg-white/5 text-white/40 border border-white/10"}`}
+              title={isListening ? "Desativar Comandos de Voz" : "Ativar Comandos de Voz (Entrada/Saída)"}
+            >
+              <Mic className={`h-6 w-6 ${isListening ? "animate-bounce" : ""}`} />
+            </button>
             <button onClick={toggleKiosk} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
               {kioskMode ? <X className="h-6 w-6" /> : <Maximize className="h-6 w-6" />}
             </button>
@@ -556,6 +626,15 @@ export default function GatePage() {
                     <h2 className="text-4xl font-black tracking-tight uppercase leading-tight">{detectedStudent.name}</h2>
                     <p className="text-xl font-bold opacity-60">{detectedStudent.series} • Turma {detectedStudent.class}</p>
 
+                    {(detectedStudent.medical_critical_info || detectedStudent.allergies) && (
+                      <div className="mt-4 p-4 bg-red-600/20 border-2 border-red-500/50 rounded-2xl animate-glow-pulse flex items-center gap-3">
+                        <AlertTriangle className="h-6 w-6 text-red-400 shrink-0" />
+                        <div className="text-left">
+                          <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">ALERTA MÉDICO CRÍTICO</p>
+                          <p className="text-sm font-bold text-white uppercase">{detectedStudent.medical_critical_info || detectedStudent.allergies}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-6 w-full pt-4">

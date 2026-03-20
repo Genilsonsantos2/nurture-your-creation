@@ -17,8 +17,11 @@ import { useDashboardCleanup } from "@/hooks/useDashboardCleanup";
 import { useRiskPattern } from "@/hooks/useRiskPattern";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
 import GlobalEngagement from "@/components/GlobalEngagement";
-import { Volume2, VolumeX, Medal, Star, Trophy } from "lucide-react";
+import { Volume2, VolumeX, Medal, Star, Trophy, Soup } from "lucide-react";
 import CustomTour from "@/components/CustomTour";
+import EngagementRanking from "@/components/EngagementRanking";
+import LiveCameraFeed from "@/components/LiveCameraFeed";
+import FacialRecognitionFeed from "@/components/FacialRecognitionFeed";
 
 export default function Dashboard() {
   const { user, isAdmin, role } = useAuth();
@@ -480,10 +483,31 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Access Control Center (DVR + Face ID) - NEW */}
+      <div id="security-center" className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+        <div className="xl:col-span-3 h-[450px]">
+          <FacialRecognitionFeed />
+        </div>
+        <div className="xl:col-span-2 h-[450px]">
+          <LiveCameraFeed />
+        </div>
+      </div>
+
       {/* Stats Grid & Global Engagement */}
       <div id="stats-section" className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-3">
           <GlobalEngagement />
+          <EngagementRanking />
+          
+          <div className="glass-panel p-4 border-success/20 bg-success/5 flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+              <Soup className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Merenda Hoje</p>
+              <p className="text-xl font-black text-foreground">342 <span className="text-xs font-bold opacity-40">REFEIÇÕES</span></p>
+            </div>
+          </div>
         </div>
         <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-3">
           {stats.map((stat, i) => (

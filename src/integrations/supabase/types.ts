@@ -141,6 +141,41 @@ export type Database = {
         }
         Relationships: []
       }
+      face_recognition_logs: {
+        Row: {
+          camera_name: string | null
+          id: string
+          image_url: string | null
+          similarity_score: number | null
+          student_id: string | null
+          timestamp: string
+        }
+        Insert: {
+          camera_name?: string | null
+          id?: string
+          image_url?: string | null
+          similarity_score?: number | null
+          student_id?: string | null
+          timestamp?: string
+        }
+        Update: {
+          camera_name?: string | null
+          id?: string
+          image_url?: string | null
+          similarity_score?: number | null
+          student_id?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "face_recognition_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exit_authorizations: {
         Row: {
           authorized_at: string
@@ -264,6 +299,8 @@ export type Database = {
           registered_by: string | null
           student_id: string
           type: Database["public"]["Enums"]["movement_type"]
+          source_type: string | null
+          camera_id: string | null
         }
         Insert: {
           id?: string
@@ -272,6 +309,8 @@ export type Database = {
           registered_by?: string | null
           student_id: string
           type: Database["public"]["Enums"]["movement_type"]
+          source_type?: string | null
+          camera_id?: string | null
         }
         Update: {
           id?: string
@@ -280,6 +319,8 @@ export type Database = {
           registered_by?: string | null
           student_id?: string
           type?: Database["public"]["Enums"]["movement_type"]
+          source_type?: string | null
+          camera_id?: string | null
         }
         Relationships: [
           {
@@ -490,6 +531,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_face_encodings: {
+        Row: {
+          created_at: string
+          encoding: Json
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          encoding: Json
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          encoding?: Json
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_face_encodings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

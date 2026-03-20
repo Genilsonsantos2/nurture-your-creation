@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Activity, Bell, ScanLine, ArrowRight } from "lucide-react";
+import { Activity, Bell, ScanLine, ArrowRight, UserCheck, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -38,6 +38,7 @@ export default function LiveActivityFeed() {
                 studentName: m.students?.name || 'Desconhecido',
                 details: `${m.students?.series || ''} • ${m.students?.class || ''}`,
                 timestamp: m.registered_at,
+                source: m.source_type || 'badge',
                 isNew: false
             }));
             setActivities(formattedMovements);
@@ -66,6 +67,7 @@ export default function LiveActivityFeed() {
                         studentName: studentData?.name || 'Desconhecido',
                         details: `${studentData?.series || ''} • ${studentData?.class || ''}`,
                         timestamp: payload.new.registered_at,
+                        source: payload.new.source_type || 'badge',
                         isNew: true
                     };
 
@@ -160,7 +162,9 @@ export default function LiveActivityFeed() {
                                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-mono font-bold shrink-0 border
                     ${act.type === 'alert' ? 'bg-destructive/20 text-destructive border-destructive/30' : 'bg-secondary text-muted-foreground border-border'}
                   `}>
-                                        {act.type === 'alert' ? <Bell className="h-4 w-4" /> : initials(act.studentName)}
+                                        {act.type === 'alert' ? <Bell className="h-4 w-4" /> : 
+                                         act.source === 'face' ? <UserCheck className="h-4 w-4 text-accent" /> :
+                                         initials(act.studentName)}
                                     </div>
 
                                     <div className="flex-1 min-w-0">

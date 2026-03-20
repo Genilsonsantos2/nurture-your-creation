@@ -6,7 +6,8 @@ import {
   Bell, Clock, FileWarning, BarChart3, UserCog, School, PowerOff,
   ShieldAlert, Settings, Menu, X, LogOut, CalendarDays, TrendingUp,
   FileCheck, Power, Brain, Bot, Shield, FileText, Flame,
-  ChevronLeft, ChevronRight, Cpu, Zap, History, WifiOff
+  ChevronLeft, ChevronRight, Cpu, Zap, History, WifiOff,
+  AlertTriangle, ShieldCheck, Award, Soup
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/", roles: ["admin", "director", "coordinator", "secretary", "gatekeeper"] },
       { label: "Analytics", icon: TrendingUp, path: "/analise", roles: ["admin", "director", "coordinator"] },
+      { label: "Merenda", icon: Soup, path: "/merenda", roles: ["gatekeeper", "coordinator", "secretary", "director"] },
       { label: "Calendário", icon: CalendarDays, path: "/calendario", roles: ["admin", "director", "coordinator", "secretary", "gatekeeper"] },
     ],
   },
