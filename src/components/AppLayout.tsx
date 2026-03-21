@@ -50,7 +50,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Alertas", icon: Bell, path: "/alertas", roles: ["admin", "director", "coordinator", "secretary", "gatekeeper"] },
       { label: "Ocorrências", icon: FileWarning, path: "/ocorrencias", roles: ["admin", "director", "coordinator", "secretary"] },
-      { label: "Vídeo & IA", icon: Video, path: "/video-ia", roles: ["admin", "director", "coordinator", "gatekeeper"] },
+      { label: "Vídeo & IA", icon: Video, path: "/video-ia", roles: ["admin", "director", "coordinator", "gatekeeper", "user"] },
       { label: "Justificativas", icon: FileCheck, path: "/justificativas", roles: ["admin", "director", "coordinator", "secretary"] },
       { label: "Logs WhatsApp", icon: History, path: "/logs-whatsapp", roles: ["admin", "director", "coordinator", "secretary"] },
     ],
