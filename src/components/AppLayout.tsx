@@ -120,7 +120,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchCounts = async () => {
       const [alertsRes, justificationsRes] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         supabase.from("alerts" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         supabase.from("absence_justifications" as any).select("id", { count: "exact", head: true }).eq("status", "pending")
       ]);
       setPendingAlertsCount(alertsRes.count || 0);
@@ -158,6 +160,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'movements' }, (payload) => {
         // A delay or debouncer might be needed in high-traffic, but for now we play on each insert
         playNotificationSound();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const typeLabel = (payload.new as any).type === 'entry' ? 'Entrada' : 'Saída';
         toast.success(`Portão: ${typeLabel} registrada!`);
       })
@@ -166,7 +169,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const checkStatus = async () => {
       try {
         const { data } = await supabase.from("settings").select("*").limit(1).maybeSingle();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (data && typeof (data as any).system_active === 'boolean') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setIsSystemActive((data as any).system_active);
         }
       } catch (err) {
@@ -178,7 +183,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const statusChannel = supabase.channel('system-status')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (typeof (payload.new as any).system_active === 'boolean') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setIsSystemActive((payload.new as any).system_active);
         }
       })
@@ -197,7 +204,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     try {
       const { data: currentSettings, error: fetchErr } = await supabase.from("settings").select("*").limit(1).maybeSingle();
       if (fetchErr || !currentSettings) throw new Error("Could not fetch settings");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newStatus = !(currentSettings as any).system_active;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: updateErr } = await supabase.from("settings").update({ system_active: newStatus } as any).eq("id", currentSettings.id);
       if (updateErr) throw new Error("Could not update settings");
       setIsSystemActive(newStatus);

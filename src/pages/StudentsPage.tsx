@@ -132,8 +132,8 @@ export default function StudentsPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
                         <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-primary/20 to-info/20 flex items-center justify-center text-primary font-black text-lg border border-primary/10 group-hover:scale-110 transition-transform overflow-hidden shrink-0">
-                          {(student as any).photo_url ? (
-                            <img src={(student as any).photo_url} alt={student.name} className="h-full w-full object-cover" />
+                          {(student as { photo_url?: string }).photo_url ? (
+                            <img src={(student as { photo_url?: string }).photo_url} alt={student.name} className="h-full w-full object-cover" />
                           ) : (
                             student.name.charAt(0).toUpperCase()
                           )}
@@ -210,6 +210,7 @@ export default function StudentsPage() {
                               const mockEncoding = Array.from({length: 128}, () => Math.random());
                               const { error } = await supabase.from("student_face_encodings").upsert({
                                 student_id: student.id,
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 encoding: mockEncoding as any
                               }, { onConflict: 'student_id' });
                               

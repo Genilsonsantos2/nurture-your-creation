@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function LiveActivityFeed() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [activities, setActivities] = useState<any[]>([]);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 

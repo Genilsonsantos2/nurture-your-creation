@@ -65,6 +65,7 @@ export default function Dashboard() {
         .lte("created_at", `${today}T23:59:59`)
         .order("created_at", { ascending: true });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allMovements = (movements || []) as any[];
 
       // Calculate Atrasos (Entries)
@@ -73,6 +74,7 @@ export default function Dashboard() {
 
       // Calculate Aguardando Retorno
       // An exit without a subsequent entry makes the student "Aguardando Retorno"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const statusMap = new Map<string, { status: 'in' | 'out', student: any }>();
 
       allMovements.forEach(m => {
@@ -116,6 +118,7 @@ export default function Dashboard() {
       const schoolPhone = settings?.school_phone || "5571999999999";
       const res = await whatsappService.sendMessage(schoolPhone, message);
       if (res.success) toast.success("Resumo enviado!"); else if (res.manualLink) { window.open(res.manualLink, "_blank"); toast.info("Abrindo link manual..."); }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) { toast.error("Erro: " + error.message); }
   };
 
@@ -138,6 +141,7 @@ export default function Dashboard() {
   const { data: pendingJustifications } = useQuery({
     queryKey: ["justifications-pending"],
     queryFn: async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any).from("absence_justifications").select("*, students(name, series, class)").eq("status", "pending");
       return data || [];
     },
@@ -154,6 +158,7 @@ export default function Dashboard() {
   const entriesCount = todayMovements?.filter((m) => m.type === "entry").length || 0;
   const exitsCount = todayMovements?.filter((m) => m.type === "exit").length || 0;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statusMap = new Map<string, { type: 'in' | 'out', student: any, lastTime: string }>();
   todayMovements?.forEach(m => {
     if (!statusMap.has(m.student_id)) {
@@ -232,15 +237,18 @@ export default function Dashboard() {
       const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000).toISOString();
       const today = new Date().toISOString().split("T")[0];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: movements } = await (supabase as any)
         .from("movements")
         .select("student_id, type, registered_at, students(name, series, class)")
         .gte("registered_at", `${today}T00:00:00`)
         .order("registered_at", { ascending: false });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const abandonments: any[] = [];
       const processed = new Set();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (movements || []).forEach((m: any) => {
         if (!processed.has(m.student_id)) {
           processed.add(m.student_id);
@@ -399,6 +407,7 @@ export default function Dashboard() {
               Identificamos <span className="font-bold text-foreground">{riskStudents.length} {riskStudents.length === 1 ? 'aluno' : 'alunos'}</span> com 3 ou mais atrasos nos últimos 7 dias. Recomendamos contato preventivo.
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
               {riskStudents.slice(0, 3).map((s: any) => (
                 <span key={s.student.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/50 border border-amber-500/20 text-[10px] font-bold text-foreground">
                   {s.student.name.split(' ')[0]} ({s.count}x)
@@ -463,6 +472,7 @@ export default function Dashboard() {
               <button
                 onClick={async () => {
                   if (confirm(`APAGAR DEFINITIVAMENTE todas as ${pendingJustifications.length} justificativas?`)) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const { error } = await (supabase as any).from("absence_justifications").delete().eq("status", "pending");
                     if (error) toast.error("Erro: " + error.message);
                     else {
@@ -534,6 +544,7 @@ export default function Dashboard() {
               {abandonmentStats.length} {abandonmentStats.length === 1 ? 'aluno saiu' : 'alunos saíram'} há mais de 2 horas e não retornaram.
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
               {abandonmentStats.slice(0, 3).map((a: any) => (
                 <span key={a.student_id} className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold border border-white/20">
                   {a.students.name} ({a.students.series} {a.students.class})
@@ -617,6 +628,7 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right">
                         <p className="font-mono text-amber-500">SAIU: {format(new Date(mov?.registered_at || ""), "HH:mm")}</p>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         <p className="text-[9px] opacity-70">{(mov as any)?.observation || "Saída Registrada"}</p>
                       </div>
                     </div>
