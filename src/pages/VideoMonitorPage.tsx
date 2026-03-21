@@ -19,11 +19,11 @@ export default function VideoMonitorPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 h-[500px]">
-          <FacialRecognitionFeed />
-        </div>
-        <div className="xl:col-span-2 h-[500px]">
+        <div className="xl:col-span-3 h-[600px] lg:order-last xl:order-none">
           <LiveCameraFeed />
+        </div>
+        <div className="xl:col-span-2 h-[600px]">
+          <FacialRecognitionFeed />
         </div>
       </div>
 
