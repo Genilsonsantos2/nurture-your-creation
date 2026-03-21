@@ -1,4 +1,4 @@
-# Welcome to your Lovable project (Sync Update 2 - Bidirectional Test)
+# Welcome to your Lovable project (Sync Update 3 - New Test)
 
 ## Project info
 
