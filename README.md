@@ -1,4 +1,4 @@
-# Welcome to your Lovable project (Sync Update 3 - New Test)
+# Welcome to your Lovable project (Sync Update 4 - Open Insights Test)
 
 ## Project info
 
