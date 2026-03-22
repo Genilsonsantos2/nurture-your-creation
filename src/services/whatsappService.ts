@@ -1,0 +1,185 @@
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+export interface WhatsAppSettings {
+    whatsapp_enabled: boolean;
+    whatsapp_api_url: string | null;
+    whatsapp_api_key: string | null;
+    whatsapp_instance_name: string | null;
+    whatsapp_bot_type: 'manual' | 'evolution';
+    school_phone: string | null;
+}
+
+class WhatsAppService {
+    private static instance: WhatsAppService;
+
+    private constructor() { }
+
+    public static getInstance(): WhatsAppService {
+        if (!WhatsAppService.instance) {
+            WhatsAppService.instance = new WhatsAppService();
+        }
+        return WhatsAppService.instance;
+    }
+
+    async getSettings(): Promise<WhatsAppSettings | null> {
+        const { data, error } = await supabase
+            .from("settings")
+            .select("whatsapp_enabled, whatsapp_api_url, whatsapp_api_key, whatsapp_instance_name, whatsapp_bot_type, school_phone")
+            .single();
+
+        if (error) {
+            console.error("Error fetching WhatsApp settings:", error);
+            return null;
+        }
+        return data as any as WhatsAppSettings;
+    }
+
+    /**
+     * Sends a WhatsApp message. 
+     * Uses Evolution API if configured, otherwise returns a wa.me link for manual sending.
+     */
+    async sendMessage(
+        phone: string, 
+        text: string, 
+        studentId?: string, 
+        recipientName?: string
+    ): Promise<{ success: boolean; manualLink?: string }> {
+        const settings = await this.getSettings();
+        const cleanPhone = phone.replace(/\D/g, "");
+
+        if (!settings?.whatsapp_enabled) {
+            return { success: false };
+        }
+
+        // Manual fallback always available
+        const manualLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+
+        let status: 'sent' | 'error' = 'sent';
+        let errorMessage: string | null = null;
+
+        if (settings.whatsapp_bot_type === 'evolution' && settings.whatsapp_api_url && settings.whatsapp_api_key && settings.whatsapp_instance_name) {
+            try {
+                const url = `${settings.whatsapp_api_url}/message/sendText/${settings.whatsapp_instance_name}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': settings.whatsapp_api_key
+                    },
+                    body: JSON.stringify({
+                        number: cleanPhone,
+                        options: {
+                            delay: 1200,
+                            presence: "composing",
+                            linkPreview: false
+                        },
+                        textMessage: {
+                            text: text
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                status = 'sent';
+            } catch (error: any) {
+                console.error("Evolution API Error:", error);
+                status = 'error';
+                errorMessage = error.message;
+                toast.error("Erro no envio automático. Use o link manual.");
+            }
+        } else {
+            // If not evolution, consider it "sent" via manual link (though not tracked in real-time)
+            status = 'sent';
+        }
+
+        // Log the communication
+        try {
+            await supabase.from("whatsapp_logs" as any).insert({
+                student_id: studentId,
+                recipient_name: recipientName,
+                recipient_phone: cleanPhone,
+                message: text,
+                status: status,
+                error_message: errorMessage,
+            });
+        } catch (logError) {
+            console.error("Error logging WhatsApp message:", logError);
+        }
+
+        return { success: status === 'sent', manualLink };
+    }
+
+    /**
+     * Sends a File/Media via WhatsApp.
+     */
+    async sendFile(phone: string, base64: string, fileName: string, caption?: string): Promise<{ success: boolean }> {
+        const settings = await this.getSettings();
+        const cleanPhone = phone.replace(/\D/g, "");
+
+        if (!settings?.whatsapp_enabled || settings.whatsapp_bot_type !== 'evolution') {
+            return { success: false };
+        }
+
+        try {
+            const url = `${settings.whatsapp_api_url}/message/sendMedia/${settings.whatsapp_instance_name}`;
+            const cleanBase64 = base64.includes(",") ? base64.split(",")[1] : base64;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': settings.whatsapp_api_key!
+                },
+                body: JSON.stringify({
+                    number: cleanPhone,
+                    mediaMessage: {
+                        mediatype: "document",
+                        caption: caption || fileName,
+                        fileName: fileName,
+                        media: cleanBase64
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return { success: true };
+        } catch (error) {
+            console.error("Evolution API Media Error:", error);
+            return { success: false };
+        }
+    }
+
+    /**
+     * Checks if the Evolution API instance is online
+     */
+    async checkInstanceStatus(): Promise<{ success: boolean; status?: string }> {
+        const settings = await this.getSettings();
+        if (!settings?.whatsapp_api_url || !settings?.whatsapp_api_key || !settings?.whatsapp_instance_name) {
+            return { success: false };
+        }
+
+        try {
+            const url = `${settings.whatsapp_api_url}/instance/connectionStatus/${settings.whatsapp_instance_name}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'apikey': settings.whatsapp_api_key
+                }
+            });
+
+            if (!response.ok) return { success: false };
+            const data = await response.json();
+            return { success: true, status: data.instance?.state };
+        } catch (error) {
+            console.error("Status Check Error:", error);
+            return { success: false };
+        }
+    }
+}
+
+export const whatsappService = WhatsAppService.getInstance();
