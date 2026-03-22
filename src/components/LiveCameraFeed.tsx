@@ -44,12 +44,12 @@ export default function LiveCameraFeed() {
           return (
           <div 
             key={cam.id} 
-            className={`relative rounded-xl overflow-hidden bg-black/40 border border-white/10 cursor-pointer hover:border-primary/40 transition-all duration-500 shadow-2xl group/cam backdrop-blur-sm ${
+            className={`relative rounded-2xl overflow-hidden bg-[#050510] border border-white/10 cursor-pointer hover:border-primary/50 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.5)] group/cam backdrop-blur-xl ${
                viewMode === "grid" 
                  ? cam.id === activeCam 
-                    ? "lg:col-span-3 lg:row-span-3 h-full min-h-[250px] lg:min-h-0 order-first" 
-                    : "lg:col-span-1 lg:row-span-1 h-32 lg:h-full order-last"
-                 : "h-full w-full"
+                    ? "lg:col-span-3 lg:row-span-3 h-full min-h-[250px] lg:min-h-0 order-first ring-1 ring-primary/30" 
+                    : "lg:col-span-1 lg:row-span-1 h-32 lg:h-full order-last opacity-75 hover:opacity-100 grayscale-[30%] hover:grayscale-0"
+                 : "h-full w-full ring-1 ring-primary/30"
             }`}
             onClick={() => {
               setActiveCam(cam.id);
@@ -59,14 +59,18 @@ export default function LiveCameraFeed() {
             }}
           >
             {/* Camera Name Overlay */}
-            <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all duration-500 ${isMain ? 'scale-100' : 'scale-90 origin-top-left'}`}>
-              <div className={`h-2 w-2 rounded-full ${cam.status === 'online' ? 'bg-success animate-pulse' : 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`} />
-              <span className={`font-bold text-white uppercase tracking-wider ${isMain ? 'text-[11px]' : 'text-[9px]'}`}>{cam.name}</span>
+            <div className={`absolute top-4 left-4 z-20 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 flex items-center gap-2.5 transition-all duration-500 shadow-lg ${isMain ? 'scale-100' : 'scale-90 origin-top-left'}`}>
+              <div className={`relative flex items-center justify-center h-2.5 w-2.5`}>
+                <div className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${cam.status === 'online' ? 'bg-success' : 'bg-destructive'}`}></div>
+                <div className={`relative inline-flex rounded-full h-2 w-2 ${cam.status === 'online' ? 'bg-success' : 'bg-destructive'}`}></div>
+              </div>
+              <span className={`font-bold text-white/90 uppercase tracking-widest ${isMain ? 'text-[10px]' : 'text-[8px]'}`}>{cam.name}</span>
             </div>
 
             {/* Time Overlay */}
-            <div className={`absolute top-3 right-3 z-10 font-mono text-white/70 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded border border-white/5 transition-all duration-500 ${isMain ? 'text-[11px]' : 'text-[9px]'}`}>
-               <span className="text-destructive animate-pulse mr-1 font-bold">●</span> REC 20:49:12
+            <div className={`absolute top-4 right-4 z-20 font-mono text-white/90 bg-black/50 backdrop-blur-xl px-2 py-1 rounded border border-white/10 shadow-lg flex items-center gap-2 transition-all duration-500 ${isMain ? 'text-xs' : 'text-[9px]'}`}>
+               {cam.status === 'online' && <span className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
+               REC 20:49:12
             </div>
 
             {/* Mock Video Feed Content */}
@@ -74,19 +78,33 @@ export default function LiveCameraFeed() {
               {cam.status === 'online' ? (
                  <div className="relative w-full h-full">
                     {/* Placeholder for camera stream with improved gradient and glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 to-black flex items-center justify-center overflow-hidden">
-                       <div className={`absolute transition-all duration-1000 ${isMain ? 'inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/10 to-transparent' : ''}`} />
-                       <Camera className={`text-white/5 transform -rotate-6 transition-all duration-700 ${isMain ? 'h-32 w-32 opacity-[0.03] scale-110' : 'h-12 w-12 opacity-[0.05] scale-150'}`} />
+                    <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black flex items-center justify-center overflow-hidden">
+                       <div className={`absolute transition-all duration-1000 ${isMain ? 'inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-primary/15 to-transparent' : ''}`} />
+                       
+                       {/* Abstract grid pattern */}
+                       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-50" />
+                       
+                       <Camera className={`text-white/10 transform transition-all duration-1000 ${isMain ? 'h-40 w-40 drop-shadow-[0_0_30px_rgba(var(--primary),0.2)]' : 'h-16 w-16 opacity-30'}`} />
                        
                        {isMain && (
-                         <div className="absolute bottom-4 left-4 text-[10px] text-white/30 font-mono flex gap-4">
-                           <span className="bg-black/40 px-2 py-1 rounded border border-white/5">BITRATE: 4.2 Mbps</span>
-                           <span className="bg-black/40 px-2 py-1 rounded border border-white/5">FPS: 30</span>
+                         <div className="absolute bottom-6 left-6 flex gap-3 z-20">
+                           <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/10 shadow-xl flex flex-col">
+                             <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Bitrate</span>
+                             <span className="text-xs text-info font-mono font-medium">4.2 Mbps</span>
+                           </div>
+                           <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/10 shadow-xl flex flex-col">
+                             <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Framerate</span>
+                             <span className="text-xs text-primary font-mono font-medium">30 FPS</span>
+                           </div>
+                           <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/10 shadow-xl flex flex-col">
+                             <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Resolução</span>
+                             <span className="text-xs text-white/80 font-mono font-medium">4K UHD</span>
+                           </div>
                          </div>
                        )}
                     </div>
                     {/* Refined Scanline Effect */}
-                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px,3px_100%] opacity-30" />
+                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-40 mix-blend-overlay" />
                  </div>
               ) : (
                 <div className="text-center space-y-2 opacity-40">
@@ -97,15 +115,15 @@ export default function LiveCameraFeed() {
             </div>
 
             {/* Hover Play Button */}
-            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover/cam:opacity-100 flex items-center justify-center transition-all duration-300 backdrop-blur-[2px]">
-               <div className="h-12 w-12 rounded-full bg-primary/20 border border-primary/50 text-primary flex items-center justify-center scale-75 group-hover/cam:scale-100 transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                  <Play className="h-5 w-5 fill-current ml-1" />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cam:opacity-100 flex items-center justify-center transition-all duration-300 backdrop-blur-[1px]">
+               <div className="h-14 w-14 rounded-full bg-primary/20 border border-primary/50 text-white flex items-center justify-center scale-75 group-hover/cam:scale-100 transition-all duration-500 shadow-[0_0_30px_rgba(var(--primary),0.4)] backdrop-blur-md">
+                  <Play className="h-6 w-6 fill-current ml-1" />
                </div>
             </div>
 
             {/* Active Border Glow */}
             {isMain && viewMode === "grid" && (
-              <div className="absolute inset-0 border-2 border-primary/40 rounded-xl pointer-events-none shadow-[inset_0_0_20px_rgba(var(--primary),0.1)]" />
+              <div className="absolute inset-0 border-[1.5px] border-primary/40 rounded-2xl pointer-events-none shadow-[inset_0_0_30px_rgba(var(--primary),0.1)] transition-all duration-1000" />
             )}
           </div>
         )})}
