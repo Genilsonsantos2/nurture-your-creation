@@ -42,28 +42,14 @@ import VideoMonitorPage from "./pages/VideoMonitorPage";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, loading } = useAuth();
-  if (loading) return null;
-  if (!user || !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function RoleRoute({ children, roles }: { children: React.ReactNode, roles: string[] }) {
-  const { user, role, isAdmin, loading } = useAuth();
-  if (loading) return null;
-  const hasAccess = isAdmin || (role && roles.includes(role));
-  if (!user || !hasAccess) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 

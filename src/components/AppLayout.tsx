@@ -114,8 +114,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     localStorage.setItem("high-contrast", highContrast.toString());
   }, [highContrast]);
 
-  const filterItems = (items: NavSection["items"]) =>
-    items.filter(item => isAdmin || item.roles.includes(role || ""));
+  const filterItems = (items: NavSection["items"]) => items;
 
   useEffect(() => {
     const fetchCounts = async () => {
