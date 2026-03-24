@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, LogIn, LogOut, User, BookOpen, AlertTriangle, ShieldCheck, Soup, Award, Star } from "lucide-react";
+import { Calendar, Clock, LogIn, LogOut, User, BookOpen, AlertTriangle, ShieldCheck, Award, Star } from "lucide-react";
 import { isSchoolDay } from "@/lib/calendar";
 
 export default function ParentPortal() {
@@ -27,10 +27,10 @@ export default function ParentPortal() {
     const { data: achievements } = useQuery({
         queryKey: ["parent-achievements", token],
         queryFn: async () => {
-            const { data, error } = await (supabase
+            const { data, error } = await (supabase as any)
                 .from("student_achievements")
                 .select("*")
-                .eq("student_id", student?.id) as any);
+                .eq("student_id", student?.id);
             if (error) return [];
             return data;
         },
@@ -197,22 +197,7 @@ export default function ParentPortal() {
                       </div>
                     </div>
 
-                    {/* Meal Summary */}
-                    <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/20">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Soup className="h-5 w-5 text-primary" />
-                        <h3 className="text-sm font-bold text-foreground">Registro de Merenda</h3>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-[10px] font-bold">
-                          <span className="text-muted-foreground uppercase">Hoje</span>
-                          <span className="text-success uppercase">Confirmado • Almoço</span>
-                        </div>
-                        <div className="w-full h-1 bg-muted rounded-full">
-                          <div className="h-full bg-success w-full rounded-full" />
-                        </div>
-                      </div>
-                    </div>
+
 
                     {/* Digital Sign-off Placeholder */}
                     <div className="pt-4">
