@@ -1,23 +1,28 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Upload, Edit, Trash2, Link as LinkIcon, Copy, UserCheck, Users, SearchSlash, Clock, ArrowRightLeft, Scan } from "lucide-react";
+import { Plus, Search, Upload, Edit, Trash2, Link as LinkIcon, Copy, UserCheck, Users, SearchSlash, Clock, ArrowRightLeft, Scan, Smartphone, QrCode } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateDeclarationPDF } from "@/lib/documentGenerator";
+import { QRCodeSVG } from "qrcode.react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { videoAiService } from "@/services/videoAiService";
 
 export default function StudentsPage() {
   const [search, setSearch] = useState("");
+  const [qrStudentId, setQrStudentId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("students").select("*").order("name");
+      const { data, error } = await (supabase as any).from("students").select("*, student_face_encodings(id)").order("name");
       if (error) throw error;
       return data;
     },
+    refetchInterval: 5000 // Real-time biometric sync
   });
 
   const deleteMutation = useMutation({
@@ -199,6 +204,13 @@ export default function StudentsPage() {
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" /></svg>
                         </button>
                         <button
+                          onClick={() => setQrStudentId(student.id)}
+                          className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-success hover:text-white transition-all active:scale-95"
+                          title="Cadastrar Face via Celular (QR)"
+                        >
+                          <Smartphone className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={async () => {
                             if (!student.photo_url) {
                               toast.error("O aluno não possui foto cadastrada.");
@@ -219,8 +231,8 @@ export default function StudentsPage() {
                               else toast.success("Assinatura facial gerada com sucesso!");
                             }, 1500);
                           }}
-                          className={`h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-accent hover:text-white transition-all active:scale-95 ${!student.photo_url ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
-                          title={student.photo_url ? "Gerar Assinatura Facial" : "Requer Foto do Aluno"}
+                          className={`h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border shadow-sm hover:bg-accent hover:text-white transition-all active:scale-95 ${(student as any).student_face_encodings?.length > 0 ? 'bg-success/20 border-success/40 text-success' : (!student.photo_url ? 'opacity-30 cursor-not-allowed grayscale' : '')}`}
+                          title={(student as any).student_face_encodings?.length > 0 ? "Biometria Já Cadastrada" : (student.photo_url ? "Gerar Assinatura Facial" : "Requer Foto do Aluno")}
                         >
                           <Scan className="h-4 w-4" />
                         </button>
@@ -250,6 +262,50 @@ export default function StudentsPage() {
         {/* Background pattern */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none -mr-48 -mt-48" />
       </div >
+
+      {/* QR Code Modal for Cell Phone Registration */}
+      <Dialog open={!!qrStudentId} onOpenChange={() => setQrStudentId(null)}>
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-border/50 rounded-[2rem]">
+          <DialogHeader className="flex flex-col items-center">
+            <div className="h-16 w-16 rounded-2xl bg-success/10 flex items-center justify-center text-success mb-4 border border-success/20">
+              <Smartphone className="h-8 w-8" />
+            </div>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight">Cadastro via Celular</DialogTitle>
+            <DialogDescription className="text-center font-medium">
+               Escaneie o QR Code abaixo com o celular para abrir a câmera e digitalizar o rosto do aluno.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-6 gap-6">
+            <div className="p-6 bg-white rounded-[2rem] shadow-2xl border-4 border-primary/20">
+              {qrStudentId && (
+                <QRCodeSVG 
+                  value={`${window.location.origin}/cadastrar-face/${qrStudentId}`} 
+                  size={200}
+                  level="H"
+                  includeMargin={true}
+                  imageSettings={{
+                    src: "/placeholder.svg",
+                    x: undefined,
+                    y: undefined,
+                    height: 40,
+                    width: 40,
+                    excavate: true,
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex flex-col items-center gap-2">
+               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase border border-primary/20">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                  Aguardando conexão do dispositivo...
+               </div>
+               <p className="text-[10px] text-muted-foreground max-w-[250px] text-center italic">
+                  A página atualizará automaticamente assim que a biometria for concluída no celular.
+               </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="p-10 rounded-[3rem] bg-muted/20 border border-border/40 flex items-start gap-6">
         <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">

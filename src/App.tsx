@@ -34,6 +34,7 @@ import AnomalyDetectionPage from "./pages/AnomalyDetectionPage";
 import ClassSuggestionPage from "./pages/ClassSuggestionPage";
 import AnnouncementGeneratorPage from "./pages/AnnouncementGeneratorPage";
 import AttendanceHeatmapPage from "./pages/AttendanceHeatmapPage";
+import MobileEnrollmentPage from "./pages/MobileEnrollmentPage";
 import NotFound from "./pages/NotFound";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import VideoMonitorPage from "./pages/VideoMonitorPage";
@@ -95,6 +96,7 @@ function AppContent() {
       <Route path="/logs-whatsapp" element={<ProtectedRoute><RoleRoute roles={["coordinator", "secretary", "director"]}><WhatsAppLogsPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/saude-sistema" element={<ProtectedRoute><RoleRoute roles={["director"]}><SystemHealthPage /></RoleRoute></ProtectedRoute>} />
       <Route path="/video-ia" element={<ProtectedRoute><RoleRoute roles={["admin", "director", "coordinator"]}><VideoMonitorPage /></RoleRoute></ProtectedRoute>} />
+      <Route path="/cadastrar-face/:id" element={<MobileEnrollmentPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
