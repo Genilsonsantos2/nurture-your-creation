@@ -3,6 +3,7 @@ import { User, ShieldCheck, AlertCircle, Scan, History, UserCheck, X } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { videoAiService } from "@/services/videoAiService";
 
 interface RecognizedPerson {
   id: string;
@@ -79,21 +80,23 @@ export default function FacialRecognitionFeed() {
         <History className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-accent transition-colors" />
         <button 
           onClick={async () => {
-            const { data: students } = await supabase.from("students").select("id, name").limit(5);
+            const { data: students } = await supabase.from("students").select("id, name").eq('active', true).limit(5);
             if (!students || students.length === 0) return;
             const randomStudent = students[Math.floor(Math.random() * students.length)];
             
-            await supabase.from("face_recognition_logs").insert({
-              student_id: randomStudent.id,
-              similarity_score: 0.94 + Math.random() * 0.05,
-              camera_name: "Portaria Principal",
-              timestamp: new Date().toISOString()
+            // USE THE INTELLIGENT SERVICE
+            await videoAiService.handleFaceDetection(randomStudent.id, {
+               confidence: 0.94 + Math.random() * 0.05,
+               cameraName: "Portaria Principal",
+               zone: "Gate 1"
             });
-            toast.success(`Simulando detecção: ${randomStudent.name}`);
+            
+            toast.success(`Simulando IA: ${randomStudent.name} identificado.`);
+            refetch();
           }}
           className="text-[8px] font-black bg-accent/20 text-accent px-2 py-1 rounded hover:bg-accent hover:text-white transition-all ml-2"
         >
-          SIMULAR DETECÇÃO
+          SIMULAR DETECÇÃO IA
         </button>
       </div>
 
