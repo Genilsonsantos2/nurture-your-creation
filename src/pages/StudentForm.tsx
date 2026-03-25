@@ -155,8 +155,12 @@ export default function StudentForm() {
       navigate("/alunos");
     },
     onError: (error: any) => {
-      if (error.message?.includes("duplicate")) toast.error("Matrícula já cadastrada.");
-      else toast.error("Erro ao salvar aluno.");
+      console.error("Erro ao cadastrar aluno:", error);
+      if (error.message?.includes("duplicate")) {
+        toast.error("Matrícula já cadastrada.");
+      } else {
+        toast.error(`Erro ao salvar: ${error.message || "Erro desconhecido"}`);
+      }
     },
   });
 
