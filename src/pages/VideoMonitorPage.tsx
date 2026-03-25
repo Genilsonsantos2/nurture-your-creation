@@ -1,20 +1,42 @@
-import React from "react";
 import LiveCameraFeed from "@/components/LiveCameraFeed";
 import FacialRecognitionFeed from "@/components/FacialRecognitionFeed";
-import { Video, ShieldCheck } from "lucide-react";
+import { Video, ShieldCheck, LayoutPanelLeft, Users, Move, Radio, Volume2 } from "lucide-react";
+import { useState } from "react";
 
 export default function VideoMonitorPage() {
+  const [activePreset, setActivePreset] = useState("entrada");
+
   return (
     <div className="space-y-6 animate-fade-up">
-      <div className="flex items-center gap-4 mb-2">
-        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-lg glow-sm">
-          <Video className="h-6 w-6" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-lg glow-sm">
+            <Video className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Centro de Comando IA</h1>
+            <p className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+               <ShieldCheck className="h-3 w-3 text-success" /> Infraestrutura: <span className="text-success font-bold">100% OPERATIVA</span>
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Centro de Comando (Beta)</h1>
-          <p className="text-xs text-muted-foreground font-medium flex items-center gap-2">
-             <ShieldCheck className="h-3 w-3 text-success" /> Monitoramento em Tempo Real • IA Ativa
-          </p>
+
+        {/* Coordination Presets */}
+        <div className="flex items-center gap-2 p-1 bg-card border border-border rounded-xl">
+           {[
+             { id: "entrada", label: "Portaria", icon: LayoutPanelLeft },
+             { id: "recreio", label: "Recreio", icon: Users },
+             { id: "corredores", label: "Foco Interno", icon: Move },
+           ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setActivePreset(p.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${activePreset === p.id ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-muted-foreground hover:bg-secondary'}`}
+              >
+                 <p.icon className="h-3.5 w-3.5" />
+                 {p.label}
+              </button>
+           ))}
         </div>
       </div>
 

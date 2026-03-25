@@ -64,6 +64,21 @@ export const videoAiService = {
     },
 
     /**
+     * Broadcasts a voice message via Speech Synthesis API.
+     */
+    broadcastEvent(message: string) {
+        if (!('speechSynthesis' in window)) return;
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.95;
+        utterance.volume = 1;
+
+        // Visual feedback could be added here if needed
+        window.speechSynthesis.speak(utterance);
+    },
+
+    /**
      * Detects anomalies based on detection data and school schedules.
      */
     async processAnomalyDetection(cameraId: string, personCount: number, studentId?: string) {

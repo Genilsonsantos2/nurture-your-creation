@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User, ShieldCheck, AlertCircle, Scan, History, UserCheck, X } from "lucide-react";
+import { User, ShieldCheck, AlertCircle, Scan, History, UserCheck, X, MessageSquare, ExternalLink, Volume2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ interface RecognizedPerson {
 
 export default function FacialRecognitionFeed() {
   const [activeDetection, setActiveDetection] = useState<RecognizedPerson | null>(null);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   const { data: lastIdentified = [], refetch } = useQuery({
     queryKey: ["face-recognition-logs"],
@@ -84,7 +86,14 @@ export default function FacialRecognitionFeed() {
             if (!students || students.length === 0) return;
             const randomStudent = students[Math.floor(Math.random() * students.length)];
             
-            // USE THE INTELLIGENT SERVICE
+            // 1. BROADCAST VOICE IF ENABLED
+            if (audioEnabled) {
+               setIsBroadcasting(true);
+               videoAiService.broadcastEvent(`Atenção Coordenação: ${randomStudent.name} identificado na Portaria.`);
+               setTimeout(() => setIsBroadcasting(false), 3000);
+            }
+
+            // 2. USE THE INTELLIGENT SERVICE
             await videoAiService.handleFaceDetection(randomStudent.id, {
                confidence: 0.94 + Math.random() * 0.05,
                cameraName: "Portaria Principal",
@@ -97,6 +106,13 @@ export default function FacialRecognitionFeed() {
           className="text-[8px] font-black bg-accent/20 text-accent px-2 py-1 rounded hover:bg-accent hover:text-white transition-all ml-2"
         >
           SIMULAR DETECÇÃO IA
+        </button>
+        <button 
+          onClick={() => setAudioEnabled(!audioEnabled)}
+          className={`p-1.5 rounded-lg border transition-all ${audioEnabled ? 'bg-success/20 border-success/30 text-success' : 'bg-muted border-border text-muted-foreground'}`}
+          title={audioEnabled ? "Interfone IA Ligado" : "Interfone IA Desligado"}
+        >
+          <Volume2 className="h-4 w-4" />
         </button>
       </div>
 
@@ -137,45 +153,67 @@ export default function FacialRecognitionFeed() {
              </div>
           )}
 
-          {/* HUD Info */}
+          {/* AI HUD Info & Broadcasting state */}
           <div className="absolute bottom-4 left-4 flex flex-col gap-1 z-10">
+             {isBroadcasting && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent text-white font-black text-[9px] animate-bounce shadow-xl">
+                   <Volume2 className="h-3 w-3 animate-pulse" />
+                   INTERFONE IA: TRANSMITINDO...
+                </div>
+             )}
              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/40 border border-white/10">
                 <div className="h-1 w-1 rounded-full bg-success animate-pulse" />
-                <span className="text-[8px] font-mono text-white/70">SYNC: DVR-712 (10Gbps)</span>
-             </div>
-             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/40 border border-white/10">
-                <span className="text-[8px] font-mono text-white/70 uppercase">Repetidor: OK</span>
+                <span className="text-[8px] font-mono text-white/70">IA_CORE: V2.4 (Ativo)</span>
              </div>
           </div>
         </div>
 
-        {/* Recent History Sidebar */}
-        <div className="w-full lg:w-48 space-y-2 max-h-[150px] lg:max-h-none overflow-y-auto pr-1 custom-scrollbar">
-           <h4 className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3">Histórico Recente</h4>
+        {/* Recent History Sidebar with Actions */}
+        <div className="w-full lg:w-56 space-y-2 max-h-[250px] lg:max-h-none overflow-y-auto pr-1 custom-scrollbar">
+           <h4 className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 flex items-center justify-between">
+              Inteligência Recente
+              <Info className="h-3 w-3 opacity-30" />
+           </h4>
            {lastIdentified.length === 0 ? (
               <div className="text-center py-8 opacity-20 grayscale scale-75">
                  <User className="h-8 w-8 mx-auto mb-2" />
-                 <p className="text-[8px]">AGUARDANDO...</p>
+                 <p className="text-[8px]">IA EM STANDBY...</p>
               </div>
            ) : (
              lastIdentified.map((person) => (
                 <div 
                   key={person.id} 
-                  className="flex items-center gap-2 p-2 rounded-lg bg-background/40 border border-border/50 hover:border-accent/30 transition-all cursor-pointer group"
+                  className="group/item flex flex-col p-2 rounded-xl bg-background/40 border border-border/50 hover:bg-background/60 hover:border-accent/40 transition-all cursor-pointer"
                 >
-                  <div className="h-8 w-8 rounded bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-                     <UserCheck className="h-4 w-4 text-accent" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-foreground truncate">{person.name.split(' ')[0]}</p>
-                    <div className="flex items-center justify-between">
-                       <span className="text-[8px] text-muted-foreground font-mono">
-                          {new Date(person.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                       </span>
-                       <span className={`text-[7px] font-bold uppercase ${person.type === 'entry' ? 'text-success' : 'text-warning'}`}>
-                          {person.type === 'entry' ? 'IN' : 'OUT'}
-                       </span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-8 w-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover/item:bg-accent group-hover/item:text-white transition-colors overflow-hidden">
+                       {person.photo_url ? (
+                          <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
+                       ) : (
+                          <UserCheck className="h-4 w-4" />
+                       )}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-foreground truncate">{person.name}</p>
+                      <div className="flex items-center gap-2">
+                         <span className="text-[8px] text-muted-foreground font-mono">
+                            {new Date(person.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                         </span>
+                         <span className={`text-[7px] font-bold uppercase rounded-full px-1.5 py-0.5 border ${person.type === 'entry' ? 'text-success bg-success/5 border-success/20' : 'text-warning bg-warning/5 border-warning/20'}`}>
+                            {person.type === 'entry' ? 'Entrada' : 'Saída'}
+                         </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions Panel */}
+                  <div className="flex items-center gap-1 pt-2 border-t border-border/20 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                     <button className="flex-1 flex items-center justify-center gap-1 py-1 rounded bg-success/10 text-success text-[7px] font-black hover:bg-success hover:text-white transition-all uppercase">
+                        <MessageSquare className="h-3 w-3" /> WhatsApp
+                     </button>
+                     <button className="flex-1 flex items-center justify-center gap-1 py-1 rounded bg-primary/10 text-primary text-[7px] font-black hover:bg-primary hover:text-white transition-all uppercase">
+                        <ExternalLink className="h-3 w-3" /> Perfil
+                     </button>
                   </div>
                 </div>
              ))
