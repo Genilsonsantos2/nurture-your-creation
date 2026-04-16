@@ -41,15 +41,35 @@ import VideoMonitorPage from "./pages/VideoMonitorPage";
 
 const queryClient = new QueryClient();
 
+import PendingApproval from "./pages/PendingApproval";
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, role, isAdmin, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex bg-background min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent" />
+      </div>
+    );
+  }
+  
+  if (!user) return <Navigate to="/login" replace />;
+  if (role === 'user' && !isAdmin) return <PendingApproval />;
+
   return <AppLayout>{children}</AppLayout>;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function RoleRoute({ children, roles }: { children: React.ReactNode, roles: string[] }) {
+  const { role, isAdmin } = useAuth();
+  if (isAdmin) return <>{children}</>;
+  if (!role || !roles.includes(role)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
